@@ -3,7 +3,7 @@
 A workspace for running isolated agent-wow sessions and compatible with your preferred
 agent (codex, claude code, opencode, etc).
 
-**Refer to the [agent-wow repository](https://github.com/agent-wow/agent-wow) for the full documentation on modules.**
+**Refer to the [agent-wow repository](https://github.com/agent-wow/agent-wow) for the full documentation.**
 
 ## Usage
 
