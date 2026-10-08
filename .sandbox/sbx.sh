@@ -14,7 +14,7 @@ Usage: ./.sandbox/sbx.sh COMMAND
   init AGENT [--cpus N] [--memory SIZE]  Create/bootstrap (defaults: 4 CPUs, 8g)
   run [-- AGENT_ARGS...]                 Run the agent selected during init
   shell                                  Open an interactive sandbox shell
-  status                                 Show state and Codex session paths
+  status                                 Show state and Codex home path
   check                                  Check tools, network, and gameplay auth
   rm                                     Remove sandbox; keep workspace files
 
