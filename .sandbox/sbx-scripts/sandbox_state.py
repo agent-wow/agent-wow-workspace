@@ -148,7 +148,7 @@ def main():
     elif command == "sessions":
         root = Path(args[0]).resolve(strict=True)
         home = root / ".sandbox/codex"
-        print(f"\nWorkspace: {root}\nCodex home: {home}\nSessions: {home / 'sessions'}")
+        print(f"\nWorkspace: {root}\nCodex home: {home}")
     else:
         raise ValueError(f"Unknown helper command: {command}")
     return 0
