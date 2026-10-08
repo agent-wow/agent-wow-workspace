@@ -11,21 +11,23 @@ import time
 import tomllib
 
 
-def prepare_codex_tmp(destination):
-    # Codex puts executable helper symlinks under CODEX_HOME/tmp. Cover only
-    # that directory with guest-private storage so sessions remain shared and
-    # helper links to native binaries never enter the host workspace.
-    private = Path.home() / ".cache/codex/tmp"
-    private.mkdir(parents=True, exist_ok=True, mode=0o700)
-    target = destination / "tmp"
-    if target.is_symlink():
-        raise ValueError("Codex temporary directory must not be a symlink")
-    target.mkdir(exist_ok=True, mode=0o700)
-    if subprocess.run(["mountpoint", "-q", str(target)]).returncode == 0:
-        if not os.path.samefile(private, target):
-            raise ValueError("Unexpected mount at the Codex temporary directory")
-        return
-    subprocess.run(["sudo", "mount", "--bind", str(private), str(target)], check=True)
+def prepare_codex_private_dirs(destination):
+    # Helper symlinks and daemon/updater sockets belong to the guest. Keeping
+    # them in the shared home makes the host workspace guard reject the next
+    # launch (including after `codex update`). Bind only these runtime dirs;
+    # configuration, credentials and session history remain in the workspace.
+    for name in ("tmp", "app-server-daemon", "app-server-control"):
+        private = Path.home() / ".cache/codex" / name
+        target = destination / name
+        if private.is_symlink() or target.is_symlink():
+            raise ValueError(f"Codex {name} directory must not be a symlink")
+        private.mkdir(parents=True, exist_ok=True, mode=0o700)
+        target.mkdir(exist_ok=True, mode=0o700)
+        if subprocess.run(["mountpoint", "-q", str(target)]).returncode == 0:
+            if not os.path.samefile(private, target):
+                raise ValueError(f"Unexpected mount at the Codex {name} directory")
+            continue
+        subprocess.run(["sudo", "mount", "--bind", str(private), str(target)], check=True)
 
 
 def without_gateway(config):
@@ -98,7 +100,7 @@ def prepare_codex(workspace):
     auth_path.write_text(json.dumps({"OPENAI_API_KEY": key}) + "\n")
     auth_path.chmod(0o600)
     (destination / "sessions").mkdir(exist_ok=True, mode=0o700)
-    prepare_codex_tmp(destination)
+    prepare_codex_private_dirs(destination)
 
 
 def listening(port):

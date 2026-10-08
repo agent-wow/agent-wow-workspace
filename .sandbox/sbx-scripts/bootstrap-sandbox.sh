@@ -73,6 +73,13 @@ if [[ ! -x /usr/local/bin/agent-wow ]] || ! go version -m /usr/local/bin/agent-w
   sudo install -m 0755 "$bootstrap_dir/bin/agent-wow" /usr/local/bin/agent-wow
 fi
 python3 "$WORKSPACE/.sandbox/sbx-scripts/sandbox_runtime.py" prepare "$WORKSPACE"
+if [[ ${WOW_SANDBOX_AGENT:-} == codex ]]; then
+  # Prepare guest-private runtime directories before the updated CLI can
+  # create daemon sockets or helper symlinks in the shared Codex home.
+  printf 'Updating Codex\n'
+  codex update
+  codex --version
+fi
 go version
 protoc --version
 docker compose version
