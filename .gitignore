@@ -1,2 +1,51 @@
 /config/
 /data/
+/.sandbox/codex/
+/.sandbox/logs/
+
+# Build output
+build/
+dist/
+bin/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+.eggs/
+
+# C and C++
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+compile_commands.json
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.pch
+*.pdb
+
+# Go
+*.test
+*.prof
+coverage.out
+coverage/
