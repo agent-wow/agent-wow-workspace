@@ -68,7 +68,7 @@ validate_agent() { sbx_safe run --help | state supported-agent "$1"; }
 list_entry() { sbx_safe ls --json | state entry "$SANDBOX_NAME"; }
 validate_existing() {
   local runtime_path
-  runtime_path=$(sbx_safe daemon status | state metadata-path "$SANDBOX_NAME")
+  runtime_path=$(sbx_safe daemon status --json | state metadata-path "$SANDBOX_NAME")
   state validate "$runtime_path" "$WORKSPACE" "$SANDBOX_NAME" "$AGENT"
 }
 use_existing() {

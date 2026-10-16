@@ -26,7 +26,7 @@ def response(text):
 
 
 def supported_agents(help_text):
-    match = re.search(r"^Available agents: (.+)$", help_text, re.M)
+    match = re.search(r"^[ \t]*Available agents:[ \t]+(.+)$", help_text, re.M)
     if not match:
         raise ValueError("Cannot read supported agents from sbx run --help; unsupported sbx output")
     agents = [item.strip() for item in match[1].split(",")]
@@ -118,7 +118,10 @@ def main():
         validate_settings(response(sys.stdin.read()))
     elif command == "mcp":
         data = response(sys.stdin.read())
-        if "servers" not in data or data["servers"]:
+        servers = data.get("servers") if isinstance(data, dict) else data
+        if not isinstance(servers, list):
+            raise ValueError("Cannot read host MCP registry; unsupported sbx mcp ls --json output")
+        if servers:
             raise ValueError("Host MCP servers are registered. This isolated launcher requires an empty host MCP registry; inspect with sbx mcp ls")
     elif command == "missing-policy":
         data = response(sys.stdin.read())
@@ -132,17 +135,23 @@ def main():
                 print(resource)
     elif command == "entry":
         data = response(sys.stdin.read())
-        matches = [item for item in data["sandboxes"] if item["name"] == args[0]]
+        sandboxes = data.get("sandboxes") if isinstance(data, dict) else data
+        if not isinstance(sandboxes, list) or any(
+                not isinstance(item, dict) or not isinstance(item.get("name"), str)
+                for item in sandboxes):
+            raise ValueError("Cannot read sandbox inventory; unsupported sbx ls --json output")
+        matches = [item for item in sandboxes if item["name"] == args[0]]
         if not matches:
             return 3
         if len(matches) != 1:
             raise ValueError("Ambiguous sandbox inventory")
         print(json.dumps(matches[0], indent=2))
     elif command == "metadata-path":
-        match = re.search(r"^Socket: (.+/sandboxd\.sock)(?: .*)?$", sys.stdin.read(), re.M)
-        if not match:
-            raise ValueError("Cannot locate native sandbox metadata; unsupported sbx daemon status output")
-        print(Path(match[1]).parent / "runtimes" / f"{args[0]}.json")
+        data = response(sys.stdin.read())
+        socket = data.get("socket") if isinstance(data, dict) else None
+        if not isinstance(socket, str) or not Path(socket).is_absolute() or Path(socket).name != "sandboxd.sock":
+            raise ValueError("Cannot locate native sandbox metadata; unsupported sbx daemon status --json output")
+        print(Path(socket).parent / "runtimes" / f"{args[0]}.json")
     elif command == "validate":
         validate_spec(json.loads(Path(args[0]).read_text()), args[1], args[2], args[3])
     elif command == "sessions":
