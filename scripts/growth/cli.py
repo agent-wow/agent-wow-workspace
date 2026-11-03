@@ -38,6 +38,8 @@ from scripts.growth.identity import (  # noqa: E402
 )
 from scripts.growth.machine import SoloGrowthMachine  # noqa: E402
 from scripts.growth.cooperation import CooperationRuntime  # noqa: E402
+from scripts.growth.character_runtime import CharacterGrowthRuntime  # noqa: E402
+from scripts.growth.professions import load_professions  # noqa: E402
 from scripts.growth.permissions import (  # noqa: E402
     audit_accounts,
     audit_tree,
@@ -185,9 +187,12 @@ def run_worker(args) -> int:
     adapter = WorldAdapter(RPCCallTransport(spec.port))
     cooperation = CooperationRuntime(
         roster, spec, adapter, store, profile.inventory)
+    character_growth = CharacterGrowthRuntime(
+        profile, load_professions(), adapter, store)
     growth = SoloGrowthMachine(
         profile, route, adapter=adapter, store=store, logger=log,
-        epoch_hint=args.epoch, cooperation=cooperation)
+        epoch_hint=args.epoch, cooperation=cooperation,
+        character_growth=character_growth, role=spec.role)
     worker = GrowthWorker(
         spec, store,
         lock_path=state / f"{spec.name}.worker.lock",

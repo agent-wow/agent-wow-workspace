@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "class": "priest",
   "source": "WotLK 3.3.5a mana-healer baseline; the heal is role-driven and only eligible below 50% health",
   "roles": ["healer", "dps"],
@@ -24,8 +24,61 @@
       "min_level": 1,
       "requires_target": true,
       "in_combat_only": true
+    },
+    {
+      "name": "Lesser Heal",
+      "spell_id": 2052,
+      "cost": 45,
+      "priority": 21,
+      "min_level": 4,
+      "requires_target": false,
+      "in_combat_only": false,
+      "when_health_below_pct": 0.5
+    },
+    {
+      "name": "Smite",
+      "spell_id": 591,
+      "cost": 50,
+      "priority": 11,
+      "min_level": 6,
+      "requires_target": true,
+      "in_combat_only": true
+    },
+    {
+      "name": "Lesser Heal",
+      "spell_id": 2053,
+      "cost": 75,
+      "priority": 22,
+      "min_level": 10,
+      "requires_target": false,
+      "in_combat_only": false,
+      "when_health_below_pct": 0.5
+    },
+    {
+      "name": "Smite",
+      "spell_id": 592,
+      "cost": 95,
+      "priority": 12,
+      "min_level": 14,
+      "requires_target": true,
+      "in_combat_only": true
+    },
+    {
+      "name": "Heal",
+      "spell_id": 2054,
+      "cost": 155,
+      "priority": 23,
+      "min_level": 16,
+      "requires_target": false,
+      "in_combat_only": false,
+      "when_health_below_pct": 0.5
     }
   ],
+  "training_reserve": 50,
+  "talents": {
+    "healer": [{"talent_id": 342, "min_level": 10, "max_rank": 4}],
+    "dps": [{"talent_id": 342, "min_level": 10, "max_rank": 4}]
+  },
   "recovery": {
     "rest_below_pct": 0.6,
     "rest_until_pct": 0.8,

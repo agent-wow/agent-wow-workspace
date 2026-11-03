@@ -71,10 +71,14 @@ func (x *AttackRequest) GetGuid() uint64 {
 type CastRequest struct {
 	state   protoimpl.MessageState `protogen:"open.v1"`
 	SpellId uint32                 `protobuf:"varint,1,opt,name=spell_id,json=spellId,proto3" json:"spell_id,omitempty"`
-	// Zero means the current combat target; a zero target mask is not sent.
-	TargetGuid    uint64 `protobuf:"varint,2,opt,name=target_guid,json=targetGuid,proto3" json:"target_guid,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// Zero means the current combat target unless preserve_empty_target is set.
+	TargetGuid uint64 `protobuf:"varint,2,opt,name=target_guid,json=targetGuid,proto3" json:"target_guid,omitempty"`
+	// Trade skills use an empty target mask even when a combat target is tracked.
+	PreserveEmptyTarget bool `protobuf:"varint,3,opt,name=preserve_empty_target,json=preserveEmptyTarget,proto3" json:"preserve_empty_target,omitempty"`
+	// Gathering spells target a game object rather than a unit.
+	TargetIsGameObject bool `protobuf:"varint,4,opt,name=target_is_game_object,json=targetIsGameObject,proto3" json:"target_is_game_object,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *CastRequest) Reset() {
@@ -119,6 +123,20 @@ func (x *CastRequest) GetTargetGuid() uint64 {
 		return x.TargetGuid
 	}
 	return 0
+}
+
+func (x *CastRequest) GetPreserveEmptyTarget() bool {
+	if x != nil {
+		return x.PreserveEmptyTarget
+	}
+	return false
+}
+
+func (x *CastRequest) GetTargetIsGameObject() bool {
+	if x != nil {
+		return x.TargetIsGameObject
+	}
+	return false
 }
 
 type Vector3 struct {
@@ -546,6 +564,111 @@ func (x *SpiritHealerRequest) GetPackedGuid() bool {
 	return false
 }
 
+type Spell struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SpellId       uint32                 `protobuf:"varint,1,opt,name=spell_id,json=spellId,proto3" json:"spell_id,omitempty"`
+	Disabled      bool                   `protobuf:"varint,2,opt,name=disabled,proto3" json:"disabled,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Spell) Reset() {
+	*x = Spell{}
+	mi := &file_module_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Spell) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Spell) ProtoMessage() {}
+
+func (x *Spell) ProtoReflect() protoreflect.Message {
+	mi := &file_module_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Spell.ProtoReflect.Descriptor instead.
+func (*Spell) Descriptor() ([]byte, []int) {
+	return file_module_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *Spell) GetSpellId() uint32 {
+	if x != nil {
+		return x.SpellId
+	}
+	return 0
+}
+
+func (x *Spell) GetDisabled() bool {
+	if x != nil {
+		return x.Disabled
+	}
+	return false
+}
+
+type SpellsResponse struct {
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Spells []*Spell               `protobuf:"bytes,1,rep,name=spells,proto3" json:"spells,omitempty"`
+	// False until SMSG_INITIAL_SPELLS establishes the current login's spellbook.
+	Initialized   bool `protobuf:"varint,2,opt,name=initialized,proto3" json:"initialized,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SpellsResponse) Reset() {
+	*x = SpellsResponse{}
+	mi := &file_module_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SpellsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SpellsResponse) ProtoMessage() {}
+
+func (x *SpellsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_module_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SpellsResponse.ProtoReflect.Descriptor instead.
+func (*SpellsResponse) Descriptor() ([]byte, []int) {
+	return file_module_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *SpellsResponse) GetSpells() []*Spell {
+	if x != nil {
+		return x.Spells
+	}
+	return nil
+}
+
+func (x *SpellsResponse) GetInitialized() bool {
+	if x != nil {
+		return x.Initialized
+	}
+	return false
+}
+
 type StatusResponse struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
 	Packets               uint32                 `protobuf:"varint,1,opt,name=packets,proto3" json:"packets,omitempty"`
@@ -566,7 +689,7 @@ type StatusResponse struct {
 
 func (x *StatusResponse) Reset() {
 	*x = StatusResponse{}
-	mi := &file_module_proto_msgTypes[5]
+	mi := &file_module_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -578,7 +701,7 @@ func (x *StatusResponse) String() string {
 func (*StatusResponse) ProtoMessage() {}
 
 func (x *StatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[5]
+	mi := &file_module_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -591,7 +714,7 @@ func (x *StatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatusResponse.ProtoReflect.Descriptor instead.
 func (*StatusResponse) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{5}
+	return file_module_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *StatusResponse) GetPackets() uint32 {
@@ -670,11 +793,13 @@ const file_module_proto_rawDesc = "" +
 	"\n" +
 	"\fmodule.proto\x12\x10combat.module.v1\x1a\x1bapi/module/v1/session.proto\x1a\x1bgoogle/protobuf/empty.proto\"#\n" +
 	"\rAttackRequest\x12\x12\n" +
-	"\x04guid\x18\x01 \x01(\x04R\x04guid\"I\n" +
+	"\x04guid\x18\x01 \x01(\x04R\x04guid\"\xb0\x01\n" +
 	"\vCastRequest\x12\x19\n" +
 	"\bspell_id\x18\x01 \x01(\rR\aspellId\x12\x1f\n" +
 	"\vtarget_guid\x18\x02 \x01(\x04R\n" +
-	"targetGuid\"3\n" +
+	"targetGuid\x122\n" +
+	"\x15preserve_empty_target\x18\x03 \x01(\bR\x13preserveEmptyTarget\x121\n" +
+	"\x15target_is_game_object\x18\x04 \x01(\bR\x12targetIsGameObject\"3\n" +
 	"\aVector3\x12\f\n" +
 	"\x01x\x18\x01 \x01(\x02R\x01x\x12\f\n" +
 	"\x01y\x18\x02 \x01(\x02R\x01y\x12\f\n" +
@@ -727,7 +852,13 @@ const file_module_proto_rawDesc = "" +
 	"\vhealer_guid\x18\x01 \x01(\x04R\n" +
 	"healerGuid\x12\x1f\n" +
 	"\vpacked_guid\x18\x02 \x01(\bR\n" +
-	"packedGuid\"\xa2\x03\n" +
+	"packedGuid\">\n" +
+	"\x05Spell\x12\x19\n" +
+	"\bspell_id\x18\x01 \x01(\rR\aspellId\x12\x1a\n" +
+	"\bdisabled\x18\x02 \x01(\bR\bdisabled\"c\n" +
+	"\x0eSpellsResponse\x12/\n" +
+	"\x06spells\x18\x01 \x03(\v2\x17.combat.module.v1.SpellR\x06spells\x12 \n" +
+	"\vinitialized\x18\x02 \x01(\bR\vinitialized\"\xa2\x03\n" +
 	"\x0eStatusResponse\x12\x18\n" +
 	"\apackets\x18\x01 \x01(\rR\apackets\x12!\n" +
 	"\fparse_errors\x18\x02 \x01(\rR\vparseErrors\x12#\n" +
@@ -740,7 +871,7 @@ const file_module_proto_rawDesc = "" +
 	"\x15corpse_reclaim_delays\x18\b \x01(\rR\x13corpseReclaimDelays\x126\n" +
 	"\x17death_release_locations\x18\t \x01(\rR\x15deathReleaseLocations\x12!\n" +
 	"\fworld_resets\x18\n" +
-	" \x01(\rR\vworldResets2\x9a\x05\n" +
+	" \x01(\rR\vworldResets2\xe1\x05\n" +
 	"\x06Module\x12H\n" +
 	"\x06Attack\x12\x1f.combat.module.v1.AttackRequest\x1a\x1d.combat.module.v1.CombatState\x12C\n" +
 	"\n" +
@@ -749,7 +880,8 @@ const file_module_proto_rawDesc = "" +
 	"\rReleaseSpirit\x12\x16.google.protobuf.Empty\x1a\x1d.combat.module.v1.CombatState\x12F\n" +
 	"\rReclaimCorpse\x12\x16.google.protobuf.Empty\x1a\x1d.combat.module.v1.CombatState\x12_\n" +
 	"\x17ResurrectAtSpiritHealer\x12%.combat.module.v1.SpiritHealerRequest\x1a\x1d.combat.module.v1.CombatState\x12A\n" +
-	"\bGetState\x12\x16.google.protobuf.Empty\x1a\x1d.combat.module.v1.CombatState\x12B\n" +
+	"\bGetState\x12\x16.google.protobuf.Empty\x1a\x1d.combat.module.v1.CombatState\x12E\n" +
+	"\tGetSpells\x12\x16.google.protobuf.Empty\x1a .combat.module.v1.SpellsResponse\x12B\n" +
 	"\x06Status\x12\x16.google.protobuf.Empty\x1a .combat.module.v1.StatusResponse\x12C\n" +
 	"\bOnPacket\x12\x1f.agentwow.module.v1.WorldPacket\x1a\x16.google.protobuf.EmptyB<Z:github.com/doumoman/agent-wow-mods/combat/src/api;modulev1b\x06proto3"
 
@@ -765,42 +897,47 @@ func file_module_proto_rawDescGZIP() []byte {
 	return file_module_proto_rawDescData
 }
 
-var file_module_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_module_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_module_proto_goTypes = []any{
 	(*AttackRequest)(nil),       // 0: combat.module.v1.AttackRequest
 	(*CastRequest)(nil),         // 1: combat.module.v1.CastRequest
 	(*Vector3)(nil),             // 2: combat.module.v1.Vector3
 	(*CombatState)(nil),         // 3: combat.module.v1.CombatState
 	(*SpiritHealerRequest)(nil), // 4: combat.module.v1.SpiritHealerRequest
-	(*StatusResponse)(nil),      // 5: combat.module.v1.StatusResponse
-	(*emptypb.Empty)(nil),       // 6: google.protobuf.Empty
-	(*v1.WorldPacket)(nil),      // 7: agentwow.module.v1.WorldPacket
+	(*Spell)(nil),               // 5: combat.module.v1.Spell
+	(*SpellsResponse)(nil),      // 6: combat.module.v1.SpellsResponse
+	(*StatusResponse)(nil),      // 7: combat.module.v1.StatusResponse
+	(*emptypb.Empty)(nil),       // 8: google.protobuf.Empty
+	(*v1.WorldPacket)(nil),      // 9: agentwow.module.v1.WorldPacket
 }
 var file_module_proto_depIdxs = []int32{
 	2,  // 0: combat.module.v1.CombatState.spirit_healer_position:type_name -> combat.module.v1.Vector3
-	0,  // 1: combat.module.v1.Module.Attack:input_type -> combat.module.v1.AttackRequest
-	6,  // 2: combat.module.v1.Module.StopAttack:input_type -> google.protobuf.Empty
-	1,  // 3: combat.module.v1.Module.Cast:input_type -> combat.module.v1.CastRequest
-	6,  // 4: combat.module.v1.Module.ReleaseSpirit:input_type -> google.protobuf.Empty
-	6,  // 5: combat.module.v1.Module.ReclaimCorpse:input_type -> google.protobuf.Empty
-	4,  // 6: combat.module.v1.Module.ResurrectAtSpiritHealer:input_type -> combat.module.v1.SpiritHealerRequest
-	6,  // 7: combat.module.v1.Module.GetState:input_type -> google.protobuf.Empty
-	6,  // 8: combat.module.v1.Module.Status:input_type -> google.protobuf.Empty
-	7,  // 9: combat.module.v1.Module.OnPacket:input_type -> agentwow.module.v1.WorldPacket
-	3,  // 10: combat.module.v1.Module.Attack:output_type -> combat.module.v1.CombatState
-	3,  // 11: combat.module.v1.Module.StopAttack:output_type -> combat.module.v1.CombatState
-	3,  // 12: combat.module.v1.Module.Cast:output_type -> combat.module.v1.CombatState
-	3,  // 13: combat.module.v1.Module.ReleaseSpirit:output_type -> combat.module.v1.CombatState
-	3,  // 14: combat.module.v1.Module.ReclaimCorpse:output_type -> combat.module.v1.CombatState
-	3,  // 15: combat.module.v1.Module.ResurrectAtSpiritHealer:output_type -> combat.module.v1.CombatState
-	3,  // 16: combat.module.v1.Module.GetState:output_type -> combat.module.v1.CombatState
-	5,  // 17: combat.module.v1.Module.Status:output_type -> combat.module.v1.StatusResponse
-	6,  // 18: combat.module.v1.Module.OnPacket:output_type -> google.protobuf.Empty
-	10, // [10:19] is the sub-list for method output_type
-	1,  // [1:10] is the sub-list for method input_type
-	1,  // [1:1] is the sub-list for extension type_name
-	1,  // [1:1] is the sub-list for extension extendee
-	0,  // [0:1] is the sub-list for field type_name
+	5,  // 1: combat.module.v1.SpellsResponse.spells:type_name -> combat.module.v1.Spell
+	0,  // 2: combat.module.v1.Module.Attack:input_type -> combat.module.v1.AttackRequest
+	8,  // 3: combat.module.v1.Module.StopAttack:input_type -> google.protobuf.Empty
+	1,  // 4: combat.module.v1.Module.Cast:input_type -> combat.module.v1.CastRequest
+	8,  // 5: combat.module.v1.Module.ReleaseSpirit:input_type -> google.protobuf.Empty
+	8,  // 6: combat.module.v1.Module.ReclaimCorpse:input_type -> google.protobuf.Empty
+	4,  // 7: combat.module.v1.Module.ResurrectAtSpiritHealer:input_type -> combat.module.v1.SpiritHealerRequest
+	8,  // 8: combat.module.v1.Module.GetState:input_type -> google.protobuf.Empty
+	8,  // 9: combat.module.v1.Module.GetSpells:input_type -> google.protobuf.Empty
+	8,  // 10: combat.module.v1.Module.Status:input_type -> google.protobuf.Empty
+	9,  // 11: combat.module.v1.Module.OnPacket:input_type -> agentwow.module.v1.WorldPacket
+	3,  // 12: combat.module.v1.Module.Attack:output_type -> combat.module.v1.CombatState
+	3,  // 13: combat.module.v1.Module.StopAttack:output_type -> combat.module.v1.CombatState
+	3,  // 14: combat.module.v1.Module.Cast:output_type -> combat.module.v1.CombatState
+	3,  // 15: combat.module.v1.Module.ReleaseSpirit:output_type -> combat.module.v1.CombatState
+	3,  // 16: combat.module.v1.Module.ReclaimCorpse:output_type -> combat.module.v1.CombatState
+	3,  // 17: combat.module.v1.Module.ResurrectAtSpiritHealer:output_type -> combat.module.v1.CombatState
+	3,  // 18: combat.module.v1.Module.GetState:output_type -> combat.module.v1.CombatState
+	6,  // 19: combat.module.v1.Module.GetSpells:output_type -> combat.module.v1.SpellsResponse
+	7,  // 20: combat.module.v1.Module.Status:output_type -> combat.module.v1.StatusResponse
+	8,  // 21: combat.module.v1.Module.OnPacket:output_type -> google.protobuf.Empty
+	12, // [12:22] is the sub-list for method output_type
+	2,  // [2:12] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_module_proto_init() }
@@ -814,7 +951,7 @@ func file_module_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_module_proto_rawDesc), len(file_module_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -13,8 +13,12 @@ message AttackRequest {
 
 message CastRequest {
   uint32 spell_id = 1;
-  // Zero means the current combat target; a zero target mask is not sent.
+  // Zero means the current combat target unless preserve_empty_target is set.
   uint64 target_guid = 2;
+  // Trade skills use an empty target mask even when a combat target is tracked.
+  bool preserve_empty_target = 3;
+  // Gathering spells target a game object rather than a unit.
+  bool target_is_game_object = 4;
 }
 
 message Vector3 {
@@ -79,6 +83,17 @@ message SpiritHealerRequest {
   bool packed_guid = 2;
 }
 
+message Spell {
+  uint32 spell_id = 1;
+  bool disabled = 2;
+}
+
+message SpellsResponse {
+  repeated Spell spells = 1;
+  // False until SMSG_INITIAL_SPELLS establishes the current login's spellbook.
+  bool initialized = 2;
+}
+
 message StatusResponse {
   uint32 packets = 1;
   uint32 parse_errors = 2;
@@ -106,6 +121,7 @@ service Module {
   // costs durability but always works, even after the corpse has decayed.
   rpc ResurrectAtSpiritHealer(SpiritHealerRequest) returns (CombatState);
   rpc GetState(google.protobuf.Empty) returns (CombatState);
+  rpc GetSpells(google.protobuf.Empty) returns (SpellsResponse);
   rpc Status(google.protobuf.Empty) returns (StatusResponse);
   rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);
 }

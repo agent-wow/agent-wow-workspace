@@ -14,6 +14,7 @@ rpc:
   reclaim_corpse: /combat.module.v1.Module/ReclaimCorpse
   resurrect_at_spirit_healer: /combat.module.v1.Module/ResurrectAtSpiritHealer
   get_state: /combat.module.v1.Module/GetState
+  get_spells: /combat.module.v1.Module/GetSpells
   status: /combat.module.v1.Module/Status
 packets:
   SMSG_LOGIN_VERIFY_WORLD: /combat.module.v1.Module/OnPacket
@@ -27,6 +28,8 @@ packets:
   SMSG_LOG_XPGAIN: /combat.module.v1.Module/OnPacket
   SMSG_LEVELUP_INFO: /combat.module.v1.Module/OnPacket
   SMSG_CAST_FAILED: /combat.module.v1.Module/OnPacket
+  SMSG_INITIAL_SPELLS: /combat.module.v1.Module/OnPacket
+  SMSG_LEARNED_SPELL: /combat.module.v1.Module/OnPacket
   SMSG_GOSSIP_MESSAGE: /combat.module.v1.Module/OnPacket
   SMSG_SPIRIT_HEALER_CONFIRM: /combat.module.v1.Module/OnPacket
   SMSG_CORPSE_RECLAIM_DELAY: /combat.module.v1.Module/OnPacket

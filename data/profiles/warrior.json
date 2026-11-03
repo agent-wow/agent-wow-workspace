@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "class": "warrior",
   "source": "WotLK 3.3.5a warrior baseline; costs are native resource points and rage update fields store the value x10",
   "roles": ["tank", "dps"],
@@ -20,11 +20,34 @@
       "spell_id": 6343,
       "cost": 20,
       "priority": 5,
-      "min_level": 1,
+      "min_level": 6,
+      "requires_target": true,
+      "in_combat_only": true
+    },
+    {
+      "name": "Heroic Strike",
+      "spell_id": 284,
+      "cost": 15,
+      "priority": 11,
+      "min_level": 8,
+      "requires_target": true,
+      "in_combat_only": true
+    },
+    {
+      "name": "Heroic Strike",
+      "spell_id": 285,
+      "cost": 15,
+      "priority": 12,
+      "min_level": 16,
       "requires_target": true,
       "in_combat_only": true
     }
   ],
+  "training_reserve": 50,
+  "talents": {
+    "tank": [{"talent_id": 130, "min_level": 10, "max_rank": 4}],
+    "dps": [{"talent_id": 124, "min_level": 10, "max_rank": 2}]
+  },
   "recovery": {
     "rest_below_pct": 0.65,
     "rest_until_pct": 0.85,

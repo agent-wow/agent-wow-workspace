@@ -17,6 +17,7 @@ of this folder and requires a valid `module.yaml` in each one
 | `sense` | implemented, verified | Read-only perception: self, nearby players/units, target |
 | `move` | implemented, verified | Locomotion: forward/back/turn/stop plus position estimate |
 | `combat` | implemented, verified | Melee swing, stop, spells, death and spirit-healer recovery |
+| `character` | implemented, unit tested | Trainer purchases, talent learning/snapshots and game-object use |
 | `party` | implemented, verifying | Accepts `SMSG_GROUP_INVITE` automatically (`party.get_state`, `party.set_auto_accept`) |
 | `loot` | implemented, verifying | Opens corpses, selective/group-safe loot and money (`loot.loot`, `loot.take`, `loot.get_state`) |
 | `inventory` | implemented, unit tested | Bags, equipment, item templates, vendor buy/sell/repair and buyback |

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -51,15 +52,17 @@ type Service struct {
 	selfDead        bool
 	selfGhost       bool
 
-	kills        uint32
-	deaths       uint32
-	lastXP       uint32
-	lastVictim   wow.GUID
-	lastError    string
-	refusals     uint32
-	levelUps     uint32
-	castFailures uint32
-	castCount    uint8
+	kills          uint32
+	deaths         uint32
+	lastXP         uint32
+	lastVictim     wow.GUID
+	lastError      string
+	refusals       uint32
+	levelUps       uint32
+	castFailures   uint32
+	castCount      uint8
+	knownSpells    map[uint32]bool
+	spellbookKnown bool
 
 	corpseDelay    time.Duration
 	corpseReceived time.Time
@@ -82,7 +85,7 @@ type Service struct {
 // New reads the identity agent-wow injects into the container.
 func New(session modv1.SessionClient) *Service {
 	guid, _ := strconv.ParseUint(os.Getenv("AGENT_WOW_CHARACTER_GUID"), 10, 64)
-	return &Service{session: session, selfGUID: wow.GUID(guid)}
+	return &Service{session: session, selfGUID: wow.GUID(guid), knownSpells: make(map[uint32]bool)}
 }
 
 // Start exists so the shared server scaffolding can call it. Combat needs no
@@ -138,15 +141,22 @@ func (s *Service) Cast(ctx context.Context, req *modulev1.CastRequest) (*modulev
 	}
 	s.mu.Lock()
 	target := wow.GUID(req.GetTargetGuid())
-	if target == 0 {
+	if target == 0 && !req.GetPreserveEmptyTarget() {
 		target = s.target
 	}
 	count := s.castCount
 	s.castCount++
 	s.mu.Unlock()
+	payload := wow.EncodeCastSpell(count, req.GetSpellId(), target)
+	if req.GetTargetIsGameObject() {
+		if target == 0 {
+			return nil, status.Error(codes.InvalidArgument, "game-object target must not be zero")
+		}
+		payload = wow.EncodeCastSpellGameObject(count, req.GetSpellId(), target)
+	}
 	if _, err := s.session.SendPacket(ctx, &modv1.SendPacketRequest{
 		Opcode:  opcode.CMSGCastSpell,
-		Payload: wow.EncodeCastSpell(count, req.GetSpellId(), target),
+		Payload: payload,
 	}); err != nil {
 		return nil, err
 	}
@@ -222,6 +232,25 @@ func (s *Service) GetState(context.Context, *emptypb.Empty) (*modulev1.CombatSta
 	return s.state(), nil
 }
 
+func (s *Service) GetSpells(context.Context, *emptypb.Empty) (*modulev1.SpellsResponse, error) {
+	s.mu.RLock()
+	ids := make([]int, 0, len(s.knownSpells))
+	for id := range s.knownSpells {
+		ids = append(ids, int(id))
+	}
+	sort.Ints(ids)
+	out := &modulev1.SpellsResponse{
+		Spells:      make([]*modulev1.Spell, 0, len(ids)),
+		Initialized: s.spellbookKnown,
+	}
+	for _, raw := range ids {
+		id := uint32(raw)
+		out.Spells = append(out.Spells, &modulev1.Spell{SpellId: id, Disabled: s.knownSpells[id]})
+	}
+	s.mu.RUnlock()
+	return out, nil
+}
+
 func (s *Service) Status(context.Context, *emptypb.Empty) (*modulev1.StatusResponse, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -245,10 +274,15 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 	s.mu.Unlock()
 
 	switch packet.GetOpcode() {
-	case opcode.SMSGLoginVerifyWorld, opcode.SMSGNewWorld:
-		// A new world or a fresh login invalidates every GUID and position the
-		// combat target was based on. Keep progression counters, drop the
-		// target and transient death/combat facts until fresh fields arrive.
+	case opcode.SMSGLoginVerifyWorld:
+		s.mu.Lock()
+		s.knownSpells = make(map[uint32]bool)
+		s.spellbookKnown = false
+		s.mu.Unlock()
+		s.resetWorld()
+	case opcode.SMSGNewWorld:
+		// Spell knowledge persists across map transitions; only a fresh login
+		// invalidates the previous spellbook snapshot.
 		s.resetWorld()
 	case opcode.SMSGDeathReleaseLoc:
 		loc, err := wow.ParseDeathReleaseLoc(packet.GetPayload())
@@ -353,6 +387,28 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 		s.levelUps++
 		s.selfLevel = level
 		s.lastError = ""
+		s.mu.Unlock()
+	case opcode.SMSGInitialSpells:
+		spells, err := wow.ParseInitialSpells(packet.GetPayload())
+		if err != nil {
+			s.recordParseError("initial spells", err)
+			return &emptypb.Empty{}, nil
+		}
+		s.mu.Lock()
+		s.knownSpells = make(map[uint32]bool, len(spells))
+		s.spellbookKnown = true
+		for _, spell := range spells {
+			s.knownSpells[spell.ID] = spell.Disabled
+		}
+		s.mu.Unlock()
+	case opcode.SMSGLearnedSpell:
+		spellID, err := wow.ParseLearnedSpell(packet.GetPayload())
+		if err != nil {
+			s.recordParseError("learned spell", err)
+			return &emptypb.Empty{}, nil
+		}
+		s.mu.Lock()
+		s.knownSpells[spellID] = false
 		s.mu.Unlock()
 	case opcode.SMSGCastFailed:
 		failure, err := wow.ParseCastFailed(packet.GetPayload())

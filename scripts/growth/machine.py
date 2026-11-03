@@ -96,6 +96,8 @@ class SoloGrowthMachine:
         epoch_hint: int | str = 0,
         metrics: MetricsWindow | None = None,
         cooperation=None,
+        character_growth=None,
+        role: str = "dps",
     ):
         if int(profile.route.map_id) != int(route.map_id):
             raise ValueError(
@@ -112,6 +114,8 @@ class SoloGrowthMachine:
         stored = store.load_metrics() if store is not None else None
         self.metrics = metrics or MetricsWindow.from_dict(stored)
         self.cooperation = cooperation
+        self.character_growth = character_growth
+        self.role = role
         self.inventory = InventoryRuntime(
             InventoryPolicy(profile.inventory), adapter, store,
             clock=clock, logger=self.log)
@@ -266,6 +270,11 @@ class SoloGrowthMachine:
             if inventory is not None:
                 return self._result(
                     GrowthState.TOWN, inventory.action, inventory.detail)
+            if self.character_growth is not None:
+                character = self.character_growth.step(now, view, self.role)
+                if character is not None:
+                    return self._result(
+                        GrowthState.TOWN, character.action, character.detail)
 
         if self.target_guid is not None:
             return self._continue_combat(now, view)
@@ -503,7 +512,12 @@ class SoloGrowthMachine:
         fraction = (view.health / view.max_health
                     if view.max_health > 0 else 1.0)
         available = view.power(self.profile.resource)
+        known_spells = view.combat.get("known_spells")
         for skill in self.profile.skill_order(view.level):
+            if (known_spells is not None
+                    and (skill.spell_id not in known_spells
+                         or known_spells[skill.spell_id])):
+                continue
             if skill.requires_target and self.target_guid is None:
                 continue
             if not skill.requires_target and view.guid is None:

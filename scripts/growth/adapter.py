@@ -53,6 +53,44 @@ class RPCCallTransport:
 
 
 @dataclass(frozen=True)
+class SkillLine:
+    id: int
+    name: str = ""
+    category: int = 0
+    value: int = 0
+    max: int = 0
+    step: int = 0
+    profession: bool = False
+
+
+@dataclass(frozen=True)
+class TrainerSpell:
+    spell_id: int
+    usable: int
+    money_cost: int
+    profession_point_cost: int
+    required_level: int
+    required_skill_line: int
+    required_skill_rank: int
+    required_abilities: tuple[int, ...] = ()
+
+
+@dataclass(frozen=True)
+class CharacterState:
+    trainer_guid: int = 0
+    trainer_open: bool = False
+    trainer_spells: tuple[TrainerSpell, ...] = ()
+    last_buy_spell_id: int = 0
+    last_buy_succeeded: bool = False
+    last_buy_result: int = 0
+    last_buy_result_known: bool = False
+    has_talents: bool = False
+    free_talent_points: int = 0
+    active_talent_group: int = 0
+    talents: dict[int, int] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class WorldView:
     """One consistent-enough read of the character's live facts."""
 
@@ -168,6 +206,39 @@ class WorldAdapter:
     def get_combat(self) -> dict:
         return normalize_combat(self._call("combat.get_state"))
 
+    def get_game_objects(self, *, radius: float = 0.0, limit: int = 200) -> list[dict]:
+        raw = self._call("sense.get_nearby", {
+            "radius": float(radius), "limit": int(limit),
+            "includeGameObjects": True,
+        })
+        rows = raw.get("game_objects", raw.get("gameObjects")) or []
+        if not isinstance(rows, list):
+            raise AdapterError("sense.get_nearby returned non-list game objects")
+        return [dict(row) for row in rows if isinstance(row, dict)]
+
+    def get_skills(self) -> tuple[SkillLine, ...]:
+        raw = self._call("sense.get_skills")
+        rows = raw.get("skills") or []
+        if not isinstance(rows, list):
+            raise AdapterError("sense.get_skills returned a non-list skills field")
+        return tuple(sorted((normalize_skill(row) for row in rows
+                             if isinstance(row, dict)), key=lambda row: row.id))
+
+    def get_spells(self) -> dict[int, bool]:
+        raw = self._call("combat.get_spells")
+        if not _as_bool(_pick(raw, "initialized"), False):
+            raise AdapterError("combat.get_spells snapshot is not initialized")
+        rows = raw.get("spells") or []
+        if not isinstance(rows, list):
+            raise AdapterError("combat.get_spells returned a non-list spells field")
+        return {_as_int(_pick(row, "spell_id", "spellId")):
+                _as_bool(_pick(row, "disabled"), False)
+                for row in rows if isinstance(row, dict)
+                and _opt_int(_pick(row, "spell_id", "spellId")) is not None}
+
+    def get_character_state(self) -> CharacterState:
+        return normalize_character_state(self._call("character.get_state"))
+
     def get_target(self) -> dict | None:
         try:
             raw = self._call("sense.get_target", timeout=5.0)
@@ -198,6 +269,13 @@ class WorldAdapter:
         position = self.get_position()
         nearby = self.get_nearby()
         combat = self.get_combat()
+        try:
+            combat["known_spells"] = self.get_spells()
+        except AdapterError:
+            # Older combat modules have no spellbook RPC, and a fresh login has
+            # no initialized snapshot yet. Profiles remain the fallback in both
+            # cases; an empty map is never invented as a known spellbook.
+            pass
         target = self.get_target()
 
         self_state = dict(snapshot)
@@ -235,11 +313,36 @@ class WorldAdapter:
     def stop_attack(self) -> dict:
         return normalize_combat(self._call("combat.stop_attack", {}, timeout=15.0))
 
-    def cast(self, spell_id: int, target_guid: int) -> dict:
+    def cast(self, spell_id: int, target_guid: int, *,
+             preserve_empty_target: bool = False,
+             target_is_game_object: bool = False) -> dict:
         return normalize_combat(self._call(
             "combat.cast",
-            {"spell_id": int(spell_id), "targetGuid": str(int(target_guid))},
+            {"spell_id": int(spell_id), "targetGuid": str(int(target_guid)),
+             "preserveEmptyTarget": bool(preserve_empty_target),
+             "targetIsGameObject": bool(target_is_game_object)},
             timeout=15.0))
+
+    def open_trainer(self, trainer_guid: int) -> CharacterState:
+        return normalize_character_state(self._call(
+            "character.open_trainer", {"trainerGuid": str(int(trainer_guid))},
+            timeout=15.0))
+
+    def buy_spell(self, trainer_guid: int, spell_id: int) -> CharacterState:
+        return normalize_character_state(self._call(
+            "character.buy_spell", {
+                "trainerGuid": str(int(trainer_guid)), "spellId": int(spell_id),
+            }, timeout=15.0))
+
+    def learn_talent(self, talent_id: int, requested_rank: int) -> CharacterState:
+        return normalize_character_state(self._call(
+            "character.learn_talent", {
+                "talentId": int(talent_id), "requestedRank": int(requested_rank),
+            }, timeout=15.0))
+
+    def use_game_object(self, guid: int) -> CharacterState:
+        return normalize_character_state(self._call(
+            "character.use_game_object", {"guid": str(int(guid))}, timeout=15.0))
 
     def move_to(self, x: float, y: float, z: float) -> dict:
         raw = self._call(
@@ -533,6 +636,65 @@ def normalize_self(snapshot: dict) -> dict:
                     _pick(raw_skill, "value", "rank", "current"), 0)
     normalized["skills"] = skills
     return normalized
+
+
+def normalize_skill(raw: dict) -> SkillLine:
+    return SkillLine(
+        id=_as_int(_pick(raw, "id", "skill_id", "skillId")),
+        name=str(_pick(raw, "name") or ""),
+        category=_as_int(_pick(raw, "category")),
+        value=_as_int(_pick(raw, "value", "rank", "current")),
+        max=_as_int(_pick(raw, "max", "maximum")),
+        step=_as_int(_pick(raw, "step")),
+        profession=_as_bool(_pick(raw, "profession"), False),
+    )
+
+
+def normalize_character_state(raw: dict) -> CharacterState:
+    trainer_rows = raw.get("trainer_spells", raw.get("trainerSpells")) or []
+    trainers = tuple(TrainerSpell(
+        spell_id=_as_int(_pick(row, "spell_id", "spellId")),
+        usable=_as_int(_pick(row, "usable")),
+        money_cost=_as_int(_pick(row, "money_cost", "moneyCost")),
+        profession_point_cost=_as_int(
+            _pick(row, "profession_point_cost", "professionPointCost")),
+        required_level=_as_int(_pick(row, "required_level", "requiredLevel")),
+        required_skill_line=_as_int(
+            _pick(row, "required_skill_line", "requiredSkillLine")),
+        required_skill_rank=_as_int(
+            _pick(row, "required_skill_rank", "requiredSkillRank")),
+        required_abilities=tuple(_as_int(value) for value in
+                                 (_pick(row, "required_abilities", "requiredAbilities") or [])),
+    ) for row in trainer_rows if isinstance(row, dict))
+    talents: dict[int, int] = {}
+    groups = raw.get("talent_groups", raw.get("talentGroups")) or []
+    active = _as_int(_pick(raw, "active_talent_group", "activeTalentGroup"))
+    for group in groups:
+        if not isinstance(group, dict):
+            continue
+        if not _as_bool(_pick(group, "active"), False) and _as_int(
+                _pick(group, "index")) != active:
+            continue
+        for row in _pick(group, "talents") or []:
+            if isinstance(row, dict):
+                talents[_as_int(_pick(row, "talent_id", "talentId"))] = _as_int(
+                    _pick(row, "rank"))
+    return CharacterState(
+        trainer_guid=_as_int(_pick(raw, "trainer_guid", "trainerGuid")),
+        trainer_open=_as_bool(_pick(raw, "trainer_open", "trainerOpen"), False),
+        trainer_spells=trainers,
+        last_buy_spell_id=_as_int(_pick(raw, "last_buy_spell_id", "lastBuySpellId")),
+        last_buy_succeeded=_as_bool(
+            _pick(raw, "last_buy_succeeded", "lastBuySucceeded"), False),
+        last_buy_result=_as_int(_pick(raw, "last_buy_result", "lastBuyResult")),
+        last_buy_result_known=_as_bool(
+            _pick(raw, "last_buy_result_known", "lastBuyResultKnown"), False),
+        has_talents=_as_bool(_pick(raw, "has_talents", "hasTalents"), False),
+        free_talent_points=_as_int(
+            _pick(raw, "free_talent_points", "freeTalentPoints")),
+        active_talent_group=active,
+        talents=talents,
+    )
 
 
 def normalize_item(raw: dict) -> Item:

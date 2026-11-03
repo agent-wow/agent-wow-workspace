@@ -28,6 +28,7 @@ const (
 	Module_ReclaimCorpse_FullMethodName           = "/combat.module.v1.Module/ReclaimCorpse"
 	Module_ResurrectAtSpiritHealer_FullMethodName = "/combat.module.v1.Module/ResurrectAtSpiritHealer"
 	Module_GetState_FullMethodName                = "/combat.module.v1.Module/GetState"
+	Module_GetSpells_FullMethodName               = "/combat.module.v1.Module/GetSpells"
 	Module_Status_FullMethodName                  = "/combat.module.v1.Module/Status"
 	Module_OnPacket_FullMethodName                = "/combat.module.v1.Module/OnPacket"
 )
@@ -47,6 +48,7 @@ type ModuleClient interface {
 	// costs durability but always works, even after the corpse has decayed.
 	ResurrectAtSpiritHealer(ctx context.Context, in *SpiritHealerRequest, opts ...grpc.CallOption) (*CombatState, error)
 	GetState(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CombatState, error)
+	GetSpells(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SpellsResponse, error)
 	Status(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StatusResponse, error)
 	OnPacket(ctx context.Context, in *v1.WorldPacket, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -129,6 +131,16 @@ func (c *moduleClient) GetState(ctx context.Context, in *emptypb.Empty, opts ...
 	return out, nil
 }
 
+func (c *moduleClient) GetSpells(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SpellsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SpellsResponse)
+	err := c.cc.Invoke(ctx, Module_GetSpells_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *moduleClient) Status(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StatusResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(StatusResponse)
@@ -164,6 +176,7 @@ type ModuleServer interface {
 	// costs durability but always works, even after the corpse has decayed.
 	ResurrectAtSpiritHealer(context.Context, *SpiritHealerRequest) (*CombatState, error)
 	GetState(context.Context, *emptypb.Empty) (*CombatState, error)
+	GetSpells(context.Context, *emptypb.Empty) (*SpellsResponse, error)
 	Status(context.Context, *emptypb.Empty) (*StatusResponse, error)
 	OnPacket(context.Context, *v1.WorldPacket) (*emptypb.Empty, error)
 	mustEmbedUnimplementedModuleServer()
@@ -196,6 +209,9 @@ func (UnimplementedModuleServer) ResurrectAtSpiritHealer(context.Context, *Spiri
 }
 func (UnimplementedModuleServer) GetState(context.Context, *emptypb.Empty) (*CombatState, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetState not implemented")
+}
+func (UnimplementedModuleServer) GetSpells(context.Context, *emptypb.Empty) (*SpellsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSpells not implemented")
 }
 func (UnimplementedModuleServer) Status(context.Context, *emptypb.Empty) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Status not implemented")
@@ -350,6 +366,24 @@ func _Module_GetState_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Module_GetSpells_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).GetSpells(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_GetSpells_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).GetSpells(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Module_Status_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -420,6 +454,10 @@ var Module_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetState",
 			Handler:    _Module_GetState_Handler,
+		},
+		{
+			MethodName: "GetSpells",
+			Handler:    _Module_GetSpells_Handler,
 		},
 		{
 			MethodName: "Status",

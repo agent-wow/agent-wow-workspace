@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "class": "rogue",
   "source": "WotLK 3.3.5a rogue energy baseline; the initial loop uses only the combo builder until combo-point conditions are implemented",
   "roles": ["dps"],
@@ -14,8 +14,30 @@
       "min_level": 1,
       "requires_target": true,
       "in_combat_only": true
+    },
+    {
+      "name": "Sinister Strike",
+      "spell_id": 1757,
+      "cost": 45,
+      "priority": 11,
+      "min_level": 6,
+      "requires_target": true,
+      "in_combat_only": true
+    },
+    {
+      "name": "Sinister Strike",
+      "spell_id": 1758,
+      "cost": 45,
+      "priority": 12,
+      "min_level": 14,
+      "requires_target": true,
+      "in_combat_only": true
     }
   ],
+  "training_reserve": 50,
+  "talents": {
+    "dps": [{"talent_id": 203, "min_level": 10, "max_rank": 2}]
+  },
   "recovery": {
     "rest_below_pct": 0.65,
     "rest_until_pct": 0.85,

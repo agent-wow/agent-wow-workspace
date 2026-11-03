@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -96,6 +96,15 @@ class RouteSelection:
 
 
 @dataclass(frozen=True)
+class TalentChoice:
+    talent_id: int
+    min_level: int
+    required_talent_id: int = 0
+    required_rank: int = 0
+    max_rank: int = 4
+
+
+@dataclass(frozen=True)
 class ClassProfile:
     version: int
     class_name: str
@@ -108,6 +117,8 @@ class ClassProfile:
     combat: CombatRules
     route: RouteSelection
     inventory: InventoryRules
+    training_reserve: int = 0
+    talents: dict[str, tuple[TalentChoice, ...]] = field(default_factory=dict)
 
     @property
     def class_mask(self) -> int:
@@ -177,11 +188,14 @@ def parse_profile(data: dict, *, expected_class: str | None = None) -> ClassProf
     combat = _parse_combat(data.get("combat"))
     route = _parse_route(data.get("route"))
     inventory = _parse_inventory(data.get("inventory"), class_name)
+    training_reserve = _optional_int(data, "training_reserve", 0, minimum=0)
+    talents = _parse_talents(data.get("talents", {}), roles)
 
     return ClassProfile(
         version=version, class_name=class_name, source=source, roles=roles,
         resource=resource, resource_scale=scale, skills=skills,
-        recovery=recovery, combat=combat, route=route, inventory=inventory)
+        recovery=recovery, combat=combat, route=route, inventory=inventory,
+        training_reserve=training_reserve, talents=talents)
 
 
 def _parse_skill(raw: dict, index: int) -> Skill:
@@ -201,6 +215,32 @@ def _parse_skill(raw: dict, index: int) -> Skill:
         min_level=min_level, requires_target=requires_target,
         in_combat_only=in_combat_only,
         when_health_below_pct=below, when_health_above_pct=above)
+
+
+def _parse_talents(raw, roles) -> dict[str, tuple[TalentChoice, ...]]:
+    if not isinstance(raw, dict):
+        raise ProfileError("profile.talents must be a mapping by role")
+    unknown = set(raw) - set(roles)
+    if unknown:
+        raise ProfileError(f"profile.talents contains unsupported roles: {sorted(unknown)}")
+    result = {}
+    for role, entries in raw.items():
+        if not isinstance(entries, list):
+            raise ProfileError(f"profile.talents.{role} must be a list")
+        parsed = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                raise ProfileError(f"profile.talents.{role} entries must be mappings")
+            parsed.append(TalentChoice(
+                talent_id=_required_int(entry, "talent_id", minimum=1),
+                min_level=_required_int(entry, "min_level", minimum=10),
+                required_talent_id=_optional_int(
+                    entry, "required_talent_id", 0, minimum=0),
+                required_rank=_optional_int(entry, "required_rank", -1, minimum=-1),
+                max_rank=_optional_int(entry, "max_rank", 4, minimum=0),
+            ))
+        result[role] = tuple(parsed)
+    return result
 
 
 def _parse_recovery(raw) -> RecoveryRules:

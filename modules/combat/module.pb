@@ -31,14 +31,16 @@ EmptyProtoPZ.google.golang.org/protobuf/types/known/emptypbø¢GPBªGoogle.P
 SendPacket%.agentwow.module.v1.SendPacketRequest.google.protobuf.EmptyE
 GetClock.google.protobuf.Empty!.agentwow.module.v1.ClockResponsea
 InvokeModule'.agentwow.module.v1.InvokeModuleRequest(.agentwow.module.v1.InvokeModuleResponseB5Z3github.com/agent-wow/agent-wow/pkg/modules/v1;modv1bproto3
-±
+…
 module.protocombat.module.v1api/module/v1/session.protogoogle/protobuf/empty.proto"#
 AttackRequest
-guid (Rguid"I
+guid (Rguid"°
 CastRequest
 spell_id (RspellId
 target_guid (R
-targetGuid"3
+targetGuid2
+preserve_empty_target (RpreserveEmptyTarget1
+target_is_game_object (RtargetIsGameObject"3
 Vector3
 x (Rx
 y (Ry
@@ -91,7 +93,13 @@ self_ghost (R	selfGhost5
 healer_guid (R
 healerGuid
 packed_guid (R
-packedGuid"¢
+packedGuid">
+Spell
+spell_id (RspellId
+disabled (Rdisabled"c
+SpellsResponse/
+spells (2.combat.module.v1.SpellRspells 
+initialized (Rinitialized"¢
 StatusResponse
 packets (Rpackets!
 parse_errors (RparseErrors#
@@ -104,7 +112,7 @@ last_error (	R	lastError'
 corpse_reclaim_delays (RcorpseReclaimDelays6
 death_release_locations	 (RdeathReleaseLocations!
 world_resets
- (RworldResets2š
+ (RworldResets2á
 ModuleH
 Attack.combat.module.v1.AttackRequest.combat.module.v1.CombatStateC
 
@@ -113,6 +121,7 @@ StopAttack.google.protobuf.Empty.combat.module.v1.CombatStateD
 ReleaseSpirit.google.protobuf.Empty.combat.module.v1.CombatStateF
 ReclaimCorpse.google.protobuf.Empty.combat.module.v1.CombatState_
 ResurrectAtSpiritHealer%.combat.module.v1.SpiritHealerRequest.combat.module.v1.CombatStateA
-GetState.google.protobuf.Empty.combat.module.v1.CombatStateB
+GetState.google.protobuf.Empty.combat.module.v1.CombatStateE
+	GetSpells.google.protobuf.Empty .combat.module.v1.SpellsResponseB
 Status.google.protobuf.Empty .combat.module.v1.StatusResponseC
 OnPacket.agentwow.module.v1.WorldPacket.google.protobuf.EmptyB<Z:github.com/doumoman/agent-wow-mods/combat/src/api;modulev1bproto3

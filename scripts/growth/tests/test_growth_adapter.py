@@ -164,6 +164,59 @@ class AdapterNormalizationTests(unittest.TestCase):
         }))
         self.assertEqual(adapter.get_self()["skills"], {"44": 5})
 
+    def test_character_progression_protojson_is_normalized(self):
+        adapter = WorldAdapter(FakeTransport({
+            "sense.get_skills": {"skills": [
+                {"id": 171, "name": "Alchemy", "value": 1, "max": 75,
+                 "profession": True},
+            ]},
+            "combat.get_spells": {"initialized": True, "spells": [
+                {"spellId": 78, "disabled": False},
+                {"spellId": 6343, "disabled": True},
+            ]},
+            "character.get_state": {
+                "trainerGuid": "9", "trainerOpen": True,
+                "trainerSpells": [{
+                    "spellId": 78, "usable": 0, "moneyCost": 10,
+                    "requiredLevel": 1, "requiredAbilities": [0, 0, 0],
+                }],
+                "lastBuySpellId": 999, "lastBuyResult": 0,
+                "lastBuyResultKnown": True, "lastBuySucceeded": False,
+                "hasTalents": True, "freeTalentPoints": 1,
+                "activeTalentGroup": 0,
+                "talentGroups": [{
+                    "index": 0, "active": True,
+                    "talents": [{"talentId": 130, "rank": 0}],
+                }],
+            },
+            "sense.get_nearby": {"gameObjects": [
+                {"guid": "55", "entry": 1617},
+            ]},
+        }))
+        self.assertEqual(adapter.get_skills()[0].id, 171)
+        self.assertTrue(adapter.get_skills()[0].profession)
+        self.assertEqual(adapter.get_spells(), {78: False, 6343: True})
+        state = adapter.get_character_state()
+        self.assertEqual(state.trainer_guid, 9)
+        self.assertEqual(state.trainer_spells[0].money_cost, 10)
+        self.assertEqual(state.talents, {130: 0})
+        self.assertTrue(state.last_buy_result_known)
+        self.assertFalse(state.last_buy_succeeded)
+        self.assertEqual(adapter.get_game_objects()[0]["guid"], "55")
+
+    def test_empty_spellbook_is_unknown_until_initial_spells_arrive(self):
+        adapter = WorldAdapter(FakeTransport({
+            "sense.get_self": {
+                "ready": True, "unit": {"guid": 1, "hasPosition": True},
+            },
+            "move.get_position": {"position": {"x": 0, "y": 0, "z": 0}},
+            "sense.get_nearby": {"units": []},
+            "combat.get_state": {},
+            "combat.get_spells": {"initialized": False, "spells": []},
+        }))
+        view = adapter.read_view()
+        self.assertNotIn("known_spells", view.combat)
+
     def test_transport_failure_becomes_adapter_error(self):
         adapter = WorldAdapter(FakeTransport({
             "sense.get_self": AdapterError("worldrpc down"),

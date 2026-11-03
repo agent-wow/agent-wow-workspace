@@ -59,7 +59,7 @@ class LowResourceTests(unittest.TestCase):
         machine = SoloGrowthMachine(PRIEST, ROUTE, adapter=adapter)
         result = machine.step(now=0)
         self.assertEqual(result.state, GrowthState.COMBAT)
-        self.assertEqual(adapter.named("cast"), [(2050, 1)])
+        self.assertEqual(adapter.named("cast"), [(2052, 1)])
 
     def test_mana_healer_with_mana_casts_damage_not_a_pointless_heal(self):
         adapter, _ = self.run_step(PRIEST, {"mana": 100})
@@ -72,6 +72,21 @@ class LowResourceTests(unittest.TestCase):
     def test_rogue_with_energy_casts_sinister_strike(self):
         adapter, _ = self.run_step(ROGUE, {"energy": 100})
         self.assertEqual(adapter.named("cast"), [(1752, 9)])
+    def test_server_spellbook_filters_unknown_and_disabled_skills(self):
+        for known_spells in ({6343: False}, {78: True}):
+            with self.subTest(known_spells=known_spells):
+                adapter = FakeAdapter(make_view(
+                    units=[unit(9)], powers={"rage": 200}, in_combat=True,
+                    combat_extra={"known_spells": known_spells}))
+                SoloGrowthMachine(WARRIOR, ROUTE, adapter=adapter).step(now=0)
+                self.assertEqual(adapter.named("cast"), [])
+
+    def test_initialized_spellbook_allows_an_enabled_skill(self):
+        adapter = FakeAdapter(make_view(
+            units=[unit(9)], powers={"rage": 200}, in_combat=True,
+            combat_extra={"known_spells": {78: False}}))
+        SoloGrowthMachine(WARRIOR, ROUTE, adapter=adapter).step(now=0)
+        self.assertEqual(adapter.named("cast"), [(78, 9)])
 
 
 class StuckRecoveryTests(unittest.TestCase):

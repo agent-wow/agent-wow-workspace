@@ -36,14 +36,22 @@ func EncodeReclaimCorpse(guid GUID) []byte {
 // EncodeCastSpell builds CMSG_CAST_SPELL for a unit target. A zero target
 // emits an empty target mask, which the server resolves against the caster.
 func EncodeCastSpell(castCount uint8, spellID uint32, target GUID) []byte {
+	return encodeCastSpell(castCount, spellID, target, 0x0002)
+}
+
+// EncodeCastSpellGameObject builds a cast with an explicit game-object target.
+func EncodeCastSpellGameObject(castCount uint8, spellID uint32, target GUID) []byte {
+	return encodeCastSpell(castCount, spellID, target, 0x0800)
+}
+
+func encodeCastSpell(castCount uint8, spellID uint32, target GUID, targetFlag uint32) []byte {
 	out := []byte{castCount}
 	out = binary.LittleEndian.AppendUint32(out, spellID)
 	out = append(out, 0) // cast flags
 	if target == 0 {
 		return binary.LittleEndian.AppendUint32(out, 0)
 	}
-	const targetFlagUnit uint32 = 0x0002
-	out = binary.LittleEndian.AppendUint32(out, targetFlagUnit)
+	out = binary.LittleEndian.AppendUint32(out, targetFlag)
 	return packedGUID(out, target)
 }
 

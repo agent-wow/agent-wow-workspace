@@ -30,8 +30,8 @@ class ClassProfileContentTests(unittest.TestCase):
         self.assertFalse(priest.combat.auto_attack)
         self.assertTrue(rogue.combat.auto_attack)
         self.assertEqual(
-            [skill.name for skill in rogue.skills], ["Sinister Strike"],
-            "combo finishers stay out of the initial loop until combo facts gate them")
+            [skill.spell_id for skill in rogue.skills], [1752, 1757, 1758],
+            "only combo-builder ranks enter the loop until combo facts gate finishers")
         # Role/benefit-driven heal: only when the character is hurt.
         heal = next(s for s in priest.skills if s.name == "Lesser Heal")
         self.assertIsNotNone(heal.when_health_below_pct)

@@ -10,7 +10,8 @@ facts and actions only; it contains no combat strategy.
 |---|---|---|---|
 | `combat.attack` | `guid` | `CombatState` | Selects the GUID, sends `CMSG_ATTACKSWING` |
 | `combat.stop_attack` | — | `CombatState` | Sends `CMSG_ATTACKSTOP` |
-| `combat.cast` | `spell_id`, optional `target_guid` | `CombatState` | Sends `CMSG_CAST_SPELL`; zero target means the tracked target |
+| `combat.cast` | `spell_id`, optional `target_guid`, `preserve_empty_target`, `target_is_game_object` | `CombatState` | Sends `CMSG_CAST_SPELL`; zero target means the tracked target unless empty-target preservation is requested. Gathering uses an explicit game-object target mask |
+| `combat.get_spells` | — | `SpellsResponse` | Current spellbook; `initialized` is false until the login's initial-spells packet |
 | `combat.release_spirit` | — | `CombatState` | Sends `CMSG_REPOP_REQUEST` |
 | `combat.reclaim_corpse` | — | `CombatState` | Sends `CMSG_RECLAIM_CORPSE` with the character GUID |
 | `combat.resurrect_at_spirit_healer` | `healer_guid`, `packed_guid` | `CombatState` | Opens gossip, waits 400 ms, sends `CMSG_SPIRIT_HEALER_ACTIVATE` |
@@ -52,7 +53,8 @@ counts these resets.
 `SMSG_LOGIN_VERIFY_WORLD`, `SMSG_NEW_WORLD`, `SMSG_ATTACKSTART`,
 `SMSG_ATTACKSTOP`, `SMSG_ATTACKSWING_NOTINRANGE`, `SMSG_ATTACKSWING_BADFACING`,
 `SMSG_ATTACKSWING_DEADTARGET`, `SMSG_ATTACKSWING_CANT_ATTACK`,
-`SMSG_LOG_XPGAIN`, `SMSG_LEVELUP_INFO`, `SMSG_CAST_FAILED`, `SMSG_GOSSIP_MESSAGE`,
+`SMSG_LOG_XPGAIN`, `SMSG_LEVELUP_INFO`, `SMSG_CAST_FAILED`,
+`SMSG_INITIAL_SPELLS`, `SMSG_LEARNED_SPELL`, `SMSG_GOSSIP_MESSAGE`,
 `SMSG_SPIRIT_HEALER_CONFIRM`, `SMSG_CORPSE_RECLAIM_DELAY`,
 `SMSG_DEATH_RELEASE_LOC`, `SMSG_UPDATE_OBJECT`,
 `SMSG_COMPRESSED_UPDATE_OBJECT`, `SMSG_DESTROY_OBJECT`.
@@ -72,5 +74,6 @@ counts these resets.
 
 Unit tests only (`go test ./...` in this module): class power slots, ghost and
 death transitions, corpse reclaim remaining time, death-release location,
-target fields, and world-reset behavior. No live-server verification is
-claimed for this revision.
+target fields, world-reset behavior, spellbook initialization/map transitions,
+empty trade-skill targets and game-object cast targets. No live-server
+verification is claimed for this revision.
