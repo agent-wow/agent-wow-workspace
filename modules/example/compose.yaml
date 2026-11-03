@@ -1,0 +1,5 @@
+services:
+  module:
+    build:
+      context: ../..
+      dockerfile: modules/example/Dockerfile

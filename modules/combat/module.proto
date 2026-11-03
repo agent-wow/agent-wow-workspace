@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package combat.module.v1;
+option go_package = "github.com/doumoman/agent-wow-mods/combat/src/api;modulev1";
+
+import "api/module/v1/session.proto";
+import "google/protobuf/empty.proto";
+
+message AttackRequest {
+  // Required. The module also selects this GUID before starting the swing.
+  uint64 guid = 1;
+}
+
+message CastRequest {
+  uint32 spell_id = 1;
+  // Zero means the current combat target; a zero target mask is not sent.
+  uint64 target_guid = 2;
+}
+
+message CombatState {
+  bool has_target = 1;
+  uint64 target_guid = 2;
+  bool attacking = 3;
+  bool in_combat = 4;
+  uint32 target_health = 5;
+  uint32 target_max_health = 6;
+  bool target_dead = 7;
+
+  uint32 self_health = 8;
+  uint32 self_max_health = 9;
+  bool self_dead = 10;
+  uint32 self_level = 11;
+  uint32 self_xp = 12;
+  uint32 self_next_level_xp = 13;
+
+  uint32 kills = 14;
+  uint32 deaths = 15;
+  uint32 last_xp = 16;
+  uint64 last_victim = 17;
+  string last_error = 18;
+  uint32 refusals = 19;
+  uint32 level_ups = 20;
+  uint32 cast_failures = 21;
+  // Warrior rage, UNIT_FIELD_POWER1.
+  uint32 self_rage = 22;
+}
+
+message SpiritHealerRequest {
+  uint64 healer_guid = 1;
+  // packed_guid sends the GUID in packed form; some servers expect it.
+  bool packed_guid = 2;
+}
+
+message StatusResponse {
+  uint32 packets = 1;
+  uint32 parse_errors = 2;
+  uint32 attack_starts = 3;
+  uint32 attack_stops = 4;
+  string last_error = 5;
+  uint32 gossip_messages = 6;
+  uint32 spirit_healer_confirms = 7;
+  uint32 corpse_reclaim_delays = 8;
+}
+
+service Module {
+  rpc Attack(AttackRequest) returns (CombatState);
+  rpc StopAttack(google.protobuf.Empty) returns (CombatState);
+  rpc Cast(CastRequest) returns (CombatState);
+  // ReleaseSpirit sends CMSG_REPOP_REQUEST, turning the corpse into a ghost.
+  rpc ReleaseSpirit(google.protobuf.Empty) returns (CombatState);
+  // ReclaimCorpse sends CMSG_RECLAIM_CORPSE with the character's own GUID.
+  rpc ReclaimCorpse(google.protobuf.Empty) returns (CombatState);
+  // ResurrectAtSpiritHealer opens gossip with the healer and activates it. It
+  // costs durability but always works, even after the corpse has decayed.
+  rpc ResurrectAtSpiritHealer(SpiritHealerRequest) returns (CombatState);
+  rpc GetState(google.protobuf.Empty) returns (CombatState);
+  rpc Status(google.protobuf.Empty) returns (StatusResponse);
+  rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);
+}

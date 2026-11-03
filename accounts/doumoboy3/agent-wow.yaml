@@ -1,0 +1,13 @@
+config_dir: ./accounts/doumoboy3/config
+data_dir: ./accounts/doumoboy3/data
+module_dir: ./modules
+
+authserver:
+  host: login.ymwow.com
+  port: 3720
+
+worldrpc:
+  host: localhost
+  port: 8091
+
+log_level: info

@@ -1,0 +1,139 @@
+syntax = "proto3";
+
+package sense.module.v1;
+option go_package = "github.com/doumoman/agent-wow-mods/sense/src/api;modulev1";
+
+import "api/module/v1/session.proto";
+import "google/protobuf/empty.proto";
+
+message Vector3 {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message Unit {
+  uint64 guid = 1;
+  string name = 2;
+  // ObjectType from the create block: 3 unit, 4 player.
+  uint32 type = 3;
+  Vector3 position = 4;
+  float orientation = 5;
+  bool has_position = 6;
+  uint32 health = 7;
+  uint32 max_health = 8;
+  uint32 level = 9;
+  uint32 class_id = 10;
+  uint32 race_id = 11;
+  uint64 target_guid = 12;
+  bool is_self = 13;
+  uint32 entry = 14;
+  // Player progression; only self carries these.
+  uint32 xp = 15;
+  uint32 next_level_xp = 16;
+  // UNIT_FIELD_FLAGS (bit 0x80000 is in combat) and PLAYER_FLAGS (bit 0x10 is ghost).
+  uint32 flags = 17;
+  uint32 player_flags = 18;
+  bool dead = 19;
+  uint32 faction = 20;
+  bool in_combat = 21;
+  // Copper carried by the character (PLAYER_FIELD_COIN1).
+  uint64 money = 22;
+}
+
+// Skill is one skill line of the character, decoded from the player's own
+// skill block. The name comes from the client data skill line table.
+message Skill {
+  uint32 id = 1;
+  string name = 2;
+  // Skill line category; 11 is the profession category.
+  uint32 category = 3;
+  uint32 value = 4;
+  uint32 max = 5;
+  // Skill step the rank has reached.
+  uint32 step = 6;
+  bool profession = 7;
+}
+
+message SelfResponse {
+  Unit unit = 1;
+  uint32 map_id = 2;
+  bool in_world = 3;
+  // Skill lines of the character, professions included.
+  repeated Skill skills = 4;
+}
+
+message SkillsResponse {
+  repeated Skill skills = 1;
+}
+
+message NearbyRequest {
+  // Zero means no distance filter.
+  float radius = 1;
+  // Zero means the default of 32 units, capped at 200.
+  uint32 limit = 2;
+}
+
+message NearbyResponse {
+  repeated Unit units = 1;
+  uint32 known_units = 2;
+}
+
+message TargetResponse {
+  bool has_target = 1;
+  uint64 target_guid = 2;
+  Unit unit = 3;
+}
+
+message SelectTargetRequest {
+  uint64 guid = 1;
+}
+
+message QueryNameRequest {
+  uint64 guid = 1;
+}
+
+message StatusResponse {
+  uint32 packets = 1;
+  uint32 parse_errors = 2;
+  uint32 known_units = 3;
+  uint32 name_queries = 4;
+  uint32 creature_queries = 5;
+}
+
+// MonsterMoveSamples returns recent SMSG_MONSTER_MOVE payloads as hex so the
+// wire layout can be verified against the live server.
+message MonsterMoveSamples {
+  repeated string payloads = 1;
+}
+
+// FieldSlot is one raw update-field slot captured for the character.
+message FieldSlot {
+  uint32 index = 1;
+  uint32 value = 2;
+}
+
+// FieldDump lists the raw update-field slots seen for the character, so a new
+// field offset can be identified against the live server before it is named.
+message FieldDump {
+  repeated FieldSlot slots = 1;
+}
+
+service Module {
+  rpc GetSelf(google.protobuf.Empty) returns (SelfResponse);
+  // GetSkills returns the character's skill lines without the rest of the
+  // character snapshot.
+  rpc GetSkills(google.protobuf.Empty) returns (SkillsResponse);
+  rpc GetNearby(NearbyRequest) returns (NearbyResponse);
+  rpc GetTarget(google.protobuf.Empty) returns (TargetResponse);
+  // SelectTarget sends CMSG_SET_SELECTION and remembers the choice because the
+  // server never echoes the client's own selection.
+  rpc SelectTarget(SelectTargetRequest) returns (google.protobuf.Empty);
+  rpc ClearTarget(google.protobuf.Empty) returns (google.protobuf.Empty);
+  // QueryName asks the server for a player/pet name; the answer is async.
+  rpc QueryName(QueryNameRequest) returns (google.protobuf.Empty);
+  rpc Status(google.protobuf.Empty) returns (StatusResponse);
+  rpc DebugMonsterMoves(google.protobuf.Empty) returns (MonsterMoveSamples);
+  rpc DebugFields(google.protobuf.Empty) returns (FieldDump);
+  rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);
+}

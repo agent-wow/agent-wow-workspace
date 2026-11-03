@@ -1,0 +1,27 @@
+api_version: 1
+enabled: true
+description: Read-only world snapshot of self, nearby units, and the current target
+compose:
+  file: compose.yaml
+  service: module
+grpc:
+  descriptor_set: module.pb
+rpc:
+  get_self: /sense.module.v1.Module/GetSelf
+  get_skills: /sense.module.v1.Module/GetSkills
+  get_nearby: /sense.module.v1.Module/GetNearby
+  get_target: /sense.module.v1.Module/GetTarget
+  select_target: /sense.module.v1.Module/SelectTarget
+  clear_target: /sense.module.v1.Module/ClearTarget
+  query_name: /sense.module.v1.Module/QueryName
+  status: /sense.module.v1.Module/Status
+  debug_monster_moves: /sense.module.v1.Module/DebugMonsterMoves
+  debug_fields: /sense.module.v1.Module/DebugFields
+packets:
+  SMSG_LOGIN_VERIFY_WORLD: /sense.module.v1.Module/OnPacket
+  SMSG_UPDATE_OBJECT: /sense.module.v1.Module/OnPacket
+  SMSG_COMPRESSED_UPDATE_OBJECT: /sense.module.v1.Module/OnPacket
+  SMSG_DESTROY_OBJECT: /sense.module.v1.Module/OnPacket
+  SMSG_NAME_QUERY_RESPONSE: /sense.module.v1.Module/OnPacket
+  SMSG_CREATURE_QUERY_RESPONSE: /sense.module.v1.Module/OnPacket
+  SMSG_MONSTER_MOVE: /sense.module.v1.Module/OnPacket

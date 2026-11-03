@@ -1,0 +1,14 @@
+api_version: 1
+enabled: true
+description: Accept party invitations automatically, with an RPC to toggle and to query state
+compose:
+  file: compose.yaml
+  service: module
+grpc:
+  descriptor_set: module.pb
+rpc:
+  get_state: /party.module.v1.Module/GetState
+  set_auto_accept: /party.module.v1.Module/SetAutoAccept
+  accept_invite: /party.module.v1.Module/AcceptInvite
+packets:
+  SMSG_GROUP_INVITE: /party.module.v1.Module/OnPacket

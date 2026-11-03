@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package example.module.v1;
+option go_package = "github.com/agent-wow/go-module-template/src/api;modulev1";
+
+import "api/module/v1/session.proto";
+import "google/protobuf/empty.proto";
+
+message StatusResponse {
+  // Milliseconds from the session's monotonic origin, modulo 2^32.
+  uint32 client_time_ms = 1;
+  uint32 packets_received = 2;
+  // Unix seconds from the latest reply; absent until a reply arrives.
+  optional uint32 server_time_unix = 3;
+}
+
+service Module {
+  rpc Status(google.protobuf.Empty) returns (StatusResponse);
+  // Success confirms the write only. Read Status later for the async reply.
+  rpc QueryTime(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);
+  rpc BeforeLogout(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

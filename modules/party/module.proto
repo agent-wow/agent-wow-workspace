@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package party.module.v1;
+option go_package = "github.com/doumoman/agent-wow-mods/party/src/api;modulev1";
+
+import "api/module/v1/session.proto";
+import "google/protobuf/empty.proto";
+
+// PartyState reports what the module has seen and done.
+message PartyState {
+  // Invitations received this session.
+  uint32 invites = 1;
+  // CMSG_GROUP_ACCEPT packets sent.
+  uint32 accepts = 2;
+  // Accept invitations as they arrive (default true).
+  bool auto_accept = 3;
+  // Name of the most recent inviter, as read from SMSG_GROUP_INVITE.
+  string last_inviter = 4;
+}
+
+message AutoAcceptRequest {
+  bool enabled = 1;
+}
+
+service Module {
+  rpc GetState(google.protobuf.Empty) returns (PartyState);
+  rpc SetAutoAccept(AutoAcceptRequest) returns (PartyState);
+  rpc AcceptInvite(google.protobuf.Empty) returns (PartyState);
+  rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);
+}
