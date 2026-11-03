@@ -7,7 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
+	"strconv"
 	"sync"
+	"time"
 
 	modv1 "github.com/agent-wow/agent-wow/pkg/modules/v1"
 	"github.com/agent-wow/agent-wow/pkg/opcode"
@@ -36,6 +39,9 @@ type Service struct {
 	currentGold uint32
 	currentRows []wow.LootItem
 	pending     bool
+	selfGUID    wow.GUID
+	now         func() time.Time
+	rolls       []*rollEntry
 
 	jobs chan lootJob
 }
@@ -49,10 +55,13 @@ type lootJob struct {
 }
 
 func New(session modv1.SessionClient) *Service {
+	guid, _ := strconv.ParseUint(os.Getenv("AGENT_WOW_CHARACTER_GUID"), 10, 64)
 	return &Service{
 		session:  session,
 		autoLoot: true,
 		jobs:     make(chan lootJob, 8),
+		selfGUID: wow.GUID(guid),
+		now:      time.Now,
 	}
 }
 
@@ -151,6 +160,11 @@ func (s *Service) SetAutoLoot(_ context.Context, req *modulev1.AutoLootRequest) 
 }
 
 func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*emptypb.Empty, error) {
+	switch packet.GetOpcode() {
+	case opcode.SMSGLootStartRoll, opcode.SMSGLootRoll, opcode.SMSGLootRollWon, opcode.SMSGLootAllPassed:
+		s.onRollPacket(packet)
+		return &emptypb.Empty{}, nil
+	}
 	if packet.GetOpcode() != opcode.SMSGLootResponse {
 		return &emptypb.Empty{}, nil
 	}
@@ -276,6 +290,7 @@ func (s *Service) state() *modulev1.LootState {
 		LastItems:   items,
 		CurrentGuid: uint64(s.currentGUID),
 		CurrentGold: s.currentGold,
+		Rolls:       s.rollProtosLocked(),
 	}
 }
 

@@ -47,6 +47,7 @@ type Service struct {
 	itemQueries  uint32
 	parseErrors  uint32
 	revision     uint64
+	trade        *tradeSession
 }
 
 func New(session modv1.SessionClient) *Service {
@@ -157,6 +158,17 @@ func (s *Service) Buyback(ctx context.Context, req *modulev1.BuybackRequest) (*m
 	if _, err := s.send(ctx, opcode.CMSGBuybackItem, body); err != nil {
 		return nil, err
 	}
+	return s.snapshot(), nil
+}
+
+func (s *Service) QueryItem(_ context.Context, req *modulev1.ItemQuery) (*modulev1.InventoryState, error) {
+	if req.GetItemId() == 0 {
+		return nil, status.Error(codes.InvalidArgument, "item_id is required")
+	}
+	s.mu.Lock()
+	queries := s.queueQueryLocked(nil, req.GetItemId())
+	s.mu.Unlock()
+	s.enqueueQueries(queries)
 	return s.snapshot(), nil
 }
 

@@ -1,29 +1,32 @@
 # party
 
-Joins groups. Listens for `SMSG_GROUP_INVITE` and answers `CMSG_GROUP_ACCEPT`
-so an unattended character accepts invitations without a human watching the
-screen. Acceptance is queued to a worker because `OnPacket` runs on the session
-owner loop and must never call `SendPacket` synchronously.
+Exposes server-backed contacts, exact-name who results, pending invitations,
+the group roster and party chat. The module never accepts an invitation on its
+own: `party.respond_invite` must name the current invite ID and inviter before
+its 30-second local expiry, and each invitation can be answered only once.
+Roster membership and consent policy belong to the growth worker.
 
-## Wire formats (3.3.5a)
-
-- `SMSG_GROUP_INVITE`: `uint8 flag`, NUL-terminated inviter name, `uint32 unk`,
-  `uint8 count`, `uint32 unk` (AzerothCore `GroupHandler.cpp`).
-- `CMSG_GROUP_ACCEPT`: 4 zero bytes; `HandleGroupAcceptOpcode` skips one
-  `uint32` before using the pending invite.
+`SMSG_MESSAGECHAT` sender GUIDs are retained exactly as supplied by the server;
+a message body cannot override them. Chat events use a random per-process epoch
+plus a sequence, so a module restart does not reuse old checkpoint cursors.
+Packet callbacks only update state and never call `SendPacket`.
 
 ## RPCs
 
-| RPC | Input | Output | Notes |
-|---|---|---|---|
-| `party.get_state` | — | `PartyState` | `invites`, `accepts`, `auto_accept`, `last_inviter` |
-| `party.set_auto_accept` | `enabled` | `PartyState` | Turn the automatic reply off or on |
-| `party.accept_invite` | — | `PartyState` | Send an accept now, for a lost automatic reply |
-
-## Example
+| RPC | Purpose |
+|---|---|
+| `party.get_state` | Contacts, who rows, pending invite, roster, loot settings and recent chat |
+| `party.request_contacts` | Request the friend list |
+| `party.add_friend` | Add a named friend with a bounded note |
+| `party.who` | Exact-name online/level/class query |
+| `party.invite` | Invite a named character |
+| `party.respond_invite` | Explicit accept or decline of one current invite |
+| `party.set_loot_method` | Send method/master/threshold; confirm through the next group list |
+| `party.leave_party` | Leave the current group |
+| `party.send_party_chat` | Send bounded party addon-language text |
 
 ```bash
-scripts/session.sh rpc party.get_state
-scripts/session.sh rpc party.set_auto_accept '{"enabled":false}'
-scripts/session.sh rpc party.accept_invite
+scripts/session.sh rpc party.request_contacts
+scripts/session.sh rpc party.respond_invite '{"invite_id":1,"inviter":"Alpha","accept":true}'
+scripts/session.sh rpc party.send_party_chat '{"message":"AGW1|PING"}'
 ```

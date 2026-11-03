@@ -431,6 +431,23 @@ class CheckpointStore:
             for row in rows
         }
 
+    def events(self, domain: str) -> list[dict]:
+        """Replay one event domain in deterministic order after a restart."""
+        rows = self._require_open().execute(
+            "SELECT event_id,epoch,seq,payload FROM events WHERE domain=? "
+            "ORDER BY created,seq,event_id", (domain,)).fetchall()
+        out = []
+        for row in rows:
+            try:
+                payload = json.loads(row["payload"])
+            except (TypeError, json.JSONDecodeError):
+                continue
+            out.append({
+                "id": str(row["event_id"]), "epoch": str(row["epoch"]),
+                "seq": int(row["seq"]), "payload": payload,
+            })
+        return out
+
     def event_count(self) -> int:
         return int(self._require_open().execute(
             "SELECT COUNT(*) AS n FROM events").fetchone()["n"])

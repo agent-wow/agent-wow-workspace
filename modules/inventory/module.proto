@@ -59,9 +59,12 @@ message InventoryState {
   uint32 parse_errors = 10;
   bool vendor_loaded = 11;
   uint64 revision = 12;
+  TradeState trade = 13;
+  repeated Item item_templates = 14;
 }
 
 message VendorRequest { uint64 vendor_guid = 1; }
+message ItemQuery { uint32 item_id = 1; }
 message BuyRequest {
   uint64 vendor_guid = 1;
   uint32 item_id = 2;
@@ -87,6 +90,43 @@ message BuybackRequest {
   uint32 slot = 2;
 }
 
+message TradeItem {
+  uint32 slot = 1;
+  uint32 item_id = 2;
+  uint32 count = 3;
+  int32 random_property = 4;
+}
+
+message TradeState {
+  uint32 trade_id = 1;
+  uint64 revision = 2;
+  bool pending = 3;
+  bool active = 4;
+  uint64 trader_guid = 5;
+  bool own_accepted = 6;
+  bool trader_accepted = 7;
+  bool complete = 8;
+  bool cancelled = 9;
+  uint32 last_status = 10;
+  uint32 close_result = 11;
+  repeated TradeItem own_items = 12;
+  repeated TradeItem trader_items = 13;
+  uint32 own_money = 14;
+  uint32 trader_money = 15;
+}
+
+message TradeRequest {
+  string action = 1;
+  uint32 trade_id = 2;
+  uint64 expected_revision = 3;
+  uint64 target_guid = 4;
+  uint32 trade_slot = 5;
+  uint32 bag = 6;
+  uint32 slot = 7;
+  uint64 item_guid = 8;
+  uint32 copper = 9;
+}
+
 service Module {
   rpc GetState(google.protobuf.Empty) returns (InventoryState);
   rpc ListInventory(VendorRequest) returns (InventoryState);
@@ -95,5 +135,7 @@ service Module {
   rpc Repair(RepairRequest) returns (InventoryState);
   rpc Equip(EquipRequest) returns (InventoryState);
   rpc Buyback(BuybackRequest) returns (InventoryState);
+  rpc Trade(TradeRequest) returns (InventoryState);
+  rpc QueryItem(ItemQuery) returns (InventoryState);
   rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);
 }

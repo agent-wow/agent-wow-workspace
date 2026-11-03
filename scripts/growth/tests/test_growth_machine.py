@@ -16,6 +16,7 @@ from _growth_support import (
 )
 from scripts.growth.machine import GrowthState, SoloGrowthMachine
 from scripts.growth.metrics import MetricsWindow
+from scripts.growth.social import RuntimeAction
 
 
 class LowResourceTests(unittest.TestCase):
@@ -247,6 +248,21 @@ class ColdStartTests(unittest.TestCase):
         machine.step(now=1)
         self.assertIsNone(machine.target_guid)
         self.assertNotIn(("attack", (50,)), adapter.calls)
+
+
+class CooperationAttachmentTests(unittest.TestCase):
+    def test_cooperation_action_uses_negotiate_state_without_attacking(self):
+        class Cooperation:
+            def step(self, now, view, class_mask):
+                return RuntimeAction("roll", "need: confirmed")
+
+        adapter = FakeAdapter(make_view(units=[unit(50)]))
+        machine = SoloGrowthMachine(
+            WARRIOR, ROUTE, adapter=adapter, cooperation=Cooperation())
+        result = machine.step(now=0)
+        self.assertEqual(result.state, GrowthState.NEGOTIATE)
+        self.assertEqual(result.action, "roll")
+        self.assertFalse(adapter.named("attack"))
 
 
 if __name__ == "__main__":

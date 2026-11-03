@@ -37,6 +37,7 @@ from scripts.growth.identity import (  # noqa: E402
     verify_roster,
 )
 from scripts.growth.machine import SoloGrowthMachine  # noqa: E402
+from scripts.growth.cooperation import CooperationRuntime  # noqa: E402
 from scripts.growth.permissions import (  # noqa: E402
     audit_accounts,
     audit_tree,
@@ -182,9 +183,11 @@ def run_worker(args) -> int:
     store.open()
     from scripts.growth.identity import EpochIdentityGate
     adapter = WorldAdapter(RPCCallTransport(spec.port))
+    cooperation = CooperationRuntime(
+        roster, spec, adapter, store, profile.inventory)
     growth = SoloGrowthMachine(
         profile, route, adapter=adapter, store=store, logger=log,
-        epoch_hint=args.epoch)
+        epoch_hint=args.epoch, cooperation=cooperation)
     worker = GrowthWorker(
         spec, store,
         lock_path=state / f"{spec.name}.worker.lock",

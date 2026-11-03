@@ -110,8 +110,9 @@ type LootState struct {
 	// Rows from the most recent successful open.
 	LastItems []*LootItem `protobuf:"bytes,7,rep,name=last_items,json=lastItems,proto3" json:"last_items,omitempty"`
 	// Current open window, retained while auto_loot is disabled.
-	CurrentGuid   uint64 `protobuf:"varint,8,opt,name=current_guid,json=currentGuid,proto3" json:"current_guid,omitempty"`
-	CurrentGold   uint32 `protobuf:"varint,9,opt,name=current_gold,json=currentGold,proto3" json:"current_gold,omitempty"`
+	CurrentGuid   uint64       `protobuf:"varint,8,opt,name=current_guid,json=currentGuid,proto3" json:"current_guid,omitempty"`
+	CurrentGold   uint32       `protobuf:"varint,9,opt,name=current_gold,json=currentGold,proto3" json:"current_gold,omitempty"`
+	Rolls         []*RollOffer `protobuf:"bytes,10,rep,name=rolls,proto3" json:"rolls,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -207,6 +208,13 @@ func (x *LootState) GetCurrentGold() uint32 {
 		return x.CurrentGold
 	}
 	return 0
+}
+
+func (x *LootState) GetRolls() []*RollOffer {
+	if x != nil {
+		return x.Rolls
+	}
+	return nil
 }
 
 type LootRequest struct {
@@ -358,6 +366,222 @@ func (x *TakeRequest) GetTakeMoney() bool {
 	return false
 }
 
+type RollOffer struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	ItemGuid       uint64                 `protobuf:"varint,1,opt,name=item_guid,json=itemGuid,proto3" json:"item_guid,omitempty"`
+	MapId          uint32                 `protobuf:"varint,2,opt,name=map_id,json=mapId,proto3" json:"map_id,omitempty"`
+	Slot           uint32                 `protobuf:"varint,3,opt,name=slot,proto3" json:"slot,omitempty"`
+	ItemId         uint32                 `protobuf:"varint,4,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	RandomSuffix   uint32                 `protobuf:"varint,5,opt,name=random_suffix,json=randomSuffix,proto3" json:"random_suffix,omitempty"`
+	RandomProperty uint32                 `protobuf:"varint,6,opt,name=random_property,json=randomProperty,proto3" json:"random_property,omitempty"`
+	Count          uint32                 `protobuf:"varint,7,opt,name=count,proto3" json:"count,omitempty"`
+	CountdownMs    uint32                 `protobuf:"varint,8,opt,name=countdown_ms,json=countdownMs,proto3" json:"countdown_ms,omitempty"`
+	DeadlineAt     int64                  `protobuf:"varint,9,opt,name=deadline_at,json=deadlineAt,proto3" json:"deadline_at,omitempty"`
+	VoteMask       uint32                 `protobuf:"varint,10,opt,name=vote_mask,json=voteMask,proto3" json:"vote_mask,omitempty"`
+	OwnVote        int32                  `protobuf:"varint,11,opt,name=own_vote,json=ownVote,proto3" json:"own_vote,omitempty"`
+	Active         bool                   `protobuf:"varint,12,opt,name=active,proto3" json:"active,omitempty"`
+	Outcome        string                 `protobuf:"bytes,13,opt,name=outcome,proto3" json:"outcome,omitempty"`
+	WinnerGuid     uint64                 `protobuf:"varint,14,opt,name=winner_guid,json=winnerGuid,proto3" json:"winner_guid,omitempty"`
+	VoteConfirmed  bool                   `protobuf:"varint,15,opt,name=vote_confirmed,json=voteConfirmed,proto3" json:"vote_confirmed,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *RollOffer) Reset() {
+	*x = RollOffer{}
+	mi := &file_module_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RollOffer) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RollOffer) ProtoMessage() {}
+
+func (x *RollOffer) ProtoReflect() protoreflect.Message {
+	mi := &file_module_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RollOffer.ProtoReflect.Descriptor instead.
+func (*RollOffer) Descriptor() ([]byte, []int) {
+	return file_module_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *RollOffer) GetItemGuid() uint64 {
+	if x != nil {
+		return x.ItemGuid
+	}
+	return 0
+}
+
+func (x *RollOffer) GetMapId() uint32 {
+	if x != nil {
+		return x.MapId
+	}
+	return 0
+}
+
+func (x *RollOffer) GetSlot() uint32 {
+	if x != nil {
+		return x.Slot
+	}
+	return 0
+}
+
+func (x *RollOffer) GetItemId() uint32 {
+	if x != nil {
+		return x.ItemId
+	}
+	return 0
+}
+
+func (x *RollOffer) GetRandomSuffix() uint32 {
+	if x != nil {
+		return x.RandomSuffix
+	}
+	return 0
+}
+
+func (x *RollOffer) GetRandomProperty() uint32 {
+	if x != nil {
+		return x.RandomProperty
+	}
+	return 0
+}
+
+func (x *RollOffer) GetCount() uint32 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+func (x *RollOffer) GetCountdownMs() uint32 {
+	if x != nil {
+		return x.CountdownMs
+	}
+	return 0
+}
+
+func (x *RollOffer) GetDeadlineAt() int64 {
+	if x != nil {
+		return x.DeadlineAt
+	}
+	return 0
+}
+
+func (x *RollOffer) GetVoteMask() uint32 {
+	if x != nil {
+		return x.VoteMask
+	}
+	return 0
+}
+
+func (x *RollOffer) GetOwnVote() int32 {
+	if x != nil {
+		return x.OwnVote
+	}
+	return 0
+}
+
+func (x *RollOffer) GetActive() bool {
+	if x != nil {
+		return x.Active
+	}
+	return false
+}
+
+func (x *RollOffer) GetOutcome() string {
+	if x != nil {
+		return x.Outcome
+	}
+	return ""
+}
+
+func (x *RollOffer) GetWinnerGuid() uint64 {
+	if x != nil {
+		return x.WinnerGuid
+	}
+	return 0
+}
+
+func (x *RollOffer) GetVoteConfirmed() bool {
+	if x != nil {
+		return x.VoteConfirmed
+	}
+	return false
+}
+
+type RollRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemGuid      uint64                 `protobuf:"varint,1,opt,name=item_guid,json=itemGuid,proto3" json:"item_guid,omitempty"`
+	Slot          uint32                 `protobuf:"varint,2,opt,name=slot,proto3" json:"slot,omitempty"`
+	Vote          uint32                 `protobuf:"varint,3,opt,name=vote,proto3" json:"vote,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RollRequest) Reset() {
+	*x = RollRequest{}
+	mi := &file_module_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RollRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RollRequest) ProtoMessage() {}
+
+func (x *RollRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_module_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RollRequest.ProtoReflect.Descriptor instead.
+func (*RollRequest) Descriptor() ([]byte, []int) {
+	return file_module_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *RollRequest) GetItemGuid() uint64 {
+	if x != nil {
+		return x.ItemGuid
+	}
+	return 0
+}
+
+func (x *RollRequest) GetSlot() uint32 {
+	if x != nil {
+		return x.Slot
+	}
+	return 0
+}
+
+func (x *RollRequest) GetVote() uint32 {
+	if x != nil {
+		return x.Vote
+	}
+	return 0
+}
+
 var File_module_proto protoreflect.FileDescriptor
 
 const file_module_proto_rawDesc = "" +
@@ -367,7 +591,7 @@ const file_module_proto_rawDesc = "" +
 	"\aitem_id\x18\x01 \x01(\rR\x06itemId\x12\x14\n" +
 	"\x05count\x18\x02 \x01(\rR\x05count\x12\x12\n" +
 	"\x04slot\x18\x03 \x01(\rR\x04slot\x12\x1b\n" +
-	"\tslot_type\x18\x04 \x01(\rR\bslotType\"\xa2\x02\n" +
+	"\tslot_type\x18\x04 \x01(\rR\bslotType\"\xd3\x02\n" +
 	"\tLootState\x12\x16\n" +
 	"\x06opened\x18\x01 \x01(\rR\x06opened\x12\x14\n" +
 	"\x05items\x18\x02 \x01(\rR\x05items\x12\x14\n" +
@@ -379,7 +603,9 @@ const file_module_proto_rawDesc = "" +
 	"\n" +
 	"last_items\x18\a \x03(\v2\x18.loot.module.v1.LootItemR\tlastItems\x12!\n" +
 	"\fcurrent_guid\x18\b \x01(\x04R\vcurrentGuid\x12!\n" +
-	"\fcurrent_gold\x18\t \x01(\rR\vcurrentGold\"!\n" +
+	"\fcurrent_gold\x18\t \x01(\rR\vcurrentGold\x12/\n" +
+	"\x05rolls\x18\n" +
+	" \x03(\v2\x19.loot.module.v1.RollOfferR\x05rolls\"!\n" +
 	"\vLootRequest\x12\x12\n" +
 	"\x04guid\x18\x01 \x01(\x04R\x04guid\"+\n" +
 	"\x0fAutoLootRequest\x12\x18\n" +
@@ -388,11 +614,35 @@ const file_module_proto_rawDesc = "" +
 	"\x04guid\x18\x01 \x01(\x04R\x04guid\x12\x14\n" +
 	"\x05slots\x18\x02 \x03(\rR\x05slots\x12\x1d\n" +
 	"\n" +
-	"take_money\x18\x03 \x01(\bR\ttakeMoney2\xd7\x02\n" +
+	"take_money\x18\x03 \x01(\bR\ttakeMoney\"\xc6\x03\n" +
+	"\tRollOffer\x12\x1b\n" +
+	"\titem_guid\x18\x01 \x01(\x04R\bitemGuid\x12\x15\n" +
+	"\x06map_id\x18\x02 \x01(\rR\x05mapId\x12\x12\n" +
+	"\x04slot\x18\x03 \x01(\rR\x04slot\x12\x17\n" +
+	"\aitem_id\x18\x04 \x01(\rR\x06itemId\x12#\n" +
+	"\rrandom_suffix\x18\x05 \x01(\rR\frandomSuffix\x12'\n" +
+	"\x0frandom_property\x18\x06 \x01(\rR\x0erandomProperty\x12\x14\n" +
+	"\x05count\x18\a \x01(\rR\x05count\x12!\n" +
+	"\fcountdown_ms\x18\b \x01(\rR\vcountdownMs\x12\x1f\n" +
+	"\vdeadline_at\x18\t \x01(\x03R\n" +
+	"deadlineAt\x12\x1b\n" +
+	"\tvote_mask\x18\n" +
+	" \x01(\rR\bvoteMask\x12\x19\n" +
+	"\bown_vote\x18\v \x01(\x05R\aownVote\x12\x16\n" +
+	"\x06active\x18\f \x01(\bR\x06active\x12\x18\n" +
+	"\aoutcome\x18\r \x01(\tR\aoutcome\x12\x1f\n" +
+	"\vwinner_guid\x18\x0e \x01(\x04R\n" +
+	"winnerGuid\x12%\n" +
+	"\x0evote_confirmed\x18\x0f \x01(\bR\rvoteConfirmed\"R\n" +
+	"\vRollRequest\x12\x1b\n" +
+	"\titem_guid\x18\x01 \x01(\x04R\bitemGuid\x12\x12\n" +
+	"\x04slot\x18\x02 \x01(\rR\x04slot\x12\x12\n" +
+	"\x04vote\x18\x03 \x01(\rR\x04vote2\x97\x03\n" +
 	"\x06Module\x12=\n" +
 	"\bGetState\x12\x16.google.protobuf.Empty\x1a\x19.loot.module.v1.LootState\x12>\n" +
 	"\x04Loot\x12\x1b.loot.module.v1.LootRequest\x1a\x19.loot.module.v1.LootState\x12>\n" +
-	"\x04Take\x12\x1b.loot.module.v1.TakeRequest\x1a\x19.loot.module.v1.LootState\x12I\n" +
+	"\x04Take\x12\x1b.loot.module.v1.TakeRequest\x1a\x19.loot.module.v1.LootState\x12>\n" +
+	"\x04Roll\x12\x1b.loot.module.v1.RollRequest\x1a\x19.loot.module.v1.LootState\x12I\n" +
 	"\vSetAutoLoot\x12\x1f.loot.module.v1.AutoLootRequest\x1a\x19.loot.module.v1.LootState\x12C\n" +
 	"\bOnPacket\x12\x1f.agentwow.module.v1.WorldPacket\x1a\x16.google.protobuf.EmptyB:Z8github.com/doumoman/agent-wow-mods/loot/src/api;modulev1b\x06proto3"
 
@@ -408,33 +658,38 @@ func file_module_proto_rawDescGZIP() []byte {
 	return file_module_proto_rawDescData
 }
 
-var file_module_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_module_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_module_proto_goTypes = []any{
 	(*LootItem)(nil),        // 0: loot.module.v1.LootItem
 	(*LootState)(nil),       // 1: loot.module.v1.LootState
 	(*LootRequest)(nil),     // 2: loot.module.v1.LootRequest
 	(*AutoLootRequest)(nil), // 3: loot.module.v1.AutoLootRequest
 	(*TakeRequest)(nil),     // 4: loot.module.v1.TakeRequest
-	(*emptypb.Empty)(nil),   // 5: google.protobuf.Empty
-	(*v1.WorldPacket)(nil),  // 6: agentwow.module.v1.WorldPacket
+	(*RollOffer)(nil),       // 5: loot.module.v1.RollOffer
+	(*RollRequest)(nil),     // 6: loot.module.v1.RollRequest
+	(*emptypb.Empty)(nil),   // 7: google.protobuf.Empty
+	(*v1.WorldPacket)(nil),  // 8: agentwow.module.v1.WorldPacket
 }
 var file_module_proto_depIdxs = []int32{
 	0, // 0: loot.module.v1.LootState.last_items:type_name -> loot.module.v1.LootItem
-	5, // 1: loot.module.v1.Module.GetState:input_type -> google.protobuf.Empty
-	2, // 2: loot.module.v1.Module.Loot:input_type -> loot.module.v1.LootRequest
-	4, // 3: loot.module.v1.Module.Take:input_type -> loot.module.v1.TakeRequest
-	3, // 4: loot.module.v1.Module.SetAutoLoot:input_type -> loot.module.v1.AutoLootRequest
-	6, // 5: loot.module.v1.Module.OnPacket:input_type -> agentwow.module.v1.WorldPacket
-	1, // 6: loot.module.v1.Module.GetState:output_type -> loot.module.v1.LootState
-	1, // 7: loot.module.v1.Module.Loot:output_type -> loot.module.v1.LootState
-	1, // 8: loot.module.v1.Module.Take:output_type -> loot.module.v1.LootState
-	1, // 9: loot.module.v1.Module.SetAutoLoot:output_type -> loot.module.v1.LootState
-	5, // 10: loot.module.v1.Module.OnPacket:output_type -> google.protobuf.Empty
-	6, // [6:11] is the sub-list for method output_type
-	1, // [1:6] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	5, // 1: loot.module.v1.LootState.rolls:type_name -> loot.module.v1.RollOffer
+	7, // 2: loot.module.v1.Module.GetState:input_type -> google.protobuf.Empty
+	2, // 3: loot.module.v1.Module.Loot:input_type -> loot.module.v1.LootRequest
+	4, // 4: loot.module.v1.Module.Take:input_type -> loot.module.v1.TakeRequest
+	6, // 5: loot.module.v1.Module.Roll:input_type -> loot.module.v1.RollRequest
+	3, // 6: loot.module.v1.Module.SetAutoLoot:input_type -> loot.module.v1.AutoLootRequest
+	8, // 7: loot.module.v1.Module.OnPacket:input_type -> agentwow.module.v1.WorldPacket
+	1, // 8: loot.module.v1.Module.GetState:output_type -> loot.module.v1.LootState
+	1, // 9: loot.module.v1.Module.Loot:output_type -> loot.module.v1.LootState
+	1, // 10: loot.module.v1.Module.Take:output_type -> loot.module.v1.LootState
+	1, // 11: loot.module.v1.Module.Roll:output_type -> loot.module.v1.LootState
+	1, // 12: loot.module.v1.Module.SetAutoLoot:output_type -> loot.module.v1.LootState
+	7, // 13: loot.module.v1.Module.OnPacket:output_type -> google.protobuf.Empty
+	8, // [8:14] is the sub-list for method output_type
+	2, // [2:8] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_module_proto_init() }
@@ -448,7 +703,7 @@ func file_module_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_module_proto_rawDesc), len(file_module_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

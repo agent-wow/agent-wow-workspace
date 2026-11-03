@@ -33,6 +33,7 @@ message LootState {
   // Current open window, retained while auto_loot is disabled.
   uint64 current_guid = 8;
   uint32 current_gold = 9;
+  repeated RollOffer rolls = 10;
 }
 
 message LootRequest {
@@ -50,10 +51,35 @@ message TakeRequest {
   bool take_money = 3;
 }
 
+message RollOffer {
+  uint64 item_guid = 1;
+  uint32 map_id = 2;
+  uint32 slot = 3;
+  uint32 item_id = 4;
+  uint32 random_suffix = 5;
+  uint32 random_property = 6;
+  uint32 count = 7;
+  uint32 countdown_ms = 8;
+  int64 deadline_at = 9;
+  uint32 vote_mask = 10;
+  int32 own_vote = 11;
+  bool active = 12;
+  string outcome = 13;
+  uint64 winner_guid = 14;
+  bool vote_confirmed = 15;
+}
+
+message RollRequest {
+  uint64 item_guid = 1;
+  uint32 slot = 2;
+  uint32 vote = 3;
+}
+
 service Module {
   rpc GetState(google.protobuf.Empty) returns (LootState);
   rpc Loot(LootRequest) returns (LootState);
   rpc Take(TakeRequest) returns (LootState);
+  rpc Roll(RollRequest) returns (LootState);
   rpc SetAutoLoot(AutoLootRequest) returns (LootState);
   rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);
 }

@@ -1,6 +1,6 @@
 api_version: 1
 enabled: true
-description: Server-backed bags, equipment, item templates, vendor purchases, sales, repairs and buyback
+description: Server-backed bags, equipment, vendors and revision-guarded roster trades
 compose:
   file: compose.yaml
   service: module
@@ -14,6 +14,8 @@ rpc:
   repair: /inventory.module.v1.Module/Repair
   equip: /inventory.module.v1.Module/Equip
   buyback: /inventory.module.v1.Module/Buyback
+  trade: /inventory.module.v1.Module/Trade
+  query_item: /inventory.module.v1.Module/QueryItem
 packets:
   SMSG_UPDATE_OBJECT: /inventory.module.v1.Module/OnPacket
   SMSG_COMPRESSED_UPDATE_OBJECT: /inventory.module.v1.Module/OnPacket
@@ -25,3 +27,5 @@ packets:
   SMSG_BUY_FAILED: /inventory.module.v1.Module/OnPacket
   SMSG_SELL_ITEM: /inventory.module.v1.Module/OnPacket
   SMSG_INVENTORY_CHANGE_FAILURE: /inventory.module.v1.Module/OnPacket
+  SMSG_TRADE_STATUS: /inventory.module.v1.Module/OnPacket
+  SMSG_TRADE_STATUS_EXTENDED: /inventory.module.v1.Module/OnPacket

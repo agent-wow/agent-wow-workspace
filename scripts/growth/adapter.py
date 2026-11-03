@@ -18,6 +18,10 @@ from typing import Protocol
 
 from .items import InventoryState, Item
 from .rpc import RPCError, call
+from .social import (
+    ChatMessage, Contact, GroupMember, Invite, LootState, PartyState,
+    RollOffer, TradeItem, TradeState,
+)
 
 LIVE_KEYS = (
     "guid", "name", "level", "health", "max_health", "xp", "next_level_xp",
@@ -290,6 +294,65 @@ class WorldAdapter:
                 "destinationSlot": int(destination_slot),
             }, timeout=15.0))
 
+    def query_item(self, item_id: int) -> InventoryState:
+        return normalize_inventory(self._call(
+            "inventory.query_item", {"itemId": int(item_id)}, timeout=15.0))
+
+    def trade(self, action: str, **params) -> InventoryState:
+        payload = {"action": str(action)}
+        for key, value in params.items():
+            camel = key.split("_")[0] + "".join(
+                part.title() for part in key.split("_")[1:])
+            payload[camel] = str(int(value)) if key.endswith("guid") else int(value)
+        return normalize_inventory(self._call(
+            "inventory.trade", payload, timeout=15.0))
+
+    def get_party(self) -> PartyState:
+        return normalize_party(self._call("party.get_state"))
+
+    def request_contacts(self) -> PartyState:
+        return normalize_party(self._call("party.request_contacts", {}, timeout=15.0))
+
+    def add_friend(self, name: str, note: str = "roster") -> PartyState:
+        return normalize_party(self._call(
+            "party.add_friend", {"name": name, "note": note}, timeout=15.0))
+
+    def who(self, name: str, min_level: int = 0, max_level: int = 255) -> PartyState:
+        return normalize_party(self._call(
+            "party.who", {"name": name, "minLevel": int(min_level),
+                          "maxLevel": int(max_level)}, timeout=15.0))
+
+    def invite(self, name: str) -> PartyState:
+        return normalize_party(self._call(
+            "party.invite", {"name": name}, timeout=15.0))
+
+    def respond_invite(self, invite_id: int, inviter: str, accept: bool) -> PartyState:
+        return normalize_party(self._call(
+            "party.respond_invite", {"inviteId": str(int(invite_id)),
+                                     "inviter": inviter, "accept": bool(accept)},
+            timeout=15.0))
+
+    def set_loot_method(self, method: int, master_guid: int, threshold: int) -> PartyState:
+        return normalize_party(self._call(
+            "party.set_loot_method", {"method": int(method),
+                                      "masterGuid": str(int(master_guid)),
+                                      "threshold": int(threshold)}, timeout=15.0))
+
+    def leave_party(self) -> PartyState:
+        return normalize_party(self._call("party.leave_party", {}, timeout=15.0))
+
+    def send_party_chat(self, message: str) -> PartyState:
+        return normalize_party(self._call(
+            "party.send_party_chat", {"message": message}, timeout=15.0))
+
+    def get_loot_state(self) -> LootState:
+        return normalize_loot(self._call("loot.get_state"))
+
+    def roll(self, item_guid: int, slot: int, vote: int) -> LootState:
+        return normalize_loot(self._call(
+            "loot.roll", {"itemGuid": str(int(item_guid)), "slot": int(slot),
+                          "vote": int(vote)}, timeout=15.0))
+
     def release_spirit(self) -> dict:
         return normalize_combat(self._call(
             "combat.release_spirit", {}, timeout=20.0))
@@ -544,7 +607,115 @@ def normalize_inventory(raw: dict) -> InventoryState:
         revision=_as_int(_pick(raw, "revision"), 0),
         failure_count=_as_int(_pick(raw, "failure_count", "failureCount"), 0),
         last_failure=normalized_failure,
+        item_templates=rows("item_templates", "itemTemplates"),
+        trade=normalize_trade(_pick(raw, "trade") or {}),
     )
+
+
+def normalize_trade(raw: dict) -> TradeState:
+    if not isinstance(raw, dict):
+        return TradeState()
+    def items(*names: str) -> tuple[TradeItem, ...]:
+        rows = _pick(raw, *names) or []
+        if not isinstance(rows, list):
+            return ()
+        return tuple(TradeItem(
+            slot=_as_int(_pick(row, "slot"), 0),
+            item_id=_as_int(_pick(row, "item_id", "itemId"), 0),
+            count=_as_int(_pick(row, "count"), 0),
+            random_property=_as_int(_pick(row, "random_property", "randomProperty"), 0),
+        ) for row in rows if isinstance(row, dict))
+    return TradeState(
+        trade_id=_as_int(_pick(raw, "trade_id", "tradeId"), 0),
+        revision=_as_int(_pick(raw, "revision"), 0),
+        pending=_as_bool(_pick(raw, "pending"), False),
+        active=_as_bool(_pick(raw, "active"), False),
+        trader_guid=_as_int(_pick(raw, "trader_guid", "traderGuid"), 0),
+        own_accepted=_as_bool(_pick(raw, "own_accepted", "ownAccepted"), False),
+        trader_accepted=_as_bool(_pick(raw, "trader_accepted", "traderAccepted"), False),
+        complete=_as_bool(_pick(raw, "complete"), False),
+        cancelled=_as_bool(_pick(raw, "cancelled"), False),
+        last_status=_as_int(_pick(raw, "last_status", "lastStatus"), 0),
+        close_result=_as_int(_pick(raw, "close_result", "closeResult"), 0),
+        own_items=items("own_items", "ownItems"),
+        trader_items=items("trader_items", "traderItems"),
+        own_money=_as_int(_pick(raw, "own_money", "ownMoney"), 0),
+        trader_money=_as_int(_pick(raw, "trader_money", "traderMoney"), 0),
+    )
+
+
+def normalize_party(raw: dict) -> PartyState:
+    if not isinstance(raw, dict):
+        raise AdapterError("party state returned a non-object")
+    contacts = tuple(Contact(
+        guid=_as_int(_pick(row, "guid"), 0),
+        flags=_as_int(_pick(row, "flags"), 0),
+        note=str(_pick(row, "note") or ""),
+        status=_as_int(_pick(row, "status"), 0),
+        area=_as_int(_pick(row, "area"), 0),
+        level=_as_int(_pick(row, "level"), 0),
+        class_id=_as_int(_pick(row, "class_id", "classId"), 0),
+    ) for row in (_pick(raw, "contacts") or []) if isinstance(row, dict))
+    invite = None
+    raw_invite = _pick(raw, "pending_invite", "pendingInvite")
+    if isinstance(raw_invite, dict) and _as_int(_pick(raw_invite, "invite_id", "inviteId"), 0):
+        invite = Invite(
+            invite_id=_as_int(_pick(raw_invite, "invite_id", "inviteId"), 0),
+            inviter=str(_pick(raw_invite, "inviter") or ""),
+            received_at=_as_int(_pick(raw_invite, "received_at", "receivedAt"), 0),
+            expires_at=_as_int(_pick(raw_invite, "expires_at", "expiresAt"), 0),
+        )
+    members = tuple(GroupMember(
+        name=str(_pick(row, "name") or ""), guid=_as_int(_pick(row, "guid"), 0),
+        status=_as_int(_pick(row, "status"), 0),
+        subgroup=_as_int(_pick(row, "subgroup"), 0),
+        flags=_as_int(_pick(row, "flags"), 0), roles=_as_int(_pick(row, "roles"), 0),
+        is_self=_as_bool(_pick(row, "is_self", "isSelf"), False),
+    ) for row in (_pick(raw, "members") or []) if isinstance(row, dict))
+    messages = tuple(ChatMessage(
+        epoch=_as_int(_pick(row, "epoch"), 0),
+        sequence=_as_int(_pick(row, "sequence"), 0),
+        sender_guid=_as_int(_pick(row, "sender_guid", "senderGuid"), 0),
+        receiver_guid=_as_int(_pick(row, "receiver_guid", "receiverGuid"), 0),
+        message=str(_pick(row, "message") or ""),
+        received_at=_as_int(_pick(row, "received_at", "receivedAt"), 0),
+    ) for row in (_pick(raw, "messages") or []) if isinstance(row, dict))
+    return PartyState(
+        epoch=_as_int(_pick(raw, "epoch"), 0),
+        revision=_as_int(_pick(raw, "revision"), 0), contacts=contacts,
+        who=tuple(row for row in (_pick(raw, "who") or []) if isinstance(row, dict)),
+        pending_invite=invite, in_group=_as_bool(_pick(raw, "in_group", "inGroup"), False),
+        group_guid=_as_int(_pick(raw, "group_guid", "groupGuid"), 0),
+        leader_guid=_as_int(_pick(raw, "leader_guid", "leaderGuid"), 0),
+        members=members, loot_method=_as_int(_pick(raw, "loot_method", "lootMethod"), 0),
+        master_looter_guid=_as_int(_pick(raw, "master_looter_guid", "masterLooterGuid"), 0),
+        loot_threshold=_as_int(_pick(raw, "loot_threshold", "lootThreshold"), 0),
+        dungeon_difficulty=_as_int(_pick(raw, "dungeon_difficulty", "dungeonDifficulty"), 0),
+        messages=messages,
+    )
+
+
+def normalize_loot(raw: dict) -> LootState:
+    if not isinstance(raw, dict):
+        raise AdapterError("loot state returned a non-object")
+    rolls = tuple(RollOffer(
+        item_guid=_as_int(_pick(row, "item_guid", "itemGuid"), 0),
+        slot=_as_int(_pick(row, "slot"), 0),
+        item_id=_as_int(_pick(row, "item_id", "itemId"), 0),
+        map_id=_as_int(_pick(row, "map_id", "mapId"), 0),
+        random_suffix=_as_int(_pick(row, "random_suffix", "randomSuffix"), 0),
+        random_property=_as_int(_pick(row, "random_property", "randomProperty"), 0),
+        count=_as_int(_pick(row, "count"), 1),
+        countdown_ms=_as_int(_pick(row, "countdown_ms", "countdownMs"), 0),
+        deadline_at=_as_int(_pick(row, "deadline_at", "deadlineAt"), 0),
+        vote_mask=_as_int(_pick(row, "vote_mask", "voteMask"), 0),
+        own_vote=_as_int(_pick(row, "own_vote", "ownVote"), -1),
+        vote_confirmed=_as_bool(_pick(row, "vote_confirmed", "voteConfirmed"), False),
+        active=_as_bool(_pick(row, "active"), False),
+        outcome=str(_pick(row, "outcome") or ""),
+        winner_guid=_as_int(_pick(row, "winner_guid", "winnerGuid"), 0),
+    ) for row in (_pick(raw, "rolls") or []) if isinstance(row, dict))
+    return LootState(rolls=rolls)
 
 
 def normalize_combat(raw: dict) -> dict:

@@ -102,6 +102,22 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 			})
 		}
 		return &emptypb.Empty{}, nil
+	case opcode.SMSGTradeStatus:
+		trade, err := wow.ParseTradeStatus(packet.GetPayload())
+		if err != nil {
+			s.recordParseError("trade status", err)
+			return &emptypb.Empty{}, nil
+		}
+		s.onTradeStatus(trade)
+		return &emptypb.Empty{}, nil
+	case opcode.SMSGTradeStatusExtended:
+		trade, err := wow.ParseTradeExtended(packet.GetPayload())
+		if err != nil {
+			s.recordParseError("trade extended", err)
+			return &emptypb.Empty{}, nil
+		}
+		s.onTradeExtended(trade)
+		return &emptypb.Empty{}, nil
 	default:
 		return &emptypb.Empty{}, nil
 	}
@@ -113,6 +129,7 @@ func (s *Service) resetWorld() {
 	s.vendor = 0
 	s.vendorLoaded = false
 	s.vendorItems = nil
+	s.trade = nil
 	s.lastFailure = nil
 	s.revision++
 	s.mu.Unlock()

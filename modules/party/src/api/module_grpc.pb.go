@@ -21,10 +21,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Module_GetState_FullMethodName      = "/party.module.v1.Module/GetState"
-	Module_SetAutoAccept_FullMethodName = "/party.module.v1.Module/SetAutoAccept"
-	Module_AcceptInvite_FullMethodName  = "/party.module.v1.Module/AcceptInvite"
-	Module_OnPacket_FullMethodName      = "/party.module.v1.Module/OnPacket"
+	Module_GetState_FullMethodName        = "/party.module.v1.Module/GetState"
+	Module_RequestContacts_FullMethodName = "/party.module.v1.Module/RequestContacts"
+	Module_AddFriend_FullMethodName       = "/party.module.v1.Module/AddFriend"
+	Module_Who_FullMethodName             = "/party.module.v1.Module/Who"
+	Module_Invite_FullMethodName          = "/party.module.v1.Module/Invite"
+	Module_RespondInvite_FullMethodName   = "/party.module.v1.Module/RespondInvite"
+	Module_SetLootMethod_FullMethodName   = "/party.module.v1.Module/SetLootMethod"
+	Module_LeaveParty_FullMethodName      = "/party.module.v1.Module/LeaveParty"
+	Module_SendPartyChat_FullMethodName   = "/party.module.v1.Module/SendPartyChat"
+	Module_OnPacket_FullMethodName        = "/party.module.v1.Module/OnPacket"
 )
 
 // ModuleClient is the client API for Module service.
@@ -32,8 +38,14 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ModuleClient interface {
 	GetState(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PartyState, error)
-	SetAutoAccept(ctx context.Context, in *AutoAcceptRequest, opts ...grpc.CallOption) (*PartyState, error)
-	AcceptInvite(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PartyState, error)
+	RequestContacts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PartyState, error)
+	AddFriend(ctx context.Context, in *AddFriendRequest, opts ...grpc.CallOption) (*PartyState, error)
+	Who(ctx context.Context, in *WhoRequest, opts ...grpc.CallOption) (*PartyState, error)
+	Invite(ctx context.Context, in *NameRequest, opts ...grpc.CallOption) (*PartyState, error)
+	RespondInvite(ctx context.Context, in *InviteResponse, opts ...grpc.CallOption) (*PartyState, error)
+	SetLootMethod(ctx context.Context, in *LootMethodRequest, opts ...grpc.CallOption) (*PartyState, error)
+	LeaveParty(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PartyState, error)
+	SendPartyChat(ctx context.Context, in *ChatRequest, opts ...grpc.CallOption) (*PartyState, error)
 	OnPacket(ctx context.Context, in *v1.WorldPacket, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -55,20 +67,80 @@ func (c *moduleClient) GetState(ctx context.Context, in *emptypb.Empty, opts ...
 	return out, nil
 }
 
-func (c *moduleClient) SetAutoAccept(ctx context.Context, in *AutoAcceptRequest, opts ...grpc.CallOption) (*PartyState, error) {
+func (c *moduleClient) RequestContacts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PartyState, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(PartyState)
-	err := c.cc.Invoke(ctx, Module_SetAutoAccept_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Module_RequestContacts_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *moduleClient) AcceptInvite(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PartyState, error) {
+func (c *moduleClient) AddFriend(ctx context.Context, in *AddFriendRequest, opts ...grpc.CallOption) (*PartyState, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(PartyState)
-	err := c.cc.Invoke(ctx, Module_AcceptInvite_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Module_AddFriend_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moduleClient) Who(ctx context.Context, in *WhoRequest, opts ...grpc.CallOption) (*PartyState, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PartyState)
+	err := c.cc.Invoke(ctx, Module_Who_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moduleClient) Invite(ctx context.Context, in *NameRequest, opts ...grpc.CallOption) (*PartyState, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PartyState)
+	err := c.cc.Invoke(ctx, Module_Invite_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moduleClient) RespondInvite(ctx context.Context, in *InviteResponse, opts ...grpc.CallOption) (*PartyState, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PartyState)
+	err := c.cc.Invoke(ctx, Module_RespondInvite_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moduleClient) SetLootMethod(ctx context.Context, in *LootMethodRequest, opts ...grpc.CallOption) (*PartyState, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PartyState)
+	err := c.cc.Invoke(ctx, Module_SetLootMethod_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moduleClient) LeaveParty(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PartyState, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PartyState)
+	err := c.cc.Invoke(ctx, Module_LeaveParty_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moduleClient) SendPartyChat(ctx context.Context, in *ChatRequest, opts ...grpc.CallOption) (*PartyState, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PartyState)
+	err := c.cc.Invoke(ctx, Module_SendPartyChat_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -90,8 +162,14 @@ func (c *moduleClient) OnPacket(ctx context.Context, in *v1.WorldPacket, opts ..
 // for forward compatibility.
 type ModuleServer interface {
 	GetState(context.Context, *emptypb.Empty) (*PartyState, error)
-	SetAutoAccept(context.Context, *AutoAcceptRequest) (*PartyState, error)
-	AcceptInvite(context.Context, *emptypb.Empty) (*PartyState, error)
+	RequestContacts(context.Context, *emptypb.Empty) (*PartyState, error)
+	AddFriend(context.Context, *AddFriendRequest) (*PartyState, error)
+	Who(context.Context, *WhoRequest) (*PartyState, error)
+	Invite(context.Context, *NameRequest) (*PartyState, error)
+	RespondInvite(context.Context, *InviteResponse) (*PartyState, error)
+	SetLootMethod(context.Context, *LootMethodRequest) (*PartyState, error)
+	LeaveParty(context.Context, *emptypb.Empty) (*PartyState, error)
+	SendPartyChat(context.Context, *ChatRequest) (*PartyState, error)
 	OnPacket(context.Context, *v1.WorldPacket) (*emptypb.Empty, error)
 	mustEmbedUnimplementedModuleServer()
 }
@@ -106,11 +184,29 @@ type UnimplementedModuleServer struct{}
 func (UnimplementedModuleServer) GetState(context.Context, *emptypb.Empty) (*PartyState, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetState not implemented")
 }
-func (UnimplementedModuleServer) SetAutoAccept(context.Context, *AutoAcceptRequest) (*PartyState, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetAutoAccept not implemented")
+func (UnimplementedModuleServer) RequestContacts(context.Context, *emptypb.Empty) (*PartyState, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RequestContacts not implemented")
 }
-func (UnimplementedModuleServer) AcceptInvite(context.Context, *emptypb.Empty) (*PartyState, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AcceptInvite not implemented")
+func (UnimplementedModuleServer) AddFriend(context.Context, *AddFriendRequest) (*PartyState, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddFriend not implemented")
+}
+func (UnimplementedModuleServer) Who(context.Context, *WhoRequest) (*PartyState, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Who not implemented")
+}
+func (UnimplementedModuleServer) Invite(context.Context, *NameRequest) (*PartyState, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Invite not implemented")
+}
+func (UnimplementedModuleServer) RespondInvite(context.Context, *InviteResponse) (*PartyState, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RespondInvite not implemented")
+}
+func (UnimplementedModuleServer) SetLootMethod(context.Context, *LootMethodRequest) (*PartyState, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetLootMethod not implemented")
+}
+func (UnimplementedModuleServer) LeaveParty(context.Context, *emptypb.Empty) (*PartyState, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LeaveParty not implemented")
+}
+func (UnimplementedModuleServer) SendPartyChat(context.Context, *ChatRequest) (*PartyState, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendPartyChat not implemented")
 }
 func (UnimplementedModuleServer) OnPacket(context.Context, *v1.WorldPacket) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OnPacket not implemented")
@@ -154,38 +250,146 @@ func _Module_GetState_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Module_SetAutoAccept_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AutoAcceptRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ModuleServer).SetAutoAccept(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Module_SetAutoAccept_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ModuleServer).SetAutoAccept(ctx, req.(*AutoAcceptRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Module_AcceptInvite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Module_RequestContacts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ModuleServer).AcceptInvite(ctx, in)
+		return srv.(ModuleServer).RequestContacts(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Module_AcceptInvite_FullMethodName,
+		FullMethod: Module_RequestContacts_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ModuleServer).AcceptInvite(ctx, req.(*emptypb.Empty))
+		return srv.(ModuleServer).RequestContacts(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Module_AddFriend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddFriendRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).AddFriend(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_AddFriend_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).AddFriend(ctx, req.(*AddFriendRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Module_Who_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WhoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).Who(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_Who_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).Who(ctx, req.(*WhoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Module_Invite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).Invite(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_Invite_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).Invite(ctx, req.(*NameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Module_RespondInvite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InviteResponse)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).RespondInvite(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_RespondInvite_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).RespondInvite(ctx, req.(*InviteResponse))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Module_SetLootMethod_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LootMethodRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).SetLootMethod(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_SetLootMethod_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).SetLootMethod(ctx, req.(*LootMethodRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Module_LeaveParty_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).LeaveParty(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_LeaveParty_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).LeaveParty(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Module_SendPartyChat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChatRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).SendPartyChat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_SendPartyChat_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).SendPartyChat(ctx, req.(*ChatRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -220,12 +424,36 @@ var Module_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Module_GetState_Handler,
 		},
 		{
-			MethodName: "SetAutoAccept",
-			Handler:    _Module_SetAutoAccept_Handler,
+			MethodName: "RequestContacts",
+			Handler:    _Module_RequestContacts_Handler,
 		},
 		{
-			MethodName: "AcceptInvite",
-			Handler:    _Module_AcceptInvite_Handler,
+			MethodName: "AddFriend",
+			Handler:    _Module_AddFriend_Handler,
+		},
+		{
+			MethodName: "Who",
+			Handler:    _Module_Who_Handler,
+		},
+		{
+			MethodName: "Invite",
+			Handler:    _Module_Invite_Handler,
+		},
+		{
+			MethodName: "RespondInvite",
+			Handler:    _Module_RespondInvite_Handler,
+		},
+		{
+			MethodName: "SetLootMethod",
+			Handler:    _Module_SetLootMethod_Handler,
+		},
+		{
+			MethodName: "LeaveParty",
+			Handler:    _Module_LeaveParty_Handler,
+		},
+		{
+			MethodName: "SendPartyChat",
+			Handler:    _Module_SendPartyChat_Handler,
 		},
 		{
 			MethodName: "OnPacket",

@@ -95,6 +95,7 @@ class SoloGrowthMachine:
         logger: Callable[[str], None] | None = None,
         epoch_hint: int | str = 0,
         metrics: MetricsWindow | None = None,
+        cooperation=None,
     ):
         if int(profile.route.map_id) != int(route.map_id):
             raise ValueError(
@@ -110,6 +111,7 @@ class SoloGrowthMachine:
 
         stored = store.load_metrics() if store is not None else None
         self.metrics = metrics or MetricsWindow.from_dict(stored)
+        self.cooperation = cooperation
         self.inventory = InventoryRuntime(
             InventoryPolicy(profile.inventory), adapter, store,
             clock=clock, logger=self.log)
@@ -247,6 +249,12 @@ class SoloGrowthMachine:
         recovery = self._handle_recovery(now, view)
         if recovery is not None:
             return recovery
+
+        if self.cooperation is not None:
+            cooperation = self.cooperation.step(now, view, self.profile.class_mask)
+            if cooperation is not None:
+                return self._result(
+                    GrowthState.NEGOTIATE, cooperation.action, cooperation.detail)
 
         if not self.position:
             # Never attack from an assumed origin.

@@ -1,6 +1,6 @@
 api_version: 1
 enabled: true
-description: Accept party invitations automatically, with an RPC to toggle and to query state
+description: Server-backed friends, who, group roster, explicit invite consent and party chat
 compose:
   file: compose.yaml
   service: module
@@ -8,7 +8,20 @@ grpc:
   descriptor_set: module.pb
 rpc:
   get_state: /party.module.v1.Module/GetState
-  set_auto_accept: /party.module.v1.Module/SetAutoAccept
-  accept_invite: /party.module.v1.Module/AcceptInvite
+  request_contacts: /party.module.v1.Module/RequestContacts
+  add_friend: /party.module.v1.Module/AddFriend
+  who: /party.module.v1.Module/Who
+  invite: /party.module.v1.Module/Invite
+  respond_invite: /party.module.v1.Module/RespondInvite
+  set_loot_method: /party.module.v1.Module/SetLootMethod
+  leave_party: /party.module.v1.Module/LeaveParty
+  send_party_chat: /party.module.v1.Module/SendPartyChat
 packets:
   SMSG_GROUP_INVITE: /party.module.v1.Module/OnPacket
+  SMSG_CONTACT_LIST: /party.module.v1.Module/OnPacket
+  SMSG_FRIEND_STATUS: /party.module.v1.Module/OnPacket
+  SMSG_WHO: /party.module.v1.Module/OnPacket
+  SMSG_GROUP_LIST: /party.module.v1.Module/OnPacket
+  SMSG_GROUP_DESTROYED: /party.module.v1.Module/OnPacket
+  SMSG_GROUP_UNINVITE: /party.module.v1.Module/OnPacket
+  SMSG_MESSAGECHAT: /party.module.v1.Module/OnPacket

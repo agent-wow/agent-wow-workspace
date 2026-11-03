@@ -15,6 +15,7 @@ func (s *Service) snapshot() *modulev1.InventoryState {
 		VendorGuid: uint64(s.vendor), VendorLoaded: s.vendorLoaded,
 		FailureCount: s.failureCount, ItemQueries: s.itemQueries,
 		ParseErrors: s.parseErrors, Revision: s.revision,
+		Trade: s.tradeSnapshotLocked(),
 	}
 	if s.lastFailure != nil {
 		failure := *s.lastFailure
@@ -91,6 +92,10 @@ func (s *Service) snapshot() *modulev1.InventoryState {
 		return a.GetGuid() < b.GetGuid()
 	})
 	sort.Slice(state.Buyback, func(i, j int) bool { return state.Buyback[i].GetSlot() < state.Buyback[j].GetSlot() })
+	for itemID := range s.templates {
+		state.ItemTemplates = append(state.ItemTemplates, s.templateItemLocked(itemID))
+	}
+	sort.Slice(state.ItemTemplates, func(i, j int) bool { return state.ItemTemplates[i].GetItemId() < state.ItemTemplates[j].GetItemId() })
 	return state
 }
 

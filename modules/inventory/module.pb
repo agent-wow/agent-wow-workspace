@@ -31,7 +31,7 @@ EmptyProtoPZ.google.golang.org/protobuf/types/known/emptypbø¢GPBªGoogle.P
 SendPacket%.agentwow.module.v1.SendPacketRequest.google.protobuf.EmptyE
 GetClock.google.protobuf.Empty!.agentwow.module.v1.ClockResponsea
 InvokeModule'.agentwow.module.v1.InvokeModuleRequest(.agentwow.module.v1.InvokeModuleResponseB5Z3github.com/agent-wow/agent-wow/pkg/modules/v1;modv1bproto3
-©
+“!
 module.protoinventory.module.v1api/module/v1/session.protogoogle/protobuf/empty.proto"¬
 Item
 guid (Rguid
@@ -77,7 +77,7 @@ StatsEntry
 	item_guid (RitemGuid
 item_id (RitemId%
 required_level (RrequiredLevel
-detail (	Rdetail"÷
+detail (	Rdetail"ð
 InventoryState/
 items (2.inventory.module.v1.ItemRitems<
 vendor_items (2.inventory.module.v1.ItemRvendorItems3
@@ -93,10 +93,14 @@ vendorGuid?
 parse_errors
  (RparseErrors#
 vendor_loaded (RvendorLoaded
-revision (Rrevision"0
+revision (Rrevision5
+trade (2.inventory.module.v1.TradeStateRtrade@
+item_templates (2.inventory.module.v1.ItemRitemTemplates"0
 VendorRequest
 vendor_guid (R
-vendorGuid"p
+vendorGuid"$
+	ItemQuery
+item_id (RitemId"p
 
 BuyRequest
 vendor_guid (R
@@ -120,7 +124,44 @@ vendorGuid
 BuybackRequest
 vendor_guid (R
 vendorGuid
-slot (Rslot2…
+slot (Rslot"w
+	TradeItem
+slot (Rslot
+item_id (RitemId
+count (Rcount'
+random_property (RrandomProperty" 
+
+TradeState
+trade_id (RtradeId
+revision (Rrevision
+pending (Rpending
+active (Ractive
+trader_guid (R
+traderGuid!
+own_accepted (RownAccepted'
+trader_accepted (RtraderAccepted
+complete (Rcomplete
+	cancelled	 (R	cancelled
+last_status
+ (R
+lastStatus!
+close_result (RcloseResult;
+	own_items (2.inventory.module.v1.TradeItemRownItemsA
+trader_items (2.inventory.module.v1.TradeItemRtraderItems
+	own_money (RownMoney!
+trader_money (RtraderMoney"‰
+TradeRequest
+action (	Raction
+trade_id (RtradeId+
+expected_revision (RexpectedRevision
+target_guid (R
+targetGuid
+
+trade_slot (R	tradeSlot
+bag (Rbag
+slot (Rslot
+	item_guid (RitemGuid
+copper	 (Rcopper2¨
 ModuleG
 GetState.google.protobuf.Empty#.inventory.module.v1.InventoryStateX
 ListInventory".inventory.module.v1.VendorRequest#.inventory.module.v1.InventoryStateK
@@ -128,5 +169,7 @@ vendorGuid
 Sell .inventory.module.v1.SellRequest#.inventory.module.v1.InventoryStateQ
 Repair".inventory.module.v1.RepairRequest#.inventory.module.v1.InventoryStateO
 Equip!.inventory.module.v1.EquipRequest#.inventory.module.v1.InventoryStateS
-Buyback#.inventory.module.v1.BuybackRequest#.inventory.module.v1.InventoryStateC
+Buyback#.inventory.module.v1.BuybackRequest#.inventory.module.v1.InventoryStateO
+Trade!.inventory.module.v1.TradeRequest#.inventory.module.v1.InventoryStateP
+	QueryItem.inventory.module.v1.ItemQuery#.inventory.module.v1.InventoryStateC
 OnPacket.agentwow.module.v1.WorldPacket.google.protobuf.EmptyB?Z=github.com/doumoman/agent-wow-mods/inventory/src/api;modulev1bproto3

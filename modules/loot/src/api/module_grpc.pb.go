@@ -24,6 +24,7 @@ const (
 	Module_GetState_FullMethodName    = "/loot.module.v1.Module/GetState"
 	Module_Loot_FullMethodName        = "/loot.module.v1.Module/Loot"
 	Module_Take_FullMethodName        = "/loot.module.v1.Module/Take"
+	Module_Roll_FullMethodName        = "/loot.module.v1.Module/Roll"
 	Module_SetAutoLoot_FullMethodName = "/loot.module.v1.Module/SetAutoLoot"
 	Module_OnPacket_FullMethodName    = "/loot.module.v1.Module/OnPacket"
 )
@@ -35,6 +36,7 @@ type ModuleClient interface {
 	GetState(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LootState, error)
 	Loot(ctx context.Context, in *LootRequest, opts ...grpc.CallOption) (*LootState, error)
 	Take(ctx context.Context, in *TakeRequest, opts ...grpc.CallOption) (*LootState, error)
+	Roll(ctx context.Context, in *RollRequest, opts ...grpc.CallOption) (*LootState, error)
 	SetAutoLoot(ctx context.Context, in *AutoLootRequest, opts ...grpc.CallOption) (*LootState, error)
 	OnPacket(ctx context.Context, in *v1.WorldPacket, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -77,6 +79,16 @@ func (c *moduleClient) Take(ctx context.Context, in *TakeRequest, opts ...grpc.C
 	return out, nil
 }
 
+func (c *moduleClient) Roll(ctx context.Context, in *RollRequest, opts ...grpc.CallOption) (*LootState, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LootState)
+	err := c.cc.Invoke(ctx, Module_Roll_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *moduleClient) SetAutoLoot(ctx context.Context, in *AutoLootRequest, opts ...grpc.CallOption) (*LootState, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(LootState)
@@ -104,6 +116,7 @@ type ModuleServer interface {
 	GetState(context.Context, *emptypb.Empty) (*LootState, error)
 	Loot(context.Context, *LootRequest) (*LootState, error)
 	Take(context.Context, *TakeRequest) (*LootState, error)
+	Roll(context.Context, *RollRequest) (*LootState, error)
 	SetAutoLoot(context.Context, *AutoLootRequest) (*LootState, error)
 	OnPacket(context.Context, *v1.WorldPacket) (*emptypb.Empty, error)
 	mustEmbedUnimplementedModuleServer()
@@ -124,6 +137,9 @@ func (UnimplementedModuleServer) Loot(context.Context, *LootRequest) (*LootState
 }
 func (UnimplementedModuleServer) Take(context.Context, *TakeRequest) (*LootState, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Take not implemented")
+}
+func (UnimplementedModuleServer) Roll(context.Context, *RollRequest) (*LootState, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Roll not implemented")
 }
 func (UnimplementedModuleServer) SetAutoLoot(context.Context, *AutoLootRequest) (*LootState, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetAutoLoot not implemented")
@@ -206,6 +222,24 @@ func _Module_Take_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Module_Roll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RollRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).Roll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_Roll_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).Roll(ctx, req.(*RollRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Module_SetAutoLoot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AutoLootRequest)
 	if err := dec(in); err != nil {
@@ -260,6 +294,10 @@ var Module_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Take",
 			Handler:    _Module_Take_Handler,
+		},
+		{
+			MethodName: "Roll",
+			Handler:    _Module_Roll_Handler,
 		},
 		{
 			MethodName: "SetAutoLoot",

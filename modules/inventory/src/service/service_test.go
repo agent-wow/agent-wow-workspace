@@ -124,6 +124,27 @@ func TestVendorListAndEquipmentFailure(t *testing.T) {
 	}
 }
 
+func TestQueryItemQueuesOnceAndExposesKnownTemplate(t *testing.T) {
+	s := New(nil)
+	if _, err := s.QueryItem(t.Context(), &modulev1.ItemQuery{}); err == nil {
+		t.Fatal("zero item id accepted")
+	}
+	if _, err := s.QueryItem(t.Context(), &modulev1.ItemQuery{ItemId: 25}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.QueryItem(t.Context(), &modulev1.ItemQuery{ItemId: 25}); err != nil {
+		t.Fatal(err)
+	}
+	if len(s.queries) != 1 || <-s.queries != 25 {
+		t.Fatal("item query was not deduplicated")
+	}
+	s.templates[25] = wow.ItemTemplate{ItemID: 25, Name: "known"}
+	state := s.snapshot()
+	if len(state.GetItemTemplates()) != 1 || !state.GetItemTemplates()[0].GetTemplateKnown() {
+		t.Fatalf("known template missing: %+v", state.GetItemTemplates())
+	}
+}
+
 func TestActionValidationAndPackets(t *testing.T) {
 	session := inventorySession{sent: make(chan *modv1.SendPacketRequest, 8)}
 	s := New(session)

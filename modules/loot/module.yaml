@@ -10,6 +10,11 @@ rpc:
   get_state: /loot.module.v1.Module/GetState
   loot: /loot.module.v1.Module/Loot
   take: /loot.module.v1.Module/Take
+  roll: /loot.module.v1.Module/Roll
   set_auto_loot: /loot.module.v1.Module/SetAutoLoot
 packets:
   SMSG_LOOT_RESPONSE: /loot.module.v1.Module/OnPacket
+  SMSG_LOOT_START_ROLL: /loot.module.v1.Module/OnPacket
+  SMSG_LOOT_ROLL: /loot.module.v1.Module/OnPacket
+  SMSG_LOOT_ROLL_WON: /loot.module.v1.Module/OnPacket
+  SMSG_LOOT_ALL_PASSED: /loot.module.v1.Module/OnPacket

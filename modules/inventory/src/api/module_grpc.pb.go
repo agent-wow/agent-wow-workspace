@@ -28,6 +28,8 @@ const (
 	Module_Repair_FullMethodName        = "/inventory.module.v1.Module/Repair"
 	Module_Equip_FullMethodName         = "/inventory.module.v1.Module/Equip"
 	Module_Buyback_FullMethodName       = "/inventory.module.v1.Module/Buyback"
+	Module_Trade_FullMethodName         = "/inventory.module.v1.Module/Trade"
+	Module_QueryItem_FullMethodName     = "/inventory.module.v1.Module/QueryItem"
 	Module_OnPacket_FullMethodName      = "/inventory.module.v1.Module/OnPacket"
 )
 
@@ -42,6 +44,8 @@ type ModuleClient interface {
 	Repair(ctx context.Context, in *RepairRequest, opts ...grpc.CallOption) (*InventoryState, error)
 	Equip(ctx context.Context, in *EquipRequest, opts ...grpc.CallOption) (*InventoryState, error)
 	Buyback(ctx context.Context, in *BuybackRequest, opts ...grpc.CallOption) (*InventoryState, error)
+	Trade(ctx context.Context, in *TradeRequest, opts ...grpc.CallOption) (*InventoryState, error)
+	QueryItem(ctx context.Context, in *ItemQuery, opts ...grpc.CallOption) (*InventoryState, error)
 	OnPacket(ctx context.Context, in *v1.WorldPacket, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -123,6 +127,26 @@ func (c *moduleClient) Buyback(ctx context.Context, in *BuybackRequest, opts ...
 	return out, nil
 }
 
+func (c *moduleClient) Trade(ctx context.Context, in *TradeRequest, opts ...grpc.CallOption) (*InventoryState, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(InventoryState)
+	err := c.cc.Invoke(ctx, Module_Trade_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moduleClient) QueryItem(ctx context.Context, in *ItemQuery, opts ...grpc.CallOption) (*InventoryState, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(InventoryState)
+	err := c.cc.Invoke(ctx, Module_QueryItem_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *moduleClient) OnPacket(ctx context.Context, in *v1.WorldPacket, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
@@ -144,6 +168,8 @@ type ModuleServer interface {
 	Repair(context.Context, *RepairRequest) (*InventoryState, error)
 	Equip(context.Context, *EquipRequest) (*InventoryState, error)
 	Buyback(context.Context, *BuybackRequest) (*InventoryState, error)
+	Trade(context.Context, *TradeRequest) (*InventoryState, error)
+	QueryItem(context.Context, *ItemQuery) (*InventoryState, error)
 	OnPacket(context.Context, *v1.WorldPacket) (*emptypb.Empty, error)
 	mustEmbedUnimplementedModuleServer()
 }
@@ -175,6 +201,12 @@ func (UnimplementedModuleServer) Equip(context.Context, *EquipRequest) (*Invento
 }
 func (UnimplementedModuleServer) Buyback(context.Context, *BuybackRequest) (*InventoryState, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Buyback not implemented")
+}
+func (UnimplementedModuleServer) Trade(context.Context, *TradeRequest) (*InventoryState, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Trade not implemented")
+}
+func (UnimplementedModuleServer) QueryItem(context.Context, *ItemQuery) (*InventoryState, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryItem not implemented")
 }
 func (UnimplementedModuleServer) OnPacket(context.Context, *v1.WorldPacket) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OnPacket not implemented")
@@ -326,6 +358,42 @@ func _Module_Buyback_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Module_Trade_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TradeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).Trade(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_Trade_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).Trade(ctx, req.(*TradeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Module_QueryItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ItemQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).QueryItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_QueryItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).QueryItem(ctx, req.(*ItemQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Module_OnPacket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(v1.WorldPacket)
 	if err := dec(in); err != nil {
@@ -378,6 +446,14 @@ var Module_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Buyback",
 			Handler:    _Module_Buyback_Handler,
+		},
+		{
+			MethodName: "Trade",
+			Handler:    _Module_Trade_Handler,
+		},
+		{
+			MethodName: "QueryItem",
+			Handler:    _Module_QueryItem_Handler,
 		},
 		{
 			MethodName: "OnPacket",

@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from .profiles import InventoryRules, PurchaseRule
+from .social import TradeState
 
 
 @dataclass(frozen=True)
@@ -55,6 +56,8 @@ class InventoryState:
     revision: int = 0
     failure_count: int = 0
     last_failure: dict = field(default_factory=dict)
+    item_templates: tuple[Item, ...] = ()
+    trade: TradeState = field(default_factory=TradeState)
 
     def count_of(self, item_id: int) -> int:
         return sum(row.count for row in self.items if row.item_id == item_id)
