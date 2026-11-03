@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "configured": false,
+  "_comment": "Versioned five-character roster. JSON is valid YAML so this stays standard-library parseable. Fill in exactly five user-created characters (account, name, guid, port, role, class, race, faction, start_zone) and set configured to true. The runtime fails closed while this is empty.",
+  "faction": null,
+  "start_zone": null,
+  "characters": []
+}

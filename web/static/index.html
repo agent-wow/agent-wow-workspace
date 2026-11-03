@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WoW 控制台</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>WoW 控制台</h1>
+      <p class="subtitle">agent-wow · 洛丹伦王国</p>
+    </div>
+    <div class="topbar-right">
+      <span id="colima-badge" class="badge muted">Colima 检测中…</span>
+      <button id="refresh-btn" class="btn" onclick="refreshAll()">刷新</button>
+    </div>
+  </header>
+
+  <main id="accounts" class="grid"></main>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-input" id="modal-input-wrap">
+        <input type="text" id="modal-input" autocomplete="off" spellcheck="false"
+          placeholder="请输入 DELETE 以确认" oninput="onModalInput(this.value)">
+        <div class="modal-hint" id="modal-hint">输入 <code>DELETE</code> 后确认按钮才可用</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn ghost" onclick="closeModal()">取消</button>
+        <button class="btn danger" id="modal-confirm" onclick="confirmModal()">删除角色</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <template id="loading-template">
+    <div class="loading">加载中…</div>
+  </template>
+
+  <script src="/static/game-data.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
