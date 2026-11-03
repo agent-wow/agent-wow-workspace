@@ -6,8 +6,11 @@ take, collects the money, and releases the window. Taking is queued to a worker
 because `OnPacket` runs on the session owner loop and must never call
 `SendPacket` synchronously.
 
-By default `auto_loot` is on: any window the server opens (including one a
-human opened) is emptied. Turn it off with `loot.set_auto_loot`.
+By default `auto_loot` is on: the module takes only rows whose slot type is
+`allow loot` or `owner`, collects money and releases the window. Roll, master
+and locked rows are never taken by this solo path. With auto-loot disabled the
+window stays open; `loot.take` accepts selected takeable slots and an explicit
+money flag, then releases it.
 
 ## Wire formats (3.3.5a)
 
@@ -25,16 +28,17 @@ human opened) is emptied. Turn it off with `loot.set_auto_loot`.
   currently open.
 
 `slotType` is 0 (allow loot), 1 (roll ongoing), 2 (master loot), 3 (locked),
-4 (owner) or 5 (none). Solo play reports 4. The module autostores 0, 2 and 4
-and skips the rest, so rolls and quest-locked rows are left alone.
+4 (owner) or 5 (none). Solo play reports 4. Automatic and selective takes accept
+only 0 and 4. `last_items` exposes each row's slot and type for agent decisions.
 
 ## RPCs
 
 | RPC | Input | Output | Notes |
 |---|---|---|---|
-| `loot.get_state` | — | `LootState` | `opened`, `items`, `money` (copper), `errors`, `auto_loot`, `last_error`, `last_items` |
+| `loot.get_state` | — | `LootState` | Counters plus `current_guid`, `current_gold` and typed `last_items` |
 | `loot.loot` | `guid` | `LootState` | Send `CMSG_LOOT`; the take happens asynchronously |
-| `loot.set_auto_loot` | `enabled` | `LootState` | Stop the automatic take |
+| `loot.take` | `guid`, `slots`, `take_money` | `LootState` | Take selected type 0/4 rows from the current open window |
+| `loot.set_auto_loot` | `enabled` | `LootState` | Disable automatic takes; the next window remains open for `loot.take` |
 
 ## Preconditions
 
@@ -44,7 +48,10 @@ and skips the rest, so rolls and quest-locked rows are left alone.
 
 ## Verified
 
-- Live on Reachbot (2026-11-02): 8 opens produced 4 items and 6 copper; two
+- Local race tests cover selective manual takes and prove roll, master and
+  locked rows are not autostored. These new paths have not had a live group
+  verification in this unit.
+- Live on Reachbot (2026-11-02), before selective/group-safe loot was added: 8 opens produced 4 items and 6 copper; two
   opens were refused with `didnt_kill` when the agent asked to loot a target
   the server had not registered as dead yet. Both counters behave as designed.
 - `loot.get_state` reported `lastItems` `[1376 x1, 2070 x1]` after a Defias

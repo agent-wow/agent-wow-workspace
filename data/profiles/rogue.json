@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "class": "rogue",
   "source": "WotLK 3.3.5a rogue energy baseline; the initial loop uses only the combo builder until combo-point conditions are implemented",
   "roles": ["dps"],
@@ -43,5 +43,20 @@
   "route": {
     "zone": "elwynn-forest",
     "map_id": 0
+  },
+  "inventory": {
+    "stat_weights": {
+      "agility": 2.0,
+      "strength": 1.0,
+      "stamina": 1.0,
+      "attack_power": 1.0
+    },
+    "armor_weight": 0.05,
+    "weapon_dps_weight": 10.0,
+    "min_free_slots": 2,
+    "sell_quality_max": 1,
+    "protected_item_ids": [],
+    "material_item_ids": [],
+    "supplies": []
   }
 }

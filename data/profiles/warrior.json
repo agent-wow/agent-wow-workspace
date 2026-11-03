@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "class": "warrior",
   "source": "WotLK 3.3.5a warrior baseline; costs are native resource points and rage update fields store the value x10",
   "roles": ["tank", "dps"],
@@ -52,5 +52,20 @@
   "route": {
     "zone": "elwynn-forest",
     "map_id": 0
+  },
+  "inventory": {
+    "stat_weights": {
+      "strength": 2.0,
+      "agility": 1.0,
+      "stamina": 1.5,
+      "attack_power": 1.0
+    },
+    "armor_weight": 0.1,
+    "weapon_dps_weight": 10.0,
+    "min_free_slots": 2,
+    "sell_quality_max": 1,
+    "protected_item_ids": [],
+    "material_item_ids": [],
+    "supplies": []
   }
 }

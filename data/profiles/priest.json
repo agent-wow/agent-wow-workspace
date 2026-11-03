@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "class": "priest",
   "source": "WotLK 3.3.5a mana-healer baseline; the heal is role-driven and only eligible below 50% health",
   "roles": ["healer", "dps"],
@@ -54,5 +54,20 @@
   "route": {
     "zone": "elwynn-forest",
     "map_id": 0
+  },
+  "inventory": {
+    "stat_weights": {
+      "intellect": 2.0,
+      "spirit": 1.5,
+      "stamina": 1.0,
+      "spell_power": 2.0
+    },
+    "armor_weight": 0.02,
+    "weapon_dps_weight": 1.0,
+    "min_free_slots": 2,
+    "sell_quality_max": 1,
+    "protected_item_ids": [],
+    "material_item_ids": [],
+    "supplies": []
   }
 }

@@ -14,7 +14,8 @@ boundaries instead of rewriting the loop:
   route band. Neither claims to implement U6 quest behavior.
 - ``NEGOTIATE`` is reserved for U4 cooperation and is never entered by the
   solo loop.
-- ``LOOT`` only opens a corpse; inventory/vendor decisions are U3.
+- ``LOOT`` opens a corpse. ``TOWN`` also covers out-of-combat equipment and
+  nearby-vendor actions through the durable inventory runtime.
 
 Boundedness: every target has an approach deadline and a no-damage stall
 deadline, every ghost search has a deadline, and every stuck recovery advances
@@ -29,6 +30,8 @@ from enum import Enum
 from typing import Callable
 
 from .adapter import AdapterError, WorldAdapter, WorldView
+from .inventory_runtime import InventoryRuntime
+from .items import InventoryPolicy
 from .metrics import MetricsWindow
 from .profiles import ClassProfile, Skill
 from .routes import Route
@@ -107,6 +110,9 @@ class SoloGrowthMachine:
 
         stored = store.load_metrics() if store is not None else None
         self.metrics = metrics or MetricsWindow.from_dict(stored)
+        self.inventory = InventoryRuntime(
+            InventoryPolicy(profile.inventory), adapter, store,
+            clock=clock, logger=self.log)
 
         self.epoch: str | None = None
         self.map_id: int | None = None
@@ -246,6 +252,12 @@ class SoloGrowthMachine:
             # Never attack from an assumed origin.
             return self._result(
                 GrowthState.ACQUIRE, detail="waiting for a live position")
+
+        if not view.in_combat and self.target_guid is None:
+            inventory = self.inventory.step(now, view, self.profile.class_mask)
+            if inventory is not None:
+                return self._result(
+                    GrowthState.TOWN, inventory.action, inventory.detail)
 
         if self.target_guid is not None:
             return self._continue_combat(now, view)

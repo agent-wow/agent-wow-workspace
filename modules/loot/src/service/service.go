@@ -24,23 +24,28 @@ type Service struct {
 	modulev1.UnimplementedModuleServer
 	session modv1.SessionClient
 
-	mu        sync.Mutex
-	opened    uint32
-	items     uint32
-	money     uint32
-	errors    uint32
-	autoLoot  bool
-	lastError string
-	lastItems []*modulev1.LootItem
+	mu          sync.Mutex
+	opened      uint32
+	items       uint32
+	money       uint32
+	errors      uint32
+	autoLoot    bool
+	lastError   string
+	lastItems   []*modulev1.LootItem
+	currentGUID wow.GUID
+	currentGold uint32
+	currentRows []wow.LootItem
+	pending     bool
 
 	jobs chan lootJob
 }
 
 // lootJob is one open window that still has rows or money to take.
 type lootJob struct {
-	guid  wow.GUID
-	gold  uint32
-	slots []uint8
+	guid      wow.GUID
+	gold      uint32
+	slots     []uint8
+	automatic bool
 }
 
 func New(session modv1.SessionClient) *Service {
@@ -86,6 +91,58 @@ func (s *Service) Loot(ctx context.Context, req *modulev1.LootRequest) (*modulev
 	return s.state(), nil
 }
 
+func (s *Service) Take(_ context.Context, req *modulev1.TakeRequest) (*modulev1.LootState, error) {
+	guid := wow.GUID(req.GetGuid())
+	if guid == 0 {
+		return nil, status.Error(codes.InvalidArgument, "guid is required")
+	}
+	s.mu.Lock()
+	if guid != s.currentGUID || s.pending {
+		s.mu.Unlock()
+		return nil, status.Error(codes.FailedPrecondition, "loot window is not open or is already being taken")
+	}
+	allowed := make(map[uint8]struct{}, len(s.currentRows))
+	for _, row := range s.currentRows {
+		if row.SlotType == wow.LootSlotAllowLoot || row.SlotType == wow.LootSlotOwner {
+			allowed[row.Slot] = struct{}{}
+		}
+	}
+	seen := make(map[uint8]struct{}, len(req.GetSlots()))
+	slots := make([]uint8, 0, len(req.GetSlots()))
+	for _, value := range req.GetSlots() {
+		if value > 255 {
+			s.mu.Unlock()
+			return nil, status.Error(codes.InvalidArgument, "slot must fit in one byte")
+		}
+		slot := uint8(value)
+		if _, ok := allowed[slot]; !ok {
+			s.mu.Unlock()
+			return nil, status.Error(codes.PermissionDenied, "slot is not takeable by this character")
+		}
+		if _, duplicate := seen[slot]; duplicate {
+			s.mu.Unlock()
+			return nil, status.Error(codes.InvalidArgument, "duplicate loot slot")
+		}
+		seen[slot] = struct{}{}
+		slots = append(slots, slot)
+	}
+	gold := uint32(0)
+	if req.GetTakeMoney() {
+		gold = s.currentGold
+	}
+	s.pending = true
+	s.mu.Unlock()
+	select {
+	case s.jobs <- lootJob{guid: guid, gold: gold, slots: slots}:
+		return s.state(), nil
+	default:
+		s.mu.Lock()
+		s.pending = false
+		s.mu.Unlock()
+		return nil, status.Error(codes.ResourceExhausted, "loot queue is full")
+	}
+}
+
 func (s *Service) SetAutoLoot(_ context.Context, req *modulev1.AutoLootRequest) (*modulev1.LootState, error) {
 	s.mu.Lock()
 	s.autoLoot = req.GetEnabled()
@@ -115,21 +172,38 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 	slots := make([]uint8, 0, len(resp.Items))
 	rows := make([]*modulev1.LootItem, 0, len(resp.Items))
 	for _, item := range resp.Items {
-		rows = append(rows, &modulev1.LootItem{ItemId: item.ItemID, Count: item.Count})
-		if item.SlotType.Takeable() {
+		rows = append(rows, &modulev1.LootItem{
+			ItemId: item.ItemID, Count: item.Count,
+			Slot: uint32(item.Slot), SlotType: uint32(item.SlotType),
+		})
+		if item.SlotType == wow.LootSlotAllowLoot || item.SlotType == wow.LootSlotOwner {
 			slots = append(slots, item.Slot)
 		}
 	}
 	s.mu.Lock()
 	s.lastItems = rows
+	s.currentGUID = resp.GUID
+	s.currentGold = resp.Gold
+	s.currentRows = append(s.currentRows[:0], resp.Items...)
+	autoLoot := s.autoLoot
+	// A newly opened manual window is not pending merely because an older
+	// automatic job has not finished yet. The old worker only clears state when
+	// its GUID still matches the current window.
+	s.pending = autoLoot
 	s.mu.Unlock()
 	slog.Info("loot window", "guid", uint64(resp.GUID), "type", resp.LootType,
 		"gold", resp.Gold, "rows", len(resp.Items), "takeable", len(slots))
-	// Every valid window goes through the worker, including empty ones and
-	// windows received with auto-loot disabled: take always releases the window.
+	if !autoLoot {
+		return &emptypb.Empty{}, nil
+	}
+	// Automatic looting never takes roll, master or locked rows. The worker
+	// releases the window after the allowed rows and money have been attempted.
 	select {
-	case s.jobs <- lootJob{guid: resp.GUID, gold: resp.Gold, slots: slots}:
+	case s.jobs <- lootJob{guid: resp.GUID, gold: resp.Gold, slots: slots, automatic: true}:
 	default:
+		s.mu.Lock()
+		s.pending = false
+		s.mu.Unlock()
 		slog.Warn("loot queue full; dropping window", "guid", uint64(resp.GUID))
 	}
 	return &emptypb.Empty{}, nil
@@ -141,7 +215,7 @@ func (s *Service) take(ctx context.Context, job lootJob) {
 	taken := uint32(0)
 	moneyTaken := false
 	for _, slot := range job.slots {
-		if !s.autoLootEnabled() {
+		if job.automatic && !s.autoLootEnabled() {
 			break
 		}
 		if _, err := s.send(ctx, opcode.CMSGAutostoreLootItem, wow.EncodeAutostoreLootItem(slot)); err != nil {
@@ -150,7 +224,7 @@ func (s *Service) take(ctx context.Context, job lootJob) {
 		}
 		taken++
 	}
-	if job.gold > 0 && s.autoLootEnabled() {
+	if job.gold > 0 && (!job.automatic || s.autoLootEnabled()) {
 		if _, err := s.send(ctx, opcode.CMSGLootMoney, nil); err != nil {
 			slog.Warn("take loot money failed", "error", err)
 		} else {
@@ -164,6 +238,12 @@ func (s *Service) take(ctx context.Context, job lootJob) {
 		slog.Warn("release loot failed", "guid", uint64(job.guid), "error", err)
 	}
 	s.mu.Lock()
+	if s.currentGUID == job.guid {
+		s.currentGUID = 0
+		s.currentGold = 0
+		s.currentRows = nil
+		s.pending = false
+	}
 	s.items += taken
 	s.mu.Unlock()
 	if taken > 0 || moneyTaken {
@@ -187,13 +267,15 @@ func (s *Service) state() *modulev1.LootState {
 	items := make([]*modulev1.LootItem, len(s.lastItems))
 	copy(items, s.lastItems)
 	return &modulev1.LootState{
-		Opened:    s.opened,
-		Items:     s.items,
-		Money:     s.money,
-		Errors:    s.errors,
-		AutoLoot:  s.autoLoot,
-		LastError: s.lastError,
-		LastItems: items,
+		Opened:      s.opened,
+		Items:       s.items,
+		Money:       s.money,
+		Errors:      s.errors,
+		AutoLoot:    s.autoLoot,
+		LastError:   s.lastError,
+		LastItems:   items,
+		CurrentGuid: uint64(s.currentGUID),
+		CurrentGold: s.currentGold,
 	}
 }
 

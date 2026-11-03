@@ -71,6 +71,25 @@ class CombatRules:
 
 
 @dataclass(frozen=True)
+class PurchaseRule:
+    item_id: int
+    target_count: int
+    max_price: int | None = None
+
+
+@dataclass(frozen=True)
+class InventoryRules:
+    stat_weights: dict[str, float]
+    armor_weight: float = 0.0
+    weapon_dps_weight: float = 0.0
+    min_free_slots: int = 1
+    sell_quality_max: int = 1
+    protected_item_ids: tuple[int, ...] = ()
+    material_item_ids: tuple[int, ...] = ()
+    supplies: tuple[PurchaseRule, ...] = ()
+
+
+@dataclass(frozen=True)
 class RouteSelection:
     zone: str
     map_id: int
@@ -88,6 +107,15 @@ class ClassProfile:
     recovery: RecoveryRules
     combat: CombatRules
     route: RouteSelection
+    inventory: InventoryRules
+
+    @property
+    def class_mask(self) -> int:
+        return {
+            "warrior": 1, "paladin": 2, "hunter": 4, "rogue": 8,
+            "priest": 16, "death_knight": 32, "shaman": 64, "mage": 128,
+            "warlock": 256, "druid": 1024,
+        }.get(self.class_name, 0)
 
     def supports_role(self, role: str) -> bool:
         return role in self.roles
@@ -148,11 +176,12 @@ def parse_profile(data: dict, *, expected_class: str | None = None) -> ClassProf
     recovery = _parse_recovery(data.get("recovery"))
     combat = _parse_combat(data.get("combat"))
     route = _parse_route(data.get("route"))
+    inventory = _parse_inventory(data.get("inventory"), class_name)
 
     return ClassProfile(
         version=version, class_name=class_name, source=source, roles=roles,
         resource=resource, resource_scale=scale, skills=skills,
-        recovery=recovery, combat=combat, route=route)
+        recovery=recovery, combat=combat, route=route, inventory=inventory)
 
 
 def _parse_skill(raw: dict, index: int) -> Skill:
@@ -225,6 +254,70 @@ def _parse_route(raw) -> RouteSelection:
     )
 
 
+def _parse_inventory(raw, class_name: str) -> InventoryRules:
+    defaults = {
+        "warrior": {"strength": 2.0, "agility": 1.0, "stamina": 1.5},
+        "priest": {"intellect": 2.0, "spirit": 1.5, "stamina": 1.0,
+                   "spell_power": 2.0},
+        "rogue": {"agility": 2.0, "strength": 1.0, "stamina": 1.0,
+                  "attack_power": 1.0},
+    }
+    raw = raw or {}
+    if not isinstance(raw, dict):
+        raise ProfileError("profile.inventory must be a mapping")
+    weights = dict(defaults.get(class_name, {"stamina": 1.0}))
+    raw_weights = raw.get("stat_weights", weights)
+    if not isinstance(raw_weights, dict) or not raw_weights:
+        raise ProfileError("inventory.stat_weights must be a non-empty mapping")
+    weights = {}
+    for name, value in raw_weights.items():
+        if not isinstance(name, str) or not name.strip():
+            raise ProfileError("inventory.stat_weights names must be strings")
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ProfileError("inventory.stat_weights values must be numbers")
+        weights[name.strip().lower()] = float(value)
+
+    supplies = []
+    raw_supplies = raw.get("supplies", [])
+    if not isinstance(raw_supplies, list):
+        raise ProfileError("inventory.supplies must be a list")
+    for index, entry in enumerate(raw_supplies):
+        if not isinstance(entry, dict):
+            raise ProfileError(f"inventory.supplies[{index}] must be a mapping")
+        maximum = entry.get("max_price")
+        if maximum is not None:
+            maximum = _required_int(entry, "max_price", minimum=0)
+        supplies.append(PurchaseRule(
+            item_id=_required_int(entry, "item_id", minimum=1),
+            target_count=_required_int(entry, "target_count", minimum=1),
+            max_price=maximum,
+        ))
+    return InventoryRules(
+        stat_weights=weights,
+        armor_weight=_optional_float(raw, "armor_weight", 0.0, minimum=0.0),
+        weapon_dps_weight=_optional_float(
+            raw, "weapon_dps_weight", 0.0, minimum=0.0),
+        min_free_slots=_optional_int(raw, "min_free_slots", 1, minimum=0),
+        sell_quality_max=_optional_int(raw, "sell_quality_max", 1, minimum=0),
+        protected_item_ids=_int_tuple(raw.get("protected_item_ids", []),
+                                      "inventory.protected_item_ids"),
+        material_item_ids=_int_tuple(raw.get("material_item_ids", []),
+                                     "inventory.material_item_ids"),
+        supplies=tuple(supplies),
+    )
+
+
+def _int_tuple(raw, label: str) -> tuple[int, ...]:
+    if not isinstance(raw, list):
+        raise ProfileError(f"{label} must be a list")
+    result = []
+    for value in raw:
+        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+            raise ProfileError(f"{label} entries must be positive integers")
+        result.append(value)
+    return tuple(result)
+
+
 # --------------------------------------------------------------- primitives
 
 def _required_text(raw: dict, key: str) -> str:
@@ -247,6 +340,14 @@ def _optional_int(raw: dict, key: str, default: int, *, minimum: int) -> int:
     if key not in raw:
         return default
     return _required_int(raw, key, minimum=minimum)
+
+
+def _optional_float(
+    raw: dict, key: str, default: float, *, minimum: float
+) -> float:
+    if key not in raw:
+        return default
+    return _required_float(raw, key, minimum=minimum)
 
 
 def _required_float(

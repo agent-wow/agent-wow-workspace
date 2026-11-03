@@ -133,6 +133,37 @@ class AdapterNormalizationTests(unittest.TestCase):
         self.assertFalse(view.ready)
         self.assertEqual([call[0] for call in transport.calls], ["sense.get_self"])
 
+    def test_inventory_protojson_is_normalized_without_inventing_templates(self):
+        adapter = WorldAdapter(FakeTransport({
+            "inventory.get_state": {
+                "items": [{
+                    "guid": "42", "itemId": 25, "equipmentSlot": -1,
+                    "requiredClassMask": 1, "stats": {"strength": 3},
+                    "count": 2, "buyPrice": "100", "templateKnown": True,
+                }, {"guid": "43", "itemId": 26}],
+                "vendorItems": [], "freeSlots": 7, "money": 99,
+                "vendorGuid": "50", "vendorLoaded": True, "revision": "4",
+            },
+        }))
+        state = adapter.get_inventory()
+        self.assertEqual(state.items[0].guid, 42)
+        self.assertIsNone(state.items[0].equipment_slot)
+        self.assertEqual(state.items[0].stats["strength"], 3)
+        self.assertEqual(state.items[0].buy_price, 100)
+        self.assertFalse(state.items[1].template_known)
+        self.assertEqual(state.free_slots, 7)
+        self.assertTrue(state.vendor_loaded)
+        self.assertEqual(state.revision, 4)
+
+    def test_self_skill_ranks_are_normalized(self):
+        adapter = WorldAdapter(FakeTransport({
+            "sense.get_self": {
+                "ready": True, "unit": {"guid": 1},
+                "skills": [{"id": 44, "value": 5}],
+            },
+        }))
+        self.assertEqual(adapter.get_self()["skills"], {"44": 5})
+
     def test_transport_failure_becomes_adapter_error(self):
         adapter = WorldAdapter(FakeTransport({
             "sense.get_self": AdapterError("worldrpc down"),

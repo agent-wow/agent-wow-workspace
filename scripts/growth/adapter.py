@@ -16,6 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Protocol
 
+from .items import InventoryState, Item
 from .rpc import RPCError, call
 
 LIVE_KEYS = (
@@ -251,6 +252,44 @@ class WorldAdapter:
     def loot(self, guid: int) -> dict:
         return self._call("loot.loot", {"guid": str(int(guid))}, timeout=20.0)
 
+    def get_inventory(self) -> InventoryState:
+        return normalize_inventory(self._call("inventory.get_state"))
+
+    def list_inventory(self, vendor_guid: int) -> InventoryState:
+        return normalize_inventory(self._call(
+            "inventory.list_inventory", {"vendorGuid": str(int(vendor_guid))},
+            timeout=15.0))
+
+    def buy_item(self, vendor_guid: int, item_id: int, slot: int,
+                 count: int) -> InventoryState:
+        return normalize_inventory(self._call(
+            "inventory.buy", {
+                "vendorGuid": str(int(vendor_guid)), "itemId": int(item_id),
+                "slot": int(slot), "count": int(count),
+            }, timeout=15.0))
+
+    def sell_item(self, vendor_guid: int, item_guid: int,
+                  count: int = 0) -> InventoryState:
+        return normalize_inventory(self._call(
+            "inventory.sell", {
+                "vendorGuid": str(int(vendor_guid)),
+                "itemGuid": str(int(item_guid)), "count": int(count),
+            }, timeout=15.0))
+
+    def repair_item(self, vendor_guid: int, item_guid: int = 0) -> InventoryState:
+        return normalize_inventory(self._call(
+            "inventory.repair", {
+                "vendorGuid": str(int(vendor_guid)),
+                "itemGuid": str(int(item_guid)), "useGuildBank": False,
+            }, timeout=15.0))
+
+    def equip_item(self, item_guid: int, destination_slot: int) -> InventoryState:
+        return normalize_inventory(self._call(
+            "inventory.equip", {
+                "itemGuid": str(int(item_guid)),
+                "destinationSlot": int(destination_slot),
+            }, timeout=15.0))
+
     def release_spirit(self) -> dict:
         return normalize_combat(self._call(
             "combat.release_spirit", {}, timeout=20.0))
@@ -379,6 +418,7 @@ def normalize_unit(raw: dict) -> dict:
         "class_id": _as_int(_pick(raw, "class_id", "classId"), 0),
         "race_id": _as_int(_pick(raw, "race_id", "raceId"), 0),
         "money": _as_int(_pick(raw, "money"), 0),
+        "npc_flags": _as_int(_pick(raw, "npc_flags", "npcFlags"), 0),
         # Optional fact from the parallel protocol unit; absent means the
         # worker falls back to the spirit-healer path.
         "corpse_reclaimable": _as_bool(
@@ -418,7 +458,93 @@ def normalize_self(snapshot: dict) -> dict:
     normalized["ready"] = bool(ready)
     normalized["epoch"] = str(epoch) if epoch is not None else None
     normalized["map_id"] = map_id
+    skills = {}
+    raw_skills = snapshot.get("skills") or []
+    if isinstance(raw_skills, list):
+        for raw_skill in raw_skills:
+            if not isinstance(raw_skill, dict):
+                continue
+            skill_id = _opt_int(_pick(raw_skill, "id", "skill_id", "skillId"))
+            if skill_id is not None:
+                skills[str(skill_id)] = _as_int(
+                    _pick(raw_skill, "value", "rank", "current"), 0)
+    normalized["skills"] = skills
     return normalized
+
+
+def normalize_item(raw: dict) -> Item:
+    equipment_slot = _opt_int(_pick(raw, "equipment_slot", "equipmentSlot"))
+    if equipment_slot is not None and equipment_slot < 0:
+        equipment_slot = None
+    stats = _pick(raw, "stats") or {}
+    if not isinstance(stats, dict):
+        stats = {}
+    return Item(
+        guid=_as_int(_pick(raw, "guid"), 0),
+        item_id=_as_int(_pick(raw, "item_id", "itemId"), 0),
+        name=str(_pick(raw, "name") or ""),
+        quality=_as_int(_pick(raw, "quality"), 0),
+        class_id=_as_int(_pick(raw, "class_id", "classId"), 0),
+        subclass=_as_int(_pick(raw, "subclass"), 0),
+        inventory_type=_as_int(_pick(raw, "inventory_type", "inventoryType"), 0),
+        equipment_slot=equipment_slot,
+        required_level=_as_int(_pick(raw, "required_level", "requiredLevel"), 0),
+        required_class_mask=_as_int(
+            _pick(raw, "required_class_mask", "requiredClassMask"), 0),
+        required_skill=_as_int(_pick(raw, "required_skill", "requiredSkill"), 0),
+        required_skill_rank=_as_int(
+            _pick(raw, "required_skill_rank", "requiredSkillRank"), 0),
+        stats={str(name): _as_int(value) for name, value in stats.items()},
+        armor=_as_int(_pick(raw, "armor"), 0),
+        dps=_as_float(_pick(raw, "dps"), 0.0),
+        sell_price=_as_int(_pick(raw, "sell_price", "sellPrice"), 0),
+        buy_price=_as_int(_pick(raw, "buy_price", "buyPrice"), 0),
+        count=_as_int(_pick(raw, "count"), 1),
+        bag=_as_int(_pick(raw, "bag"), 0),
+        slot=_as_int(_pick(raw, "slot"), 0),
+        container_slots=_as_int(_pick(raw, "container_slots", "containerSlots"), 0),
+        equipped=_as_bool(_pick(raw, "equipped"), False),
+        quest_item=_as_bool(_pick(raw, "quest_item", "questItem"), False),
+        stock=_as_int(_pick(raw, "stock"), -1),
+        durability=_as_int(_pick(raw, "durability"), 0),
+        max_durability=_as_int(_pick(raw, "max_durability", "maxDurability"), 0),
+        template_known=_as_bool(_pick(raw, "template_known", "templateKnown"), False),
+        bonding=_as_int(_pick(raw, "bonding"), 0),
+    )
+
+
+def normalize_inventory(raw: dict) -> InventoryState:
+    if not isinstance(raw, dict):
+        raise AdapterError("inventory state returned a non-object")
+    def rows(*names: str) -> tuple[Item, ...]:
+        value = _pick(raw, *names) or []
+        if not isinstance(value, list):
+            raise AdapterError(f"inventory.{names[0]} is not a list")
+        return tuple(normalize_item(row) for row in value if isinstance(row, dict))
+
+    failure = _pick(raw, "last_failure", "lastFailure") or {}
+    if not isinstance(failure, dict):
+        failure = {}
+    normalized_failure = {
+        "operation": str(_pick(failure, "operation") or ""),
+        "result": _as_int(_pick(failure, "result"), 0),
+        "item_guid": _as_int(_pick(failure, "item_guid", "itemGuid"), 0),
+        "item_id": _as_int(_pick(failure, "item_id", "itemId"), 0),
+        "required_level": _as_int(
+            _pick(failure, "required_level", "requiredLevel"), 0),
+        "detail": str(_pick(failure, "detail") or ""),
+    }
+    vendor_guid = _as_int(_pick(raw, "vendor_guid", "vendorGuid"), 0)
+    return InventoryState(
+        items=rows("items"), vendor_items=rows("vendor_items", "vendorItems"),
+        buyback=rows("buyback"), money=_as_int(_pick(raw, "money"), 0),
+        free_slots=_as_int(_pick(raw, "free_slots", "freeSlots"), 0),
+        vendor_guid=vendor_guid or None,
+        vendor_loaded=_as_bool(_pick(raw, "vendor_loaded", "vendorLoaded"), False),
+        revision=_as_int(_pick(raw, "revision"), 0),
+        failure_count=_as_int(_pick(raw, "failure_count", "failureCount"), 0),
+        last_failure=normalized_failure,
+    )
 
 
 def normalize_combat(raw: dict) -> dict:

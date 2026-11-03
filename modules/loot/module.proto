@@ -10,6 +10,8 @@ import "google/protobuf/empty.proto";
 message LootItem {
   uint32 item_id = 1;
   uint32 count = 2;
+  uint32 slot = 3;
+  uint32 slot_type = 4;
 }
 
 // LootState reports what the module has seen and done this session.
@@ -28,6 +30,9 @@ message LootState {
   string last_error = 6;
   // Rows from the most recent successful open.
   repeated LootItem last_items = 7;
+  // Current open window, retained while auto_loot is disabled.
+  uint64 current_guid = 8;
+  uint32 current_gold = 9;
 }
 
 message LootRequest {
@@ -39,9 +44,16 @@ message AutoLootRequest {
   bool enabled = 1;
 }
 
+message TakeRequest {
+  uint64 guid = 1;
+  repeated uint32 slots = 2;
+  bool take_money = 3;
+}
+
 service Module {
   rpc GetState(google.protobuf.Empty) returns (LootState);
   rpc Loot(LootRequest) returns (LootState);
+  rpc Take(TakeRequest) returns (LootState);
   rpc SetAutoLoot(AutoLootRequest) returns (LootState);
   rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);
 }

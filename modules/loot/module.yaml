@@ -9,6 +9,7 @@ grpc:
 rpc:
   get_state: /loot.module.v1.Module/GetState
   loot: /loot.module.v1.Module/Loot
+  take: /loot.module.v1.Module/Take
   set_auto_loot: /loot.module.v1.Module/SetAutoLoot
 packets:
   SMSG_LOOT_RESPONSE: /loot.module.v1.Module/OnPacket

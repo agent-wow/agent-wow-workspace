@@ -18,7 +18,8 @@ of this folder and requires a valid `module.yaml` in each one
 | `move` | implemented, verified | Locomotion: forward/back/turn/stop plus position estimate |
 | `combat` | implemented, verified | Melee swing, stop, spells, death and spirit-healer recovery |
 | `party` | implemented, verifying | Accepts `SMSG_GROUP_INVITE` automatically (`party.get_state`, `party.set_auto_accept`) |
-| `loot` | implemented, verifying | Opens corpses and takes items and money (`loot.loot`, `loot.get_state`) |
+| `loot` | implemented, verifying | Opens corpses, selective/group-safe loot and money (`loot.loot`, `loot.take`, `loot.get_state`) |
+| `inventory` | implemented, unit tested | Bags, equipment, item templates, vendor buy/sell/repair and buyback |
 | `quest` | implemented, unit tested | Quest-giver menus, accept/turn-in, kill progress and rewards |
 
 `sense` and `move` are both live. Note the split: `move` owns the character's

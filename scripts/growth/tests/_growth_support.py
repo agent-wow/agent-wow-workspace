@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 from scripts.growth.adapter import WorldView
+from scripts.growth.items import InventoryState
 from scripts.growth.profiles import load_profile
 from scripts.growth.routes import load_route
 
@@ -128,6 +129,10 @@ class FakeAdapter:
     def attack(self, guid):
         self.calls.append(("attack", (int(guid),)))
         return {"target_guid": int(guid), "attacking": True}
+
+    def get_inventory(self):
+        self.calls.append(("get_inventory", ()))
+        return InventoryState()
 
     def stop_attack(self):
         self.calls.append(("stop_attack", ()))
