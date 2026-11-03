@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "class": "warrior",
+  "source": "WotLK 3.3.5a warrior baseline; costs are native resource points and rage update fields store the value x10",
+  "roles": ["tank", "dps"],
+  "resource": "rage",
+  "resource_scale": 10,
+  "skills": [
+    {
+      "name": "Heroic Strike",
+      "spell_id": 78,
+      "cost": 15,
+      "priority": 10,
+      "min_level": 1,
+      "requires_target": true,
+      "in_combat_only": true
+    },
+    {
+      "name": "Thunder Clap",
+      "spell_id": 6343,
+      "cost": 20,
+      "priority": 5,
+      "min_level": 1,
+      "requires_target": true,
+      "in_combat_only": true
+    }
+  ],
+  "recovery": {
+    "rest_below_pct": 0.65,
+    "rest_until_pct": 0.85,
+    "flee_below_pct": 0.25,
+    "max_rest_seconds": 40,
+    "rest_step_seconds": 1
+  },
+  "combat": {
+    "engage_radius": 40,
+    "melee_range": 4,
+    "approach_step": 12,
+    "dz_tolerance": 3,
+    "attack_reissue_seconds": 2,
+    "cast_interval_seconds": 3,
+    "stall_seconds": 10,
+    "no_kill_seconds": 120,
+    "max_approach_seconds": 20,
+    "blacklist_seconds": 45,
+    "side_step_distance": 20,
+    "crowd_radius": 8,
+    "max_crowd": 2,
+    "lost_target_limit": 3,
+    "spell_disable_seconds": 60
+  },
+  "route": {
+    "zone": "elwynn-forest",
+    "map_id": 0
+  }
+}

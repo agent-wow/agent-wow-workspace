@@ -17,6 +17,12 @@ message CastRequest {
   uint64 target_guid = 2;
 }
 
+message Vector3 {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
 message CombatState {
   bool has_target = 1;
   uint64 target_guid = 2;
@@ -41,8 +47,30 @@ message CombatState {
   uint32 refusals = 19;
   uint32 level_ups = 20;
   uint32 cast_failures = 21;
-  // Warrior rage, UNIT_FIELD_POWER1.
+  // Legacy alias for the rage slot. New code should read self_power_type and
+  // self_power instead; the primary slot is UNIT_FIELD_POWER1 + power type, so
+  // a warrior's rage is POWER2, a rogue's energy is POWER4 and a priest's mana
+  // is POWER1.
   uint32 self_rage = 22;
+  // Primary power type from UNIT_FIELD_BYTES_0: 0 mana, 1 rage, 2 focus,
+  // 3 energy, 4 happiness, 5 rune, 6 runic power.
+  uint32 self_power_type = 23;
+  uint32 self_power = 24;
+  uint32 self_max_power = 25;
+  // Self_ghost is PLAYER_FLAGS & 0x10: released spirit, corpse still exists.
+  bool self_ghost = 26;
+  // Corpse reclaim delay last reported by the server and the module-computed
+  // time left. Zero delay or zero remaining means no active reclaim timer.
+  uint32 corpse_reclaim_delay_ms = 27;
+  uint32 corpse_reclaim_remaining_ms = 28;
+  // Graveyard/spirit-healer location from SMSG_DEATH_RELEASE_LOC. The map id
+  // and position are only valid when has_spirit_healer_location is true.
+  uint32 spirit_healer_map_id = 29;
+  bool has_spirit_healer_location = 30;
+  Vector3 spirit_healer_position = 31;
+  // Tracked target facts from update fields.
+  uint32 target_level = 32;
+  uint32 target_entry = 33;
 }
 
 message SpiritHealerRequest {
@@ -60,6 +88,10 @@ message StatusResponse {
   uint32 gossip_messages = 6;
   uint32 spirit_healer_confirms = 7;
   uint32 corpse_reclaim_delays = 8;
+  uint32 death_release_locations = 9;
+  // Number of authoritative world entries (SMSG_LOGIN_VERIFY_WORLD and
+  // SMSG_NEW_WORLD) that cleared the tracked target.
+  uint32 world_resets = 10;
 }
 
 service Module {

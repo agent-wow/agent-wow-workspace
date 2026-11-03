@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "class": "priest",
+  "source": "WotLK 3.3.5a mana-healer baseline; the heal is role-driven and only eligible below 50% health",
+  "roles": ["healer", "dps"],
+  "resource": "mana",
+  "resource_scale": 1,
+  "skills": [
+    {
+      "name": "Lesser Heal",
+      "spell_id": 2050,
+      "cost": 40,
+      "priority": 20,
+      "min_level": 1,
+      "requires_target": false,
+      "in_combat_only": false,
+      "when_health_below_pct": 0.5
+    },
+    {
+      "name": "Smite",
+      "spell_id": 585,
+      "cost": 30,
+      "priority": 10,
+      "min_level": 1,
+      "requires_target": true,
+      "in_combat_only": true
+    }
+  ],
+  "recovery": {
+    "rest_below_pct": 0.6,
+    "rest_until_pct": 0.8,
+    "flee_below_pct": 0.2,
+    "max_rest_seconds": 40,
+    "rest_step_seconds": 1
+  },
+  "combat": {
+    "engage_radius": 35,
+    "melee_range": 28,
+    "auto_attack": false,
+    "approach_step": 12,
+    "dz_tolerance": 3,
+    "attack_reissue_seconds": 2,
+    "cast_interval_seconds": 2.5,
+    "stall_seconds": 10,
+    "no_kill_seconds": 120,
+    "max_approach_seconds": 20,
+    "blacklist_seconds": 45,
+    "side_step_distance": 20,
+    "crowd_radius": 8,
+    "max_crowd": 2,
+    "lost_target_limit": 3,
+    "spell_disable_seconds": 60
+  },
+  "route": {
+    "zone": "elwynn-forest",
+    "map_id": 0
+  }
+}

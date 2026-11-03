@@ -19,9 +19,15 @@ rpc:
   debug_fields: /sense.module.v1.Module/DebugFields
 packets:
   SMSG_LOGIN_VERIFY_WORLD: /sense.module.v1.Module/OnPacket
+  SMSG_NEW_WORLD: /sense.module.v1.Module/OnPacket
   SMSG_UPDATE_OBJECT: /sense.module.v1.Module/OnPacket
   SMSG_COMPRESSED_UPDATE_OBJECT: /sense.module.v1.Module/OnPacket
   SMSG_DESTROY_OBJECT: /sense.module.v1.Module/OnPacket
   SMSG_NAME_QUERY_RESPONSE: /sense.module.v1.Module/OnPacket
   SMSG_CREATURE_QUERY_RESPONSE: /sense.module.v1.Module/OnPacket
   SMSG_MONSTER_MOVE: /sense.module.v1.Module/OnPacket
+  SMSG_SPELL_COOLDOWN: /sense.module.v1.Module/OnPacket
+  SMSG_COOLDOWN_EVENT: /sense.module.v1.Module/OnPacket
+  SMSG_AURA_UPDATE: /sense.module.v1.Module/OnPacket
+  SMSG_AURA_UPDATE_ALL: /sense.module.v1.Module/OnPacket
+  SMSG_UPDATE_COMBO_POINTS: /sense.module.v1.Module/OnPacket

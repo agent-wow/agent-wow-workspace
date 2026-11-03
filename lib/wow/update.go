@@ -84,7 +84,8 @@ func (t ObjectType) String() string {
 	}
 }
 
-// Update field indices used by this workspace (see AzerothCore UpdateFields.h).
+// Update field indices used by this workspace (see AzerothCore UpdateFields.h,
+// pinned commit d80ce1d8). OBJECT_END is 0x0006.
 const (
 	ObjectFieldGUID    uint32 = 0x0000
 	ObjectFieldEntry   uint32 = 0x0003
@@ -92,10 +93,41 @@ const (
 	UnitFieldBytes0    uint32 = 0x0017
 	UnitFieldHealth    uint32 = 0x0018
 	UnitFieldPower1    uint32 = 0x0019
+	UnitFieldPower2    uint32 = 0x001A
+	UnitFieldPower3    uint32 = 0x001B
+	UnitFieldPower4    uint32 = 0x001C
+	UnitFieldPower5    uint32 = 0x001D
+	UnitFieldPower6    uint32 = 0x001E
+	UnitFieldPower7    uint32 = 0x001F
 	UnitFieldMaxHealth uint32 = 0x0020
+	UnitFieldMaxPower1 uint32 = 0x0021
+	UnitFieldMaxPower2 uint32 = 0x0022
+	UnitFieldMaxPower3 uint32 = 0x0023
+	UnitFieldMaxPower4 uint32 = 0x0024
+	UnitFieldMaxPower5 uint32 = 0x0025
+	UnitFieldMaxPower6 uint32 = 0x0026
+	UnitFieldMaxPower7 uint32 = 0x0027
 	UnitFieldLevel     uint32 = 0x0036
 	UnitFieldFaction   uint32 = 0x0037
 	UnitFieldFlags     uint32 = 0x003B
+	// UnitFieldDisplayID is UNIT_FIELD_DISPLAYID.
+	UnitFieldDisplayID uint32 = 0x0043
+	UnitFieldBytes1    uint32 = 0x004A
+	// UnitFieldDynamicFlags is a uint32 whose low byte is UNIT_DYNAMIC_FLAGS
+	// (lootable, skinnable, tagged); the high bytes are unused.
+	UnitFieldDynamicFlags uint32 = 0x004F
+	// UnitFieldNpcFlags is a uint32 whose low bytes are UNIT_NPC_FLAGS
+	// (gossip, questgiver, vendor, trainer, spirit healer).
+	UnitFieldNpcFlags uint32 = 0x0052
+
+	// Game object fields (EGameObjectFields; OBJECT_END + offset).
+	GameObjectDisplayID uint32 = 0x0008
+	GameObjectFlags     uint32 = 0x0009
+	GameObjectFaction   uint32 = 0x000F
+	GameObjectLevel     uint32 = 0x0010
+	// GameObjectBytes1 packs state (byte 0), type id (byte 1), art kit
+	// (byte 2) and animation progress (byte 3).
+	GameObjectBytes1 uint32 = 0x0011
 
 	// UNIT_END is 0x94 in build 12340.
 	PlayerFlags       uint32 = 0x0096
@@ -111,6 +143,53 @@ const (
 	// after XP and is two-short pairs, not money.
 	PlayerCoinage uint32 = 0x0492
 )
+
+// Primary power types, from UNIT_FIELD_BYTES_0 byte 3 (SharedDefines.h Powers).
+// The live slot for a type is UnitFieldPower1 + type, so a warrior's rage lives
+// at UnitFieldPower2 and a rogue's energy at UnitFieldPower4.
+const (
+	PowerMana       uint32 = 0
+	PowerRage       uint32 = 1
+	PowerFocus      uint32 = 2
+	PowerEnergy     uint32 = 3
+	PowerHappiness  uint32 = 4
+	PowerRune       uint32 = 5
+	PowerRunicPower uint32 = 6
+	MaxPowers       uint32 = 7
+	PowerAll        uint32 = 127
+	PowerHealth     uint32 = 0xFFFFFFFE
+)
+
+// PowerTypeFromBytes0 extracts the primary power type from UNIT_FIELD_BYTES_0.
+func PowerTypeFromBytes0(v uint32) uint32 {
+	return (v >> 24) & 0xff
+}
+
+// PowerFieldIndex returns UNIT_FIELD_POWER1 + powerType, or false when the
+// type has no update-field slot (unknown, POWER_ALL, POWER_HEALTH).
+func PowerFieldIndex(powerType uint32) (uint32, bool) {
+	if powerType >= MaxPowers {
+		return 0, false
+	}
+	return UnitFieldPower1 + powerType, true
+}
+
+// MaxPowerFieldIndex returns UNIT_FIELD_MAXPOWER1 + powerType.
+func MaxPowerFieldIndex(powerType uint32) (uint32, bool) {
+	if powerType >= MaxPowers {
+		return 0, false
+	}
+	return UnitFieldMaxPower1 + powerType, true
+}
+
+// GameObjectState returns GAMEOBJECT_STATE from GAMEOBJECT_BYTES_1.
+func GameObjectState(v uint32) uint32 { return v & 0xff }
+
+// GameObjectTypeID returns the gameobject type id from GAMEOBJECT_BYTES_1.
+func GameObjectTypeID(v uint32) uint32 { return (v >> 8) & 0xff }
+
+// GameObjectAnimProgress returns the animation progress from GAMEOBJECT_BYTES_1.
+func GameObjectAnimProgress(v uint32) uint32 { return (v >> 24) & 0xff }
 
 // Selected flag bits used by the modules.
 const (
@@ -282,8 +361,10 @@ func ParseUpdateObject(body []byte) (*Update, error) {
 	return u, nil
 }
 
-// ParseLoginVerifyWorld decodes SMSG_LOGIN_VERIFY_WORLD: map id followed by the
-// character's world position and orientation.
+// ParseLoginVerifyWorld decodes SMSG_LOGIN_VERIFY_WORLD and SMSG_NEW_WORLD:
+// both carry the map id followed by the character's world position and
+// orientation. SMSG_NEW_WORLD is sent on every map transition, so callers must
+// treat it as a full world-state reset, not an incremental position update.
 func ParseLoginVerifyWorld(body []byte) (uint32, Position, error) {
 	if len(body) < 20 {
 		return 0, Position{}, fmt.Errorf("login verify world: body length %d", len(body))

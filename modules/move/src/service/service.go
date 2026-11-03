@@ -44,6 +44,14 @@ type Service struct {
 	runSpeed    float32
 	packets     uint32
 	parseErrors uint32
+	// worldEpoch increments on every authoritative world entry
+	// (SMSG_LOGIN_VERIFY_WORLD and SMSG_NEW_WORLD). In-flight moves capture it
+	// and abort instead of storing or sending old-map coordinates. worldCh is
+	// closed and replaced on each reset to wake a blocked walk immediately.
+	worldEpoch uint64
+	mapID      uint32
+	hasMap     bool
+	worldCh    chan struct{}
 }
 
 // New reads the identity agent-wow injects into the container.
@@ -53,6 +61,7 @@ func New(session modv1.SessionClient) *Service {
 		session:  session,
 		selfGUID: wow.GUID(guid),
 		runSpeed: defaultRunSpeed,
+		worldCh:  make(chan struct{}),
 	}
 }
 
@@ -91,8 +100,9 @@ func (s *Service) TurnTo(ctx context.Context, req *modulev1.TurnToRequest) (*mod
 	}
 	s.pos.O = float32(wow.NormalizeOrientation(float64(req.GetOrientation())))
 	pos := s.pos
+	epoch := s.worldEpoch
 	s.mu.Unlock()
-	if err := s.send(ctx, opcode.MSGMoveSetFacing, 0, pos); err != nil {
+	if err := s.sendForEpoch(ctx, epoch, opcode.MSGMoveSetFacing, 0, pos); err != nil {
 		return nil, err
 	}
 	return &modulev1.PositionResponse{Position: toProto(pos)}, nil
@@ -104,11 +114,12 @@ func (s *Service) Stop(ctx context.Context, _ *emptypb.Empty) (*modulev1.Positio
 	s.mu.RLock()
 	pos := s.pos
 	hasPos := s.hasPos
+	epoch := s.worldEpoch
 	s.mu.RUnlock()
 	if !hasPos {
 		return nil, status.Error(codes.FailedPrecondition, "position unknown: wait for the character to enter the world")
 	}
-	if err := s.send(ctx, opcode.MSGMoveStop, 0, pos); err != nil {
+	if err := s.sendForEpoch(ctx, epoch, opcode.MSGMoveStop, 0, pos); err != nil {
 		return nil, err
 	}
 	return &modulev1.PositionResponse{Position: toProto(pos)}, nil
@@ -135,6 +146,9 @@ func (s *Service) Status(context.Context, *emptypb.Empty) (*modulev1.StatusRespo
 		RunSpeed:    s.runSpeed,
 		Packets:     s.packets,
 		ParseErrors: s.parseErrors,
+		WorldEpoch:  s.worldEpoch,
+		MapId:       s.mapID,
+		HasMap:      s.hasMap,
 	}, nil
 }
 
@@ -145,14 +159,23 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 
 	switch packet.GetOpcode() {
 	case opcode.SMSGLoginVerifyWorld:
-		_, pos, err := wow.ParseLoginVerifyWorld(packet.GetPayload())
+		mapID, pos, err := wow.ParseLoginVerifyWorld(packet.GetPayload())
 		if err != nil {
 			s.recordParseError("login verify", err)
 			return &emptypb.Empty{}, nil
 		}
-		s.mu.Lock()
-		s.pos, s.hasPos = pos, true
-		s.mu.Unlock()
+		s.resetWorld(mapID, pos)
+	case opcode.SMSGNewWorld:
+		// Every map transition invalidates the old position, map id and any
+		// in-flight walk. New-world coordinates are authoritative; the next
+		// movement packet starts from here, not from the old map.
+		mapID, pos, err := wow.ParseLoginVerifyWorld(packet.GetPayload())
+		if err != nil {
+			s.recordParseError("new world", err)
+			return &emptypb.Empty{}, nil
+		}
+		s.resetWorld(mapID, pos)
+		slog.Info("world changed", "map_id", mapID, "x", pos.X, "y", pos.Y, "z", pos.Z)
 	case opcode.MSGMoveTeleportAck:
 		guid, counter, pos, err := wow.ParseTeleportAck(packet.GetPayload())
 		if err != nil {
@@ -186,6 +209,23 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 	return &emptypb.Empty{}, nil
 }
 
+// resetWorld applies one authoritative world entry. It bumps the epoch before
+// any caller can observe the new position, clears the moving flag and wakes an
+// in-flight walk so it cannot store or send coordinates from the old map.
+func (s *Service) resetWorld(mapID uint32, pos wow.Position) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.worldEpoch++
+	s.mapID = mapID
+	s.hasMap = true
+	s.pos, s.hasPos = pos, true
+	s.moving = false
+	if s.worldCh != nil {
+		close(s.worldCh)
+	}
+	s.worldCh = make(chan struct{})
+}
+
 func (s *Service) acknowledgeTeleport(guid wow.GUID, counter uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
@@ -208,7 +248,7 @@ func (s *Service) travel(ctx context.Context, yards float32, backward bool) (*mo
 	}
 	s.moveMu.Lock()
 	defer s.moveMu.Unlock()
-	start, speed, err := s.startMove()
+	start, speed, epoch, worldCh, err := s.startMove()
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +261,7 @@ func (s *Service) travel(ctx context.Context, yards float32, backward bool) (*mo
 		moveFlags = wow.MovementFlagBackward
 	}
 	end := wow.ForwardPosition(start, sign*float64(yards))
-	return s.walk(ctx, start, end, moveFlags, startOp, speed)
+	return s.walk(ctx, epoch, worldCh, start, end, moveFlags, startOp, speed)
 }
 
 // MoveTo walks straight toward a world position, interpolating Z so slopes do
@@ -232,7 +272,7 @@ func (s *Service) MoveTo(ctx context.Context, req *modulev1.MoveToRequest) (*mod
 	}
 	s.moveMu.Lock()
 	defer s.moveMu.Unlock()
-	start, speed, err := s.startMove()
+	start, speed, epoch, worldCh, err := s.startMove()
 	if err != nil {
 		return nil, err
 	}
@@ -252,26 +292,28 @@ func (s *Service) MoveTo(ctx context.Context, req *modulev1.MoveToRequest) (*mod
 	// character ~90 degrees off and swings get refused.
 	end.O = float32(wow.NormalizeOrientation(math.Atan2(dy, dx)))
 	start.O = end.O
-	if err := s.send(ctx, opcode.MSGMoveSetFacing, 0, start); err != nil {
+	if err := s.sendForEpoch(ctx, epoch, opcode.MSGMoveSetFacing, 0, start); err != nil {
 		s.endMove()
 		return nil, err
 	}
-	return s.walk(ctx, start, end, wow.MovementFlagForward, opcode.MSGMoveStartForward, speed)
+	return s.walk(ctx, epoch, worldCh, start, end, wow.MovementFlagForward, opcode.MSGMoveStartForward, speed)
 }
 
-// startMove locks in the start position and marks the character as moving. The
-// caller must hold moveMu and must call endMove when the walk finishes.
-func (s *Service) startMove() (wow.Position, float32, error) {
+// startMove locks in the start position and marks the character as moving. It
+// also snapshots the world epoch and reset channel so the walk can abort if
+// the map changes mid-step. The caller must hold moveMu and must call endMove
+// when the walk finishes.
+func (s *Service) startMove() (wow.Position, float32, uint64, <-chan struct{}, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if !s.hasPos {
-		return wow.Position{}, 0, status.Error(codes.FailedPrecondition, "position unknown: wait for the character to enter the world")
+		return wow.Position{}, 0, 0, nil, status.Error(codes.FailedPrecondition, "position unknown: wait for the character to enter the world")
 	}
 	if s.moving {
-		return wow.Position{}, 0, status.Error(codes.FailedPrecondition, "already moving")
+		return wow.Position{}, 0, 0, nil, status.Error(codes.FailedPrecondition, "already moving")
 	}
 	s.moving = true
-	return s.pos, s.runSpeed, nil
+	return s.pos, s.runSpeed, s.worldEpoch, s.worldCh, nil
 }
 
 func (s *Service) endMove() {
@@ -281,10 +323,12 @@ func (s *Service) endMove() {
 }
 
 // walk drives one straight-line movement from start to end. The caller holds
-// moveMu and has marked the character as moving.
-func (s *Service) walk(ctx context.Context, start, end wow.Position, moveFlags uint32, startOp uint32, speed float32) (*modulev1.PositionResponse, error) {
+// moveMu and has marked the character as moving. epoch and worldCh are the
+// snapshot taken by startMove; a world entry closes worldCh and aborts the walk
+// without sending a stop or storing a position that belongs to the old map.
+func (s *Service) walk(ctx context.Context, epoch uint64, worldCh <-chan struct{}, start, end wow.Position, moveFlags uint32, startOp uint32, speed float32) (*modulev1.PositionResponse, error) {
 	defer s.endMove()
-	if err := s.send(ctx, startOp, moveFlags, start); err != nil {
+	if err := s.sendForEpoch(ctx, epoch, startOp, moveFlags, start); err != nil {
 		return nil, err
 	}
 	dx := float64(end.X - start.X)
@@ -303,11 +347,20 @@ func (s *Service) walk(ctx context.Context, start, end wow.Position, moveFlags u
 
 	for {
 		select {
+		case <-worldCh:
+			// The server already placed the character on the new map. Sending a
+			// stop with old-map coordinates would drag it back, so just abort.
+			return nil, status.Error(codes.Aborted, "world changed during move")
 		case <-ctx.Done():
-			s.store(pos)
-			s.stopDetached(pos)
+			// The context is gone, so a detached stop is the only way to tell
+			// the server to halt; it is still epoch-checked.
+			s.storeIfEpoch(epoch, pos)
+			s.stopDetached(epoch, pos)
 			return nil, ctx.Err()
 		case <-ticker.C:
+			if err := s.ensureEpoch(epoch); err != nil {
+				return nil, err
+			}
 			traveled := float64(speed) * time.Since(started).Seconds()
 			fraction := 0.0
 			if distance > 0 {
@@ -317,14 +370,16 @@ func (s *Service) walk(ctx context.Context, start, end wow.Position, moveFlags u
 				fraction = 1
 			}
 			pos = lerpPosition(start, end, fraction)
-			s.store(pos)
-			if err := s.send(ctx, opcode.MSGMoveHeartbeat, moveFlags, pos); err != nil {
-				s.stopDetached(pos)
+			s.storeIfEpoch(epoch, pos)
+			if err := s.sendForEpoch(ctx, epoch, opcode.MSGMoveHeartbeat, moveFlags, pos); err != nil {
+				if status.Code(err) != codes.Aborted {
+					s.stopDetached(epoch, pos)
+				}
 				return nil, err
 			}
 		case <-deadline.C:
-			s.store(end)
-			if err := s.send(ctx, opcode.MSGMoveStop, 0, end); err != nil {
+			s.storeIfEpoch(epoch, end)
+			if err := s.sendForEpoch(ctx, epoch, opcode.MSGMoveStop, 0, end); err != nil {
 				return nil, err
 			}
 			return &modulev1.PositionResponse{Position: toProto(end)}, nil
@@ -357,16 +412,38 @@ func (s *Service) turn(ctx context.Context, radians float32) (*modulev1.Position
 	}
 	s.pos.O = float32(wow.NormalizeOrientation(float64(s.pos.O) + float64(radians)))
 	pos := s.pos
+	epoch := s.worldEpoch
 	s.mu.Unlock()
-	if err := s.send(ctx, opcode.MSGMoveSetFacing, 0, pos); err != nil {
+	if err := s.sendForEpoch(ctx, epoch, opcode.MSGMoveSetFacing, 0, pos); err != nil {
 		return nil, err
 	}
 	return &modulev1.PositionResponse{Position: toProto(pos)}, nil
 }
 
-func (s *Service) send(ctx context.Context, op uint32, flags uint32, pos wow.Position) error {
+// ensureEpoch returns Aborted after a world entry. Callers check it before
+// mutating shared state or sending a packet so an old-map move cannot leak
+// across a map transition.
+func (s *Service) ensureEpoch(epoch uint64) error {
+	s.mu.RLock()
+	current := s.worldEpoch
+	s.mu.RUnlock()
+	if current != epoch {
+		return status.Error(codes.Aborted, "world changed during move")
+	}
+	return nil
+}
+
+// sendForEpoch validates the world epoch before and after fetching the clock,
+// narrowing the window in which a reset can race a queued movement packet.
+func (s *Service) sendForEpoch(ctx context.Context, epoch uint64, op uint32, flags uint32, pos wow.Position) error {
+	if err := s.ensureEpoch(epoch); err != nil {
+		return err
+	}
 	clock, err := s.session.GetClock(ctx, &emptypb.Empty{})
 	if err != nil {
+		return err
+	}
+	if err := s.ensureEpoch(epoch); err != nil {
 		return err
 	}
 	_, err = s.session.SendPacket(ctx, &modv1.SendPacketRequest{
@@ -381,15 +458,21 @@ func (s *Service) send(ctx context.Context, op uint32, flags uint32, pos wow.Pos
 }
 
 // stopDetached sends a best-effort stop after the caller's context is gone.
-func (s *Service) stopDetached(pos wow.Position) {
+// It is skipped when the world already changed.
+func (s *Service) stopDetached(epoch uint64, pos wow.Position) {
+	if s.ensureEpoch(epoch) != nil {
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	_ = s.send(ctx, opcode.MSGMoveStop, 0, pos)
+	_ = s.sendForEpoch(ctx, epoch, opcode.MSGMoveStop, 0, pos)
 }
 
-func (s *Service) store(pos wow.Position) {
+func (s *Service) storeIfEpoch(epoch uint64, pos wow.Position) {
 	s.mu.Lock()
-	s.pos = pos
+	if s.worldEpoch == epoch {
+		s.pos = pos
+	}
 	s.mu.Unlock()
 }
 

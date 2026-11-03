@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Command-line entry point for the growth runtime (U1 lifecycle only).
+"""Command-line entry point for the growth runtime.
+
+The worker command attaches the stateful U2 solo growth loop after the U1
+identity gate; supervisor/backup/permission commands are unchanged.
 
 Usage (the shell wrappers in scripts/ call this file):
 
@@ -26,19 +29,23 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from scripts.growth.adapter import RPCCallTransport, WorldAdapter  # noqa: E402
 from scripts.growth.backup import create_backup, restore_backup  # noqa: E402
 from scripts.growth.identity import (  # noqa: E402
     load_account_ports,
     load_exported_account_ports,
     verify_roster,
 )
+from scripts.growth.machine import SoloGrowthMachine  # noqa: E402
 from scripts.growth.permissions import (  # noqa: E402
     audit_accounts,
     audit_tree,
     enforce_tree,
     ensure_private_dir,
 )
+from scripts.growth.profiles import ProfileError, load_profile  # noqa: E402
 from scripts.growth.roster import load_roster  # noqa: E402
+from scripts.growth.routes import RouteError, load_route  # noqa: E402
 from scripts.growth.stop import StopFlag  # noqa: E402
 from scripts.growth.store import CheckpointStore  # noqa: E402
 from scripts.growth.supervisor import GrowthSupervisor  # noqa: E402
@@ -152,27 +159,38 @@ def build_supervisor(roster) -> GrowthSupervisor:
 
 # ------------------------------------------------------------------- worker
 
-def rpc_snapshot(spec) -> dict:
-    from scripts.growth.rpc import call
-    return call(spec.port, "sense.get_self")
-
-
 def run_worker(args) -> int:
     roster = verified_roster(Path(args.roster) if args.roster else None)
     spec = roster.by_character().get(args.character)
     if spec is None or spec.account != args.account:
         log(f"roster has no {args.account}/{args.character}")
         return 2
+    try:
+        profile = load_profile(spec.class_name)
+        route = load_route(profile.route.zone)
+    except (ProfileError, RouteError) as exc:
+        log(f"growth content unavailable for {spec.class_name}: {exc}")
+        return 2
+    if not profile.supports_role(spec.role):
+        log(f"profile {profile.class_name} does not support roster role "
+            f"{spec.role}")
+        return 2
+
     state = state_root() / spec.account
     ensure_private_dir(state)
     store = CheckpointStore(state / f"{spec.name}.db")
     store.open()
     from scripts.growth.identity import EpochIdentityGate
+    adapter = WorldAdapter(RPCCallTransport(spec.port))
+    growth = SoloGrowthMachine(
+        profile, route, adapter=adapter, store=store, logger=log,
+        epoch_hint=args.epoch)
     worker = GrowthWorker(
         spec, store,
         lock_path=state / f"{spec.name}.worker.lock",
         stop_flag=StopFlag(),
-        gate=EpochIdentityGate(spec, lambda: rpc_snapshot(spec)),
+        gate=EpochIdentityGate(spec, adapter.get_self),
+        growth=growth,
         epoch=args.epoch,
         logger=log,
     )

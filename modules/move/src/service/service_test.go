@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"math"
+	"sync"
 	"testing"
 	"time"
 
@@ -138,6 +139,122 @@ func TestTeleportUpdatesPositionAndAcknowledges(t *testing.T) {
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("timed out waiting for teleport ack")
+	}
+}
+
+func worldPayload(mapID uint32, x, y, z, o float32) []byte {
+	body := binary.LittleEndian.AppendUint32(nil, mapID)
+	body = f32(body, x)
+	body = f32(body, y)
+	body = f32(body, z)
+	body = f32(body, o)
+	return body
+}
+
+func TestNewWorldResetsMapAndPosition(t *testing.T) {
+	t.Setenv("AGENT_WOW_CHARACTER_GUID", "42")
+	s := New(nil)
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGLoginVerifyWorld, Payload: worldPayload(1, 10, 20, 30, 0),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGNewWorld, Payload: worldPayload(0, -8949.95, -132.49, 83.53, math.Pi/2),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	st, err := s.Status(context.Background(), &emptypb.Empty{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st.WorldEpoch != 2 || st.MapId != 0 || !st.HasMap {
+		t.Fatalf("world state = epoch %d map %d/%v", st.WorldEpoch, st.MapId, st.HasMap)
+	}
+	if st.Position.X != -8949.95 || st.Position.Y != -132.49 ||
+		st.Position.Orientation != float32(math.Pi/2) || st.Moving {
+		t.Fatalf("position after transition = %+v moving=%v", st.Position, st.Moving)
+	}
+}
+
+// recordingSession records every movement packet sent by the module.
+type recordingSession struct {
+	modv1.SessionClient
+	mu        sync.Mutex
+	sent      []*modv1.SendPacketRequest
+	firstSent chan struct{}
+}
+
+func (f *recordingSession) GetClock(context.Context, *emptypb.Empty, ...grpc.CallOption) (*modv1.ClockResponse, error) {
+	return &modv1.ClockResponse{ClientTimeMs: 1234}, nil
+}
+
+func (f *recordingSession) SendPacket(_ context.Context, req *modv1.SendPacketRequest, _ ...grpc.CallOption) (*emptypb.Empty, error) {
+	f.mu.Lock()
+	f.sent = append(f.sent, req)
+	f.mu.Unlock()
+	select {
+	case f.firstSent <- struct{}{}:
+	default:
+	}
+	return &emptypb.Empty{}, nil
+}
+
+func TestWorldChangeAbortsInFlightMove(t *testing.T) {
+	t.Setenv("AGENT_WOW_CHARACTER_GUID", "42")
+	session := &recordingSession{firstSent: make(chan struct{}, 1)}
+	s := New(session)
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGLoginVerifyWorld, Payload: worldPayload(1, 10, 20, 30, 0),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.SetRunSpeed(context.Background(), &modulev1.RunSpeedRequest{YardsPerSecond: 1}); err != nil {
+		t.Fatal(err)
+	}
+
+	errCh := make(chan error, 1)
+	go func() {
+		_, err := s.Forward(context.Background(), &modulev1.MoveRequest{Yards: 40})
+		errCh <- err
+	}()
+	select {
+	case <-session.firstSent:
+	case <-time.After(2 * time.Second):
+		t.Fatal("move never sent its start packet")
+	}
+	// Only the start packet has been sent; no heartbeat can fire before the
+	// 500 ms ticker, so every later packet would belong to the old map.
+	session.mu.Lock()
+	before := len(session.sent)
+	session.mu.Unlock()
+
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGNewWorld, Payload: worldPayload(0, 100, 200, 300, 0),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case err := <-errCh:
+		if status.Code(err) != codes.Aborted {
+			t.Fatalf("move error = %v, want Aborted", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("in-flight move was not aborted by world change")
+	}
+
+	// Give a stale heartbeat a full ticker window to surface.
+	time.Sleep(600 * time.Millisecond)
+	session.mu.Lock()
+	after := len(session.sent)
+	session.mu.Unlock()
+	if after != before {
+		t.Fatalf("module sent %d old-map packet(s) after the world change", after-before)
+	}
+
+	pos, _ := s.GetPosition(context.Background(), &emptypb.Empty{})
+	if pos.Position.X != 100 || pos.Position.Y != 200 || pos.Moving {
+		t.Fatalf("position after aborted move = %+v moving=%v", pos.Position, pos.Moving)
 	}
 }
 

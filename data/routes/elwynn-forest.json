@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "zone": "elwynn-forest",
+  "map_id": 0,
+  "source": "Waypoints measured live on 2026-11-02 during the Northshire valley sense sweep and the Defias camp walk; not a generic pathfinding graph",
+  "bands": [
+    {
+      "min_level": 1,
+      "max_level": 4,
+      "source": "measured Northshire valley sweep 2026-11-02",
+      "waypoints": [
+        {"x": -8950.0, "y": -80.0, "z": 88.0},
+        {"x": -8975.0, "y": -65.0, "z": 91.0},
+        {"x": -8920.0, "y": -80.0, "z": 88.0},
+        {"x": -8960.0, "y": -50.0, "z": 91.5},
+        {"x": -8900.0, "y": -100.0, "z": 82.5},
+        {"x": -8990.0, "y": -120.0, "z": 84.0},
+        {"x": -9000.0, "y": -160.0, "z": 82.0},
+        {"x": -8920.0, "y": -150.0, "z": 82.0}
+      ]
+    },
+    {
+      "min_level": 5,
+      "max_level": 20,
+      "source": "Initial U2 sample from the measured Defias camp walk 2026-11-02; additional measured bands are required before final level-20 acceptance",
+      "waypoints": [
+        {"x": -9028.0, "y": -271.0, "z": 74.0},
+        {"x": -9039.0, "y": -273.0, "z": 74.0},
+        {"x": -9030.0, "y": -289.0, "z": 75.0},
+        {"x": -9050.0, "y": -300.0, "z": 73.0},
+        {"x": -9005.0, "y": -250.0, "z": 73.0}
+      ]
+    }
+  ],
+  "targets": {
+    "hostile_factions": [32],
+    "hostile_names": [
+      "wolf",
+      "diseased",
+      "defias",
+      "kobold",
+      "murloc",
+      "gnoll",
+      "boar",
+      "prowler",
+      "bear",
+      "spider",
+      "harvest watcher"
+    ],
+    "critter_names": [
+      "turkey",
+      "rabbit",
+      "deer",
+      "sheep",
+      "frog",
+      "chicken",
+      "cat",
+      "dog"
+    ],
+    "unit_types": [3],
+    "level_floor_delta": 3,
+    "level_ceiling_delta": 1
+  },
+  "recovery": {
+    "waypoint_arrival_radius": 6,
+    "waypoint_dwell_seconds": 5,
+    "route_change_waypoints": 1,
+    "spirit_healer_names": ["spirit healer", "幽灵医者"],
+    "spirit_healer_interact_range": 3.5,
+    "ghost_search_seconds": 30
+  }
+}

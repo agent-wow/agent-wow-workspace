@@ -51,6 +51,30 @@ type unit struct {
 	playerFlags uint32
 	faction     uint32
 	money       uint64
+	powerType   uint32
+	powers      [7]uint32
+	maxPowers   [7]uint32
+	displayID   uint32
+	bytes1      uint32
+	dynamicFlag uint32
+	npcFlags    uint32
+	auras       map[uint8]wow.Aura
+
+	// Game object fields, from EGameObjectFields.
+	goTypeID       uint32
+	goState        uint32
+	goAnimProgress uint32
+	goFlags        uint32
+	goDisplayID    uint32
+	goLevel        uint32
+	goFaction      uint32
+}
+
+// cooldownEntry remembers when the server reported a cooldown and how long it
+// lasts. Remaining time is derived at read time; the module never guesses.
+type cooldownEntry struct {
+	duration time.Duration
+	received time.Time
 }
 
 type creatureQuery struct {
@@ -68,6 +92,11 @@ type Service struct {
 
 	mu              sync.RWMutex
 	mapID           uint32
+	mapKnown        bool
+	mapChanges      uint32
+	epoch           uint64
+	ready           bool
+	sawInitial      bool
 	self            unit
 	selfFields      wow.UpdateFields
 	units           map[wow.GUID]*unit
@@ -82,6 +111,12 @@ type Service struct {
 	names           chan wow.GUID
 	creatures       chan creatureQuery
 	moveSamples     []string
+	cooldowns       map[uint32]cooldownEntry
+	cooldownPackets uint32
+	cooldownEvents  uint32
+	auraUpdates     uint32
+	comboPoints     uint8
+	comboTarget     wow.GUID
 }
 
 // livePos returns where the unit is now. Creature move packets only carry the
@@ -145,6 +180,7 @@ func New(session modv1.SessionClient) *Service {
 		creatureNames:   make(map[uint32]string),
 		names:           make(chan wow.GUID, nameQueueSize),
 		creatures:       make(chan creatureQuery, creatureQueueSize),
+		cooldowns:       make(map[uint32]cooldownEntry),
 	}
 }
 
@@ -190,14 +226,65 @@ func (s *Service) Start(ctx context.Context) {
 func (s *Service) GetSelf(context.Context, *emptypb.Empty) (*modulev1.SelfResponse, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	resp := &modulev1.SelfResponse{MapId: s.mapID, InWorld: s.self.hasPos}
-	if s.self.guid != 0 || s.self.name != "" {
-		self := s.self
-		self.pos = self.livePos(time.Now())
-		resp.Unit = toProto(&self, s.selfGUID)
+	now := time.Now()
+	resp := &modulev1.SelfResponse{
+		Guid:            uint64(s.selfGUID),
+		Name:            s.selfName,
+		MapId:           s.mapID,
+		InWorld:         s.self.hasPos,
+		Epoch:           s.epoch,
+		Ready:           s.ready,
+		MapChanges:      s.mapChanges,
+		HasMap:          s.mapKnown,
+		ComboPoints:     uint32(s.comboPoints),
+		ComboTargetGuid: uint64(s.comboTarget),
+		Cooldowns:       s.cooldownsLocked(now),
+	}
+	self := s.selfUnitLocked()
+	if self != nil && (self.guid != 0 || self.name != "") {
+		snapshot := *self
+		snapshot.pos = snapshot.livePos(now)
+		resp.Guid = uint64(self.guid)
+		resp.Name = self.name
+		resp.Unit = toProto(&snapshot, s.selfGUID)
+		resp.Auras = toProtoAuras(snapshot.auras)
 	}
 	resp.Skills = toProtoSkills(wow.DecodeSkills(s.selfFields))
 	return resp, nil
+}
+
+// selfUnitLocked returns the tracked self object. The env-provided identity is
+// used before the first update block creates it. The caller holds s.mu.
+func (s *Service) selfUnitLocked() *unit {
+	if u := s.units[s.selfGUID]; u != nil {
+		return u
+	}
+	if s.self.guid == 0 && s.self.name == "" {
+		return nil
+	}
+	return &s.self
+}
+
+// cooldownsLocked returns server-reported cooldowns that have not expired,
+// sorted by spell id. The caller holds s.mu.
+func (s *Service) cooldownsLocked(now time.Time) []*modulev1.Cooldown {
+	if len(s.cooldowns) == 0 {
+		return nil
+	}
+	out := make([]*modulev1.Cooldown, 0, len(s.cooldowns))
+	for spellID, entry := range s.cooldowns {
+		remaining := entry.duration - now.Sub(entry.received)
+		if remaining <= 0 {
+			continue
+		}
+		out = append(out, &modulev1.Cooldown{
+			SpellId:     spellID,
+			CooldownMs:  uint32(entry.duration / time.Millisecond),
+			RemainingMs: uint32(remaining / time.Millisecond),
+		})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].SpellId < out[j].SpellId })
+	return out
 }
 
 // GetSkills returns the character's skill lines. The server sends them in the
@@ -221,14 +308,28 @@ func (s *Service) GetNearby(_ context.Context, req *modulev1.NearbyRequest) (*mo
 
 	s.mu.RLock()
 	now := time.Now()
-	origin := s.self.livePos(now)
-	hasOrigin := s.self.hasPos
-	candidates := make([]unit, 0, len(s.units))
+	self := s.selfUnitLocked()
+	origin := wow.Position{}
+	hasOrigin := false
+	if self != nil {
+		origin = self.livePos(now)
+		hasOrigin = self.hasPos
+	}
+	var unitCandidates, gameObjectCandidates []unit
+	var knownUnits, knownGameObjects uint32
 	for guid, u := range s.units {
 		if guid == s.selfGUID {
 			continue
 		}
-		if u.typ != wow.ObjectTypeUnit && u.typ != wow.ObjectTypePlayer {
+		switch u.typ {
+		case wow.ObjectTypeUnit, wow.ObjectTypePlayer:
+			knownUnits++
+		case wow.ObjectTypeGameObject:
+			knownGameObjects++
+			if !req.GetIncludeGameObjects() {
+				continue
+			}
+		default:
 			continue
 		}
 		pos := u.livePos(now)
@@ -239,26 +340,44 @@ func (s *Service) GetNearby(_ context.Context, req *modulev1.NearbyRequest) (*mo
 		}
 		copied := *u
 		copied.pos = pos
-		candidates = append(candidates, copied)
+		if u.typ == wow.ObjectTypeGameObject {
+			gameObjectCandidates = append(gameObjectCandidates, copied)
+		} else {
+			unitCandidates = append(unitCandidates, copied)
+		}
 	}
-	known := uint32(len(s.units))
 	s.mu.RUnlock()
 
-	if hasOrigin {
-		sort.Slice(candidates, func(i, j int) bool {
-			di := candidates[i].pos.Distance2D(origin)
-			dj := candidates[j].pos.Distance2D(origin)
-			return di < dj
-		})
+	sortByDistance(unitCandidates, origin, hasOrigin)
+	sortByDistance(gameObjectCandidates, origin, hasOrigin)
+	if len(unitCandidates) > limit {
+		unitCandidates = unitCandidates[:limit]
 	}
-	if len(candidates) > limit {
-		candidates = candidates[:limit]
+	if len(gameObjectCandidates) > limit {
+		gameObjectCandidates = gameObjectCandidates[:limit]
 	}
-	resp := &modulev1.NearbyResponse{KnownUnits: known, Units: make([]*modulev1.Unit, 0, len(candidates))}
-	for i := range candidates {
-		resp.Units = append(resp.Units, toProto(&candidates[i], s.selfGUID))
+	resp := &modulev1.NearbyResponse{
+		KnownUnits:       knownUnits,
+		KnownGameObjects: knownGameObjects,
+		Units:            make([]*modulev1.Unit, 0, len(unitCandidates)),
+		GameObjects:      make([]*modulev1.GameObject, 0, len(gameObjectCandidates)),
+	}
+	for i := range unitCandidates {
+		resp.Units = append(resp.Units, toProto(&unitCandidates[i], s.selfGUID))
+	}
+	for i := range gameObjectCandidates {
+		resp.GameObjects = append(resp.GameObjects, toProtoGameObject(&gameObjectCandidates[i]))
 	}
 	return resp, nil
+}
+
+func sortByDistance(units []unit, origin wow.Position, hasOrigin bool) {
+	if !hasOrigin {
+		return
+	}
+	sort.Slice(units, func(i, j int) bool {
+		return units[i].pos.Distance2D(origin) < units[j].pos.Distance2D(origin)
+	})
 }
 
 func (s *Service) GetTarget(context.Context, *emptypb.Empty) (*modulev1.TargetResponse, error) {
@@ -266,7 +385,11 @@ func (s *Service) GetTarget(context.Context, *emptypb.Empty) (*modulev1.TargetRe
 	defer s.mu.RUnlock()
 	resp := &modulev1.TargetResponse{TargetGuid: uint64(s.target), HasTarget: s.target != 0}
 	if u, ok := s.units[s.target]; ok {
-		resp.Unit = toProto(u, s.selfGUID)
+		if u.typ == wow.ObjectTypeGameObject {
+			resp.GameObject = toProtoGameObject(u)
+		} else {
+			resp.Unit = toProto(u, s.selfGUID)
+		}
 	}
 	return resp, nil
 }
@@ -316,12 +439,25 @@ func (s *Service) QueryName(ctx context.Context, req *modulev1.QueryNameRequest)
 func (s *Service) Status(context.Context, *emptypb.Empty) (*modulev1.StatusResponse, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+	var knownUnits uint32
+	for _, u := range s.units {
+		if u.typ == wow.ObjectTypeUnit || u.typ == wow.ObjectTypePlayer {
+			knownUnits++
+		}
+	}
 	return &modulev1.StatusResponse{
 		Packets:         s.packets,
 		ParseErrors:     s.parseErrors,
-		KnownUnits:      uint32(len(s.units)),
+		KnownUnits:      knownUnits,
 		NameQueries:     s.nameQueries,
 		CreatureQueries: s.creatureQueries,
+		Epoch:           s.epoch,
+		Ready:           s.ready,
+		MapId:           s.mapID,
+		MapChanges:      s.mapChanges,
+		AuraUpdates:     s.auraUpdates,
+		CooldownPackets: s.cooldownPackets,
+		CooldownEvents:  s.cooldownEvents,
 	}, nil
 }
 
@@ -364,7 +500,22 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 	)
 	switch packet.GetOpcode() {
 	case opcode.SMSGLoginVerifyWorld:
-		s.applyLoginVerify(packet.GetPayload())
+		s.applyWorldReset(packet.GetPayload(), false)
+		return &emptypb.Empty{}, nil
+	case opcode.SMSGNewWorld:
+		s.applyWorldReset(packet.GetPayload(), true)
+		return &emptypb.Empty{}, nil
+	case opcode.SMSGAuraUpdate, opcode.SMSGAuraUpdateAll:
+		s.applyAuraUpdate(packet.GetPayload())
+		return &emptypb.Empty{}, nil
+	case opcode.SMSGSpellCooldown:
+		s.applySpellCooldown(packet.GetPayload())
+		return &emptypb.Empty{}, nil
+	case opcode.SMSGCooldownEvent:
+		s.applyCooldownEvent(packet.GetPayload())
+		return &emptypb.Empty{}, nil
+	case opcode.SMSGUpdateComboPoints:
+		s.applyComboPoints(packet.GetPayload())
 		return &emptypb.Empty{}, nil
 	case opcode.SMSGUpdateObject:
 		update, err = wow.ParseUpdateObject(packet.GetPayload())
@@ -379,6 +530,11 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 		s.mu.Lock()
 		if guid != s.selfGUID {
 			delete(s.units, guid)
+			if guid == s.target {
+				// Never keep a selected target the server has removed: the
+				// GUID may belong to an object that no longer exists.
+				s.target = 0
+			}
 		}
 		s.mu.Unlock()
 		return &emptypb.Empty{}, nil
@@ -450,6 +606,7 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 			}
 		}
 	}
+	s.markReadyLocked(len(update.Objects) > 0)
 	s.mu.Unlock()
 	for _, guid := range toQuery {
 		select {
@@ -472,15 +629,161 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 	return &emptypb.Empty{}, nil
 }
 
-func (s *Service) applyLoginVerify(body []byte) {
+// applyWorldReset handles the two authoritative world-entry packets. A login
+// starts a new epoch; SMSG_NEW_WORLD also starts a new epoch because every
+// GUID, position and cursor from the old map is invalid. In both cases the
+// snapshot accumulators are discarded so readiness can only be restored by
+// fresh server fields.
+func (s *Service) applyWorldReset(body []byte, mapChange bool) {
 	mapID, pos, err := wow.ParseLoginVerifyWorld(body)
 	if err != nil {
-		s.recordParseError("login verify", err)
+		s.recordParseError("world entry", err)
 		return
 	}
 	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.epoch++
+	if mapChange {
+		s.mapChanges++
+	}
 	s.mapID = mapID
-	s.self.pos, s.self.hasPos = pos, true
+	s.mapKnown = true
+	s.ready = false
+	s.sawInitial = false
+	s.selfFields = nil
+	s.units = make(map[wow.GUID]*unit)
+	s.self = unit{
+		guid:   s.selfGUID,
+		name:   s.selfName,
+		typ:    wow.ObjectTypePlayer,
+		pos:    pos,
+		hasPos: true,
+		auras:  make(map[uint8]wow.Aura),
+	}
+	s.target = 0
+	s.nameQueried = make(map[wow.GUID]struct{})
+	s.cooldowns = make(map[uint32]cooldownEntry)
+	s.comboPoints = 0
+	s.comboTarget = 0
+}
+
+// markReadyLocked promotes the snapshot to ready only when the post-transition
+// update actually carried the fields a class-driven worker needs. It never
+// uses a timer or a caller hint. The caller holds s.mu.
+func (s *Service) markReadyLocked(hadObjects bool) {
+	if s.ready || !s.mapKnown || !hadObjects {
+		return
+	}
+	s.sawInitial = true
+	fields := s.selfFields
+	if fields == nil || !s.self.hasPos {
+		return
+	}
+	_, hasHealth := fields.Uint32(wow.UnitFieldHealth)
+	_, hasMaxHealth := fields.Uint32(wow.UnitFieldMaxHealth)
+	_, hasLevel := fields.Uint32(wow.UnitFieldLevel)
+	bytes0, hasBytes0 := fields.Uint32(wow.UnitFieldBytes0)
+	if !hasHealth || !hasMaxHealth || !hasLevel || !hasBytes0 {
+		return
+	}
+	powerType := wow.PowerTypeFromBytes0(bytes0)
+	powerIndex, okPower := wow.PowerFieldIndex(powerType)
+	maxPowerIndex, okMaxPower := wow.MaxPowerFieldIndex(powerType)
+	if !okPower || !okMaxPower {
+		return
+	}
+	if _, ok := fields.Uint32(powerIndex); !ok {
+		return
+	}
+	if _, ok := fields.Uint32(maxPowerIndex); !ok {
+		return
+	}
+	s.ready = true
+}
+
+func (s *Service) applyAuraUpdate(body []byte) {
+	update, err := wow.ParseAuraUpdate(body)
+	if err != nil {
+		s.recordParseError("aura update", err)
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	u := s.units[update.Target]
+	if u == nil {
+		// Only self may create a unit out of an aura packet. Unknown GUIDs are
+		// ignored so a burst cannot grow the map without bound.
+		if update.Target != s.selfGUID {
+			return
+		}
+		u = s.newUnitLocked(update.Target, wow.ObjectTypePlayer)
+		s.units[update.Target] = u
+	}
+	if u.auras == nil {
+		u.auras = make(map[uint8]wow.Aura)
+	}
+	for _, aura := range update.Auras {
+		if aura.SpellID == 0 {
+			delete(u.auras, aura.Slot)
+		} else {
+			u.auras[aura.Slot] = aura
+		}
+	}
+	s.auraUpdates++
+	s.refreshSelf(u)
+}
+
+func (s *Service) applySpellCooldown(body []byte) {
+	guid, _, cooldowns, err := wow.ParseSpellCooldown(body)
+	if err != nil {
+		s.recordParseError("spell cooldown", err)
+		return
+	}
+	if guid != s.selfGUID {
+		return
+	}
+	now := time.Now()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.cooldowns == nil {
+		s.cooldowns = make(map[uint32]cooldownEntry)
+	}
+	for _, cooldown := range cooldowns {
+		if cooldown.CooldownMS == 0 {
+			delete(s.cooldowns, cooldown.SpellID)
+			continue
+		}
+		s.cooldowns[cooldown.SpellID] = cooldownEntry{
+			duration: time.Duration(cooldown.CooldownMS) * time.Millisecond,
+			received: now,
+		}
+	}
+	s.cooldownPackets++
+}
+
+func (s *Service) applyCooldownEvent(body []byte) {
+	event, err := wow.ParseCooldownEvent(body)
+	if err != nil {
+		s.recordParseError("cooldown event", err)
+		return
+	}
+	if event.GUID != s.selfGUID {
+		return
+	}
+	s.mu.Lock()
+	s.cooldownEvents++
+	s.mu.Unlock()
+}
+
+func (s *Service) applyComboPoints(body []byte) {
+	combo, err := wow.ParseComboPoints(body)
+	if err != nil {
+		s.recordParseError("combo points", err)
+		return
+	}
+	s.mu.Lock()
+	s.comboPoints = combo.Points
+	s.comboTarget = combo.Target
 	s.mu.Unlock()
 }
 
@@ -539,6 +842,25 @@ func (s *Service) applyCreatureQuery(body []byte) {
 	}
 }
 
+// newUnitLocked creates a unit, seeding the self entry with the last
+// world-entry position and identity so an incremental self update does not
+// erase facts learned from SMSG_NEW_WORLD/SMSG_LOGIN_VERIFY_WORLD. The caller
+// holds s.mu.
+func (s *Service) newUnitLocked(guid wow.GUID, typ wow.ObjectType) *unit {
+	u := &unit{guid: guid, typ: typ}
+	if guid != s.selfGUID {
+		return u
+	}
+	u.typ = wow.ObjectTypePlayer
+	u.name = s.selfName
+	u.pos = s.self.pos
+	u.hasPos = s.self.hasPos
+	if s.self.auras != nil {
+		u.auras = s.self.auras
+	}
+	return u
+}
+
 // applyObject merges one update block. The caller holds s.mu.
 func (s *Service) applyObject(obj wow.ObjectUpdate) *unit {
 	if obj.GUID == 0 {
@@ -547,7 +869,7 @@ func (s *Service) applyObject(obj wow.ObjectUpdate) *unit {
 	if obj.Kind == wow.UpdateCreate || obj.Kind == wow.UpdateCreate2 {
 		u := s.units[obj.GUID]
 		if u == nil {
-			u = &unit{guid: obj.GUID}
+			u = s.newUnitLocked(obj.GUID, obj.Type)
 			s.units[obj.GUID] = u
 		}
 		u.typ = obj.Type
@@ -571,10 +893,9 @@ func (s *Service) applyObject(obj wow.ObjectUpdate) *unit {
 		if uint16(uint64(obj.GUID)>>48) == 0 {
 			typ = wow.ObjectTypePlayer
 		}
-		u = &unit{guid: obj.GUID, typ: typ}
+		u = s.newUnitLocked(obj.GUID, typ)
 		if obj.GUID == s.selfGUID {
 			u.typ = wow.ObjectTypePlayer
-			u.name = s.selfName
 		}
 		s.units[obj.GUID] = u
 	}
@@ -598,6 +919,26 @@ func (s *Service) applyFields(u *unit, fields wow.UpdateFields) {
 	if v, ok := fields.Uint32(wow.ObjectFieldEntry); ok {
 		u.entry = v
 	}
+	if u.typ == wow.ObjectTypeGameObject {
+		if v, ok := fields.Uint32(wow.GameObjectDisplayID); ok {
+			u.goDisplayID = v
+		}
+		if v, ok := fields.Uint32(wow.GameObjectFlags); ok {
+			u.goFlags = v
+		}
+		if v, ok := fields.Uint32(wow.GameObjectFaction); ok {
+			u.goFaction = v
+		}
+		if v, ok := fields.Uint32(wow.GameObjectLevel); ok {
+			u.goLevel = v
+		}
+		if v, ok := fields.Uint32(wow.GameObjectBytes1); ok {
+			u.goState = wow.GameObjectState(v)
+			u.goTypeID = wow.GameObjectTypeID(v)
+			u.goAnimProgress = wow.GameObjectAnimProgress(v)
+		}
+		return
+	}
 	if v, ok := fields.Uint32(wow.UnitFieldHealth); ok {
 		u.health = v
 	}
@@ -610,6 +951,27 @@ func (s *Service) applyFields(u *unit, fields wow.UpdateFields) {
 	if v, ok := fields.Uint32(wow.UnitFieldBytes0); ok {
 		u.raceID = v & 0xff
 		u.classID = (v >> 8) & 0xff
+		u.powerType = wow.PowerTypeFromBytes0(v)
+	}
+	for powerType := uint32(0); powerType < wow.MaxPowers; powerType++ {
+		if v, ok := fields.Uint32(wow.UnitFieldPower1 + powerType); ok {
+			u.powers[powerType] = v
+		}
+		if v, ok := fields.Uint32(wow.UnitFieldMaxPower1 + powerType); ok {
+			u.maxPowers[powerType] = v
+		}
+	}
+	if v, ok := fields.Uint32(wow.UnitFieldDisplayID); ok {
+		u.displayID = v
+	}
+	if v, ok := fields.Uint32(wow.UnitFieldBytes1); ok {
+		u.bytes1 = v
+	}
+	if v, ok := fields.Uint32(wow.UnitFieldDynamicFlags); ok {
+		u.dynamicFlag = v
+	}
+	if v, ok := fields.Uint32(wow.UnitFieldNpcFlags); ok {
+		u.npcFlags = v
 	}
 	if v, ok := fields.Uint64(wow.UnitFieldTarget); ok {
 		u.target = wow.GUID(v)
@@ -676,30 +1038,86 @@ func (s *Service) queryName(ctx context.Context, guid wow.GUID) error {
 
 func toProto(u *unit, self wow.GUID) *modulev1.Unit {
 	out := &modulev1.Unit{
-		Guid:        uint64(u.guid),
-		Name:        u.name,
-		Type:        uint32(u.typ),
-		Position:    &modulev1.Vector3{X: u.pos.X, Y: u.pos.Y, Z: u.pos.Z},
-		Orientation: u.pos.O,
-		HasPosition: u.hasPos,
-		Health:      u.health,
-		MaxHealth:   u.maxHealth,
-		Level:       u.level,
-		ClassId:     u.classID,
-		RaceId:      u.raceID,
-		TargetGuid:  uint64(u.target),
-		IsSelf:      u.guid == self,
-		Entry:       u.entry,
-		Xp:          u.xp,
-		NextLevelXp: u.nextXP,
-		Flags:       u.flags,
-		PlayerFlags: u.playerFlags,
-		Dead:        (u.maxHealth > 0 && u.health == 0) || (u.guid == self && u.playerFlags&wow.PlayerFlagGhost != 0),
-		Faction:     u.faction,
-		InCombat:    u.flags&wow.UnitFlagInCombat != 0,
-		Money:       u.money,
+		Guid:         uint64(u.guid),
+		Name:         u.name,
+		Type:         uint32(u.typ),
+		Position:     &modulev1.Vector3{X: u.pos.X, Y: u.pos.Y, Z: u.pos.Z},
+		Orientation:  u.pos.O,
+		HasPosition:  u.hasPos,
+		Health:       u.health,
+		MaxHealth:    u.maxHealth,
+		Level:        u.level,
+		ClassId:      u.classID,
+		RaceId:       u.raceID,
+		TargetGuid:   uint64(u.target),
+		IsSelf:       u.guid == self,
+		Entry:        u.entry,
+		Xp:           u.xp,
+		NextLevelXp:  u.nextXP,
+		Flags:        u.flags,
+		PlayerFlags:  u.playerFlags,
+		Dead:         (u.maxHealth > 0 && u.health == 0) || (u.guid == self && u.playerFlags&wow.PlayerFlagGhost != 0),
+		Faction:      u.faction,
+		InCombat:     u.flags&wow.UnitFlagInCombat != 0,
+		Money:        u.money,
+		PowerType:    u.powerType,
+		DisplayId:    u.displayID,
+		DynamicFlags: u.dynamicFlag,
+		NpcFlags:     u.npcFlags,
+		Auras:        toProtoAuras(u.auras),
+	}
+	if u.powerType < wow.MaxPowers {
+		out.Power = u.powers[u.powerType]
+		out.MaxPower = u.maxPowers[u.powerType]
 	}
 	return out
+}
+
+func toProtoAuras(auras map[uint8]wow.Aura) []*modulev1.Aura {
+	if len(auras) == 0 {
+		return nil
+	}
+	slots := make([]int, 0, len(auras))
+	for slot := range auras {
+		slots = append(slots, int(slot))
+	}
+	sort.Ints(slots)
+	out := make([]*modulev1.Aura, 0, len(slots))
+	for _, slot := range slots {
+		aura := auras[uint8(slot)]
+		out = append(out, &modulev1.Aura{
+			Slot:          uint32(aura.Slot),
+			SpellId:       aura.SpellID,
+			Flags:         uint32(aura.Flags),
+			CasterLevel:   uint32(aura.CasterLevel),
+			Stacks:        uint32(aura.Stacks),
+			CasterGuid:    uint64(aura.Caster),
+			HasCaster:     aura.HasCaster,
+			MaxDurationMs: aura.MaxDurationMS,
+			DurationMs:    aura.DurationMS,
+			HasDuration:   aura.HasDuration,
+			Positive:      aura.Positive(),
+			Negative:      aura.Negative(),
+		})
+	}
+	return out
+}
+
+func toProtoGameObject(u *unit) *modulev1.GameObject {
+	return &modulev1.GameObject{
+		Guid:         uint64(u.guid),
+		Entry:        u.entry,
+		TypeId:       u.goTypeID,
+		DisplayId:    u.goDisplayID,
+		Flags:        u.goFlags,
+		State:        u.goState,
+		AnimProgress: u.goAnimProgress,
+		Level:        u.goLevel,
+		Faction:      u.goFaction,
+		Position:     &modulev1.Vector3{X: u.pos.X, Y: u.pos.Y, Z: u.pos.Z},
+		Orientation:  u.pos.O,
+		HasPosition:  u.hasPos,
+	}
 }
 
 // toProtoSkills turns the decoded skill lines into their wire form.

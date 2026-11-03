@@ -39,6 +39,61 @@ message Unit {
   bool in_combat = 21;
   // Copper carried by the character (PLAYER_FIELD_COIN1).
   uint64 money = 22;
+  // Primary power type from UNIT_FIELD_BYTES_0 byte 3: 0 mana, 1 rage,
+  // 2 focus, 3 energy, 4 happiness, 5 rune, 6 runic power.
+  uint32 power_type = 23;
+  // Current and maximum primary power, read from the slot for power_type.
+  uint32 power = 24;
+  uint32 max_power = 25;
+  uint32 display_id = 26;
+  // UNIT_DYNAMIC_FLAGS low byte (lootable/skinnable/tagged) and UNIT_NPC_FLAGS
+  // low bytes (gossip, questgiver, vendor, trainer, spirit healer).
+  uint32 dynamic_flags = 27;
+  uint32 npc_flags = 28;
+  // Visible aura slots reported for this unit. Empty until an aura packet for
+  // the unit arrives.
+  repeated Aura auras = 29;
+}
+
+// Aura is one visible aura slot. spell_id zero means the slot was cleared.
+message Aura {
+  uint32 slot = 1;
+  uint32 spell_id = 2;
+  uint32 flags = 3;
+  uint32 caster_level = 4;
+  uint32 stacks = 5;
+  uint64 caster_guid = 6;
+  bool has_caster = 7;
+  uint32 max_duration_ms = 8;
+  uint32 duration_ms = 9;
+  bool has_duration = 10;
+  bool positive = 11;
+  bool negative = 12;
+}
+
+// Cooldown is one server-reported spell cooldown. cooldown_ms is the duration
+// the server applied; remaining_ms is computed from the module's receipt time.
+message Cooldown {
+  uint32 spell_id = 1;
+  uint32 cooldown_ms = 2;
+  uint32 remaining_ms = 3;
+}
+
+// GameObject is a visible game object (herb/mining node, quest object, door,
+// chest) from the create block and game object update fields.
+message GameObject {
+  uint64 guid = 1;
+  uint32 entry = 2;
+  uint32 type_id = 3;
+  uint32 display_id = 4;
+  uint32 flags = 5;
+  uint32 state = 6;
+  uint32 anim_progress = 7;
+  uint32 level = 8;
+  uint32 faction = 9;
+  Vector3 position = 10;
+  float orientation = 11;
+  bool has_position = 12;
 }
 
 // Skill is one skill line of the character, decoded from the player's own
@@ -61,6 +116,31 @@ message SelfResponse {
   bool in_world = 3;
   // Skill lines of the character, professions included.
   repeated Skill skills = 4;
+  // State epoch. It increments on every SMSG_LOGIN_VERIFY_WORLD and every
+  // SMSG_NEW_WORLD (map transition), invalidating cursors, GUIDs and position
+  // assumptions from the previous epoch.
+  uint64 epoch = 5;
+  // Ready is the cold-start gate for this epoch: the character has entered the
+  // world, a map is known, and the first post-transition update carried the
+  // self health, max health, level, class/power type and primary power fields.
+  // It is derived from server packets, never set by the caller.
+  bool ready = 6;
+  // Number of map transitions observed in this process.
+  uint32 map_changes = 7;
+  // Has_map distinguishes a known map id from the valid map 0 (Eastern
+  // Kingdoms).
+  bool has_map = 8;
+  repeated Aura auras = 9;
+  repeated Cooldown cooldowns = 10;
+  // Combo points and their target (SMSG_UPDATE_COMBO_POINTS). Zero points or
+  // a zero target mean no active combo.
+  uint32 combo_points = 11;
+  uint64 combo_target_guid = 12;
+  // Top-level identity of the character this module is attached to. These
+  // duplicate unit.guid/unit.name so a cold-start gate can validate the
+  // session from the snapshot root without flattening nested messages.
+  uint64 guid = 13;
+  string name = 14;
 }
 
 message SkillsResponse {
@@ -70,19 +150,28 @@ message SkillsResponse {
 message NearbyRequest {
   // Zero means no distance filter.
   float radius = 1;
-  // Zero means the default of 32 units, capped at 200.
+  // Zero means the default of 32 units, capped at 200. The cap applies to
+  // units and game objects separately.
   uint32 limit = 2;
+  // Include game objects (nodes, quest objects, doors, chests). Off by
+  // default so existing unit-only callers keep their ordering and size.
+  bool include_game_objects = 3;
 }
 
 message NearbyResponse {
   repeated Unit units = 1;
   uint32 known_units = 2;
+  repeated GameObject game_objects = 3;
+  uint32 known_game_objects = 4;
 }
 
 message TargetResponse {
   bool has_target = 1;
   uint64 target_guid = 2;
   Unit unit = 3;
+  // Game_object is set when the current selection is a game object rather
+  // than a unit/player.
+  GameObject game_object = 4;
 }
 
 message SelectTargetRequest {
@@ -99,6 +188,13 @@ message StatusResponse {
   uint32 known_units = 3;
   uint32 name_queries = 4;
   uint32 creature_queries = 5;
+  uint64 epoch = 6;
+  bool ready = 7;
+  uint32 map_id = 8;
+  uint32 map_changes = 9;
+  uint32 aura_updates = 10;
+  uint32 cooldown_packets = 11;
+  uint32 cooldown_events = 12;
 }
 
 // MonsterMoveSamples returns recent SMSG_MONSTER_MOVE payloads as hex so the

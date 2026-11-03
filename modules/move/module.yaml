@@ -19,6 +19,7 @@ rpc:
   status: /move.module.v1.Module/Status
 packets:
   SMSG_LOGIN_VERIFY_WORLD: /move.module.v1.Module/OnPacket
+  SMSG_NEW_WORLD: /move.module.v1.Module/OnPacket
   MSG_MOVE_START_FORWARD: /move.module.v1.Module/OnPacket
   MSG_MOVE_START_BACKWARD: /move.module.v1.Module/OnPacket
   MSG_MOVE_STOP: /move.module.v1.Module/OnPacket

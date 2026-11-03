@@ -121,6 +121,66 @@ func (x *CastRequest) GetTargetGuid() uint64 {
 	return 0
 }
 
+type Vector3 struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	X             float32                `protobuf:"fixed32,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y             float32                `protobuf:"fixed32,2,opt,name=y,proto3" json:"y,omitempty"`
+	Z             float32                `protobuf:"fixed32,3,opt,name=z,proto3" json:"z,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Vector3) Reset() {
+	*x = Vector3{}
+	mi := &file_module_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Vector3) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Vector3) ProtoMessage() {}
+
+func (x *Vector3) ProtoReflect() protoreflect.Message {
+	mi := &file_module_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Vector3.ProtoReflect.Descriptor instead.
+func (*Vector3) Descriptor() ([]byte, []int) {
+	return file_module_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Vector3) GetX() float32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *Vector3) GetY() float32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *Vector3) GetZ() float32 {
+	if x != nil {
+		return x.Z
+	}
+	return 0
+}
+
 type CombatState struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	HasTarget       bool                   `protobuf:"varint,1,opt,name=has_target,json=hasTarget,proto3" json:"has_target,omitempty"`
@@ -144,15 +204,37 @@ type CombatState struct {
 	Refusals        uint32                 `protobuf:"varint,19,opt,name=refusals,proto3" json:"refusals,omitempty"`
 	LevelUps        uint32                 `protobuf:"varint,20,opt,name=level_ups,json=levelUps,proto3" json:"level_ups,omitempty"`
 	CastFailures    uint32                 `protobuf:"varint,21,opt,name=cast_failures,json=castFailures,proto3" json:"cast_failures,omitempty"`
-	// Warrior rage, UNIT_FIELD_POWER1.
-	SelfRage      uint32 `protobuf:"varint,22,opt,name=self_rage,json=selfRage,proto3" json:"self_rage,omitempty"`
+	// Legacy alias for the rage slot. New code should read self_power_type and
+	// self_power instead; the primary slot is UNIT_FIELD_POWER1 + power type, so
+	// a warrior's rage is POWER2, a rogue's energy is POWER4 and a priest's mana
+	// is POWER1.
+	SelfRage uint32 `protobuf:"varint,22,opt,name=self_rage,json=selfRage,proto3" json:"self_rage,omitempty"`
+	// Primary power type from UNIT_FIELD_BYTES_0: 0 mana, 1 rage, 2 focus,
+	// 3 energy, 4 happiness, 5 rune, 6 runic power.
+	SelfPowerType uint32 `protobuf:"varint,23,opt,name=self_power_type,json=selfPowerType,proto3" json:"self_power_type,omitempty"`
+	SelfPower     uint32 `protobuf:"varint,24,opt,name=self_power,json=selfPower,proto3" json:"self_power,omitempty"`
+	SelfMaxPower  uint32 `protobuf:"varint,25,opt,name=self_max_power,json=selfMaxPower,proto3" json:"self_max_power,omitempty"`
+	// Self_ghost is PLAYER_FLAGS & 0x10: released spirit, corpse still exists.
+	SelfGhost bool `protobuf:"varint,26,opt,name=self_ghost,json=selfGhost,proto3" json:"self_ghost,omitempty"`
+	// Corpse reclaim delay last reported by the server and the module-computed
+	// time left. Zero delay or zero remaining means no active reclaim timer.
+	CorpseReclaimDelayMs     uint32 `protobuf:"varint,27,opt,name=corpse_reclaim_delay_ms,json=corpseReclaimDelayMs,proto3" json:"corpse_reclaim_delay_ms,omitempty"`
+	CorpseReclaimRemainingMs uint32 `protobuf:"varint,28,opt,name=corpse_reclaim_remaining_ms,json=corpseReclaimRemainingMs,proto3" json:"corpse_reclaim_remaining_ms,omitempty"`
+	// Graveyard/spirit-healer location from SMSG_DEATH_RELEASE_LOC. The map id
+	// and position are only valid when has_spirit_healer_location is true.
+	SpiritHealerMapId       uint32   `protobuf:"varint,29,opt,name=spirit_healer_map_id,json=spiritHealerMapId,proto3" json:"spirit_healer_map_id,omitempty"`
+	HasSpiritHealerLocation bool     `protobuf:"varint,30,opt,name=has_spirit_healer_location,json=hasSpiritHealerLocation,proto3" json:"has_spirit_healer_location,omitempty"`
+	SpiritHealerPosition    *Vector3 `protobuf:"bytes,31,opt,name=spirit_healer_position,json=spiritHealerPosition,proto3" json:"spirit_healer_position,omitempty"`
+	// Tracked target facts from update fields.
+	TargetLevel   uint32 `protobuf:"varint,32,opt,name=target_level,json=targetLevel,proto3" json:"target_level,omitempty"`
+	TargetEntry   uint32 `protobuf:"varint,33,opt,name=target_entry,json=targetEntry,proto3" json:"target_entry,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CombatState) Reset() {
 	*x = CombatState{}
-	mi := &file_module_proto_msgTypes[2]
+	mi := &file_module_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -164,7 +246,7 @@ func (x *CombatState) String() string {
 func (*CombatState) ProtoMessage() {}
 
 func (x *CombatState) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[2]
+	mi := &file_module_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -177,7 +259,7 @@ func (x *CombatState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CombatState.ProtoReflect.Descriptor instead.
 func (*CombatState) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{2}
+	return file_module_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *CombatState) GetHasTarget() bool {
@@ -334,6 +416,83 @@ func (x *CombatState) GetSelfRage() uint32 {
 	return 0
 }
 
+func (x *CombatState) GetSelfPowerType() uint32 {
+	if x != nil {
+		return x.SelfPowerType
+	}
+	return 0
+}
+
+func (x *CombatState) GetSelfPower() uint32 {
+	if x != nil {
+		return x.SelfPower
+	}
+	return 0
+}
+
+func (x *CombatState) GetSelfMaxPower() uint32 {
+	if x != nil {
+		return x.SelfMaxPower
+	}
+	return 0
+}
+
+func (x *CombatState) GetSelfGhost() bool {
+	if x != nil {
+		return x.SelfGhost
+	}
+	return false
+}
+
+func (x *CombatState) GetCorpseReclaimDelayMs() uint32 {
+	if x != nil {
+		return x.CorpseReclaimDelayMs
+	}
+	return 0
+}
+
+func (x *CombatState) GetCorpseReclaimRemainingMs() uint32 {
+	if x != nil {
+		return x.CorpseReclaimRemainingMs
+	}
+	return 0
+}
+
+func (x *CombatState) GetSpiritHealerMapId() uint32 {
+	if x != nil {
+		return x.SpiritHealerMapId
+	}
+	return 0
+}
+
+func (x *CombatState) GetHasSpiritHealerLocation() bool {
+	if x != nil {
+		return x.HasSpiritHealerLocation
+	}
+	return false
+}
+
+func (x *CombatState) GetSpiritHealerPosition() *Vector3 {
+	if x != nil {
+		return x.SpiritHealerPosition
+	}
+	return nil
+}
+
+func (x *CombatState) GetTargetLevel() uint32 {
+	if x != nil {
+		return x.TargetLevel
+	}
+	return 0
+}
+
+func (x *CombatState) GetTargetEntry() uint32 {
+	if x != nil {
+		return x.TargetEntry
+	}
+	return 0
+}
+
 type SpiritHealerRequest struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	HealerGuid uint64                 `protobuf:"varint,1,opt,name=healer_guid,json=healerGuid,proto3" json:"healer_guid,omitempty"`
@@ -345,7 +504,7 @@ type SpiritHealerRequest struct {
 
 func (x *SpiritHealerRequest) Reset() {
 	*x = SpiritHealerRequest{}
-	mi := &file_module_proto_msgTypes[3]
+	mi := &file_module_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -357,7 +516,7 @@ func (x *SpiritHealerRequest) String() string {
 func (*SpiritHealerRequest) ProtoMessage() {}
 
 func (x *SpiritHealerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[3]
+	mi := &file_module_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -370,7 +529,7 @@ func (x *SpiritHealerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SpiritHealerRequest.ProtoReflect.Descriptor instead.
 func (*SpiritHealerRequest) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{3}
+	return file_module_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *SpiritHealerRequest) GetHealerGuid() uint64 {
@@ -388,22 +547,26 @@ func (x *SpiritHealerRequest) GetPackedGuid() bool {
 }
 
 type StatusResponse struct {
-	state                protoimpl.MessageState `protogen:"open.v1"`
-	Packets              uint32                 `protobuf:"varint,1,opt,name=packets,proto3" json:"packets,omitempty"`
-	ParseErrors          uint32                 `protobuf:"varint,2,opt,name=parse_errors,json=parseErrors,proto3" json:"parse_errors,omitempty"`
-	AttackStarts         uint32                 `protobuf:"varint,3,opt,name=attack_starts,json=attackStarts,proto3" json:"attack_starts,omitempty"`
-	AttackStops          uint32                 `protobuf:"varint,4,opt,name=attack_stops,json=attackStops,proto3" json:"attack_stops,omitempty"`
-	LastError            string                 `protobuf:"bytes,5,opt,name=last_error,json=lastError,proto3" json:"last_error,omitempty"`
-	GossipMessages       uint32                 `protobuf:"varint,6,opt,name=gossip_messages,json=gossipMessages,proto3" json:"gossip_messages,omitempty"`
-	SpiritHealerConfirms uint32                 `protobuf:"varint,7,opt,name=spirit_healer_confirms,json=spiritHealerConfirms,proto3" json:"spirit_healer_confirms,omitempty"`
-	CorpseReclaimDelays  uint32                 `protobuf:"varint,8,opt,name=corpse_reclaim_delays,json=corpseReclaimDelays,proto3" json:"corpse_reclaim_delays,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	Packets               uint32                 `protobuf:"varint,1,opt,name=packets,proto3" json:"packets,omitempty"`
+	ParseErrors           uint32                 `protobuf:"varint,2,opt,name=parse_errors,json=parseErrors,proto3" json:"parse_errors,omitempty"`
+	AttackStarts          uint32                 `protobuf:"varint,3,opt,name=attack_starts,json=attackStarts,proto3" json:"attack_starts,omitempty"`
+	AttackStops           uint32                 `protobuf:"varint,4,opt,name=attack_stops,json=attackStops,proto3" json:"attack_stops,omitempty"`
+	LastError             string                 `protobuf:"bytes,5,opt,name=last_error,json=lastError,proto3" json:"last_error,omitempty"`
+	GossipMessages        uint32                 `protobuf:"varint,6,opt,name=gossip_messages,json=gossipMessages,proto3" json:"gossip_messages,omitempty"`
+	SpiritHealerConfirms  uint32                 `protobuf:"varint,7,opt,name=spirit_healer_confirms,json=spiritHealerConfirms,proto3" json:"spirit_healer_confirms,omitempty"`
+	CorpseReclaimDelays   uint32                 `protobuf:"varint,8,opt,name=corpse_reclaim_delays,json=corpseReclaimDelays,proto3" json:"corpse_reclaim_delays,omitempty"`
+	DeathReleaseLocations uint32                 `protobuf:"varint,9,opt,name=death_release_locations,json=deathReleaseLocations,proto3" json:"death_release_locations,omitempty"`
+	// Number of authoritative world entries (SMSG_LOGIN_VERIFY_WORLD and
+	// SMSG_NEW_WORLD) that cleared the tracked target.
+	WorldResets   uint32 `protobuf:"varint,10,opt,name=world_resets,json=worldResets,proto3" json:"world_resets,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *StatusResponse) Reset() {
 	*x = StatusResponse{}
-	mi := &file_module_proto_msgTypes[4]
+	mi := &file_module_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -415,7 +578,7 @@ func (x *StatusResponse) String() string {
 func (*StatusResponse) ProtoMessage() {}
 
 func (x *StatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[4]
+	mi := &file_module_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -428,7 +591,7 @@ func (x *StatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatusResponse.ProtoReflect.Descriptor instead.
 func (*StatusResponse) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{4}
+	return file_module_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *StatusResponse) GetPackets() uint32 {
@@ -487,6 +650,20 @@ func (x *StatusResponse) GetCorpseReclaimDelays() uint32 {
 	return 0
 }
 
+func (x *StatusResponse) GetDeathReleaseLocations() uint32 {
+	if x != nil {
+		return x.DeathReleaseLocations
+	}
+	return 0
+}
+
+func (x *StatusResponse) GetWorldResets() uint32 {
+	if x != nil {
+		return x.WorldResets
+	}
+	return 0
+}
+
 var File_module_proto protoreflect.FileDescriptor
 
 const file_module_proto_rawDesc = "" +
@@ -497,7 +674,11 @@ const file_module_proto_rawDesc = "" +
 	"\vCastRequest\x12\x19\n" +
 	"\bspell_id\x18\x01 \x01(\rR\aspellId\x12\x1f\n" +
 	"\vtarget_guid\x18\x02 \x01(\x04R\n" +
-	"targetGuid\"\xc7\x05\n" +
+	"targetGuid\"3\n" +
+	"\aVector3\x12\f\n" +
+	"\x01x\x18\x01 \x01(\x02R\x01x\x12\f\n" +
+	"\x01y\x18\x02 \x01(\x02R\x01y\x12\f\n" +
+	"\x01z\x18\x03 \x01(\x02R\x01z\"\xce\t\n" +
 	"\vCombatState\x12\x1d\n" +
 	"\n" +
 	"has_target\x18\x01 \x01(\bR\thasTarget\x12\x1f\n" +
@@ -528,12 +709,25 @@ const file_module_proto_rawDesc = "" +
 	"\brefusals\x18\x13 \x01(\rR\brefusals\x12\x1b\n" +
 	"\tlevel_ups\x18\x14 \x01(\rR\blevelUps\x12#\n" +
 	"\rcast_failures\x18\x15 \x01(\rR\fcastFailures\x12\x1b\n" +
-	"\tself_rage\x18\x16 \x01(\rR\bselfRage\"W\n" +
+	"\tself_rage\x18\x16 \x01(\rR\bselfRage\x12&\n" +
+	"\x0fself_power_type\x18\x17 \x01(\rR\rselfPowerType\x12\x1d\n" +
+	"\n" +
+	"self_power\x18\x18 \x01(\rR\tselfPower\x12$\n" +
+	"\x0eself_max_power\x18\x19 \x01(\rR\fselfMaxPower\x12\x1d\n" +
+	"\n" +
+	"self_ghost\x18\x1a \x01(\bR\tselfGhost\x125\n" +
+	"\x17corpse_reclaim_delay_ms\x18\x1b \x01(\rR\x14corpseReclaimDelayMs\x12=\n" +
+	"\x1bcorpse_reclaim_remaining_ms\x18\x1c \x01(\rR\x18corpseReclaimRemainingMs\x12/\n" +
+	"\x14spirit_healer_map_id\x18\x1d \x01(\rR\x11spiritHealerMapId\x12;\n" +
+	"\x1ahas_spirit_healer_location\x18\x1e \x01(\bR\x17hasSpiritHealerLocation\x12O\n" +
+	"\x16spirit_healer_position\x18\x1f \x01(\v2\x19.combat.module.v1.Vector3R\x14spiritHealerPosition\x12!\n" +
+	"\ftarget_level\x18  \x01(\rR\vtargetLevel\x12!\n" +
+	"\ftarget_entry\x18! \x01(\rR\vtargetEntry\"W\n" +
 	"\x13SpiritHealerRequest\x12\x1f\n" +
 	"\vhealer_guid\x18\x01 \x01(\x04R\n" +
 	"healerGuid\x12\x1f\n" +
 	"\vpacked_guid\x18\x02 \x01(\bR\n" +
-	"packedGuid\"\xc7\x02\n" +
+	"packedGuid\"\xa2\x03\n" +
 	"\x0eStatusResponse\x12\x18\n" +
 	"\apackets\x18\x01 \x01(\rR\apackets\x12!\n" +
 	"\fparse_errors\x18\x02 \x01(\rR\vparseErrors\x12#\n" +
@@ -543,7 +737,10 @@ const file_module_proto_rawDesc = "" +
 	"last_error\x18\x05 \x01(\tR\tlastError\x12'\n" +
 	"\x0fgossip_messages\x18\x06 \x01(\rR\x0egossipMessages\x124\n" +
 	"\x16spirit_healer_confirms\x18\a \x01(\rR\x14spiritHealerConfirms\x122\n" +
-	"\x15corpse_reclaim_delays\x18\b \x01(\rR\x13corpseReclaimDelays2\x9a\x05\n" +
+	"\x15corpse_reclaim_delays\x18\b \x01(\rR\x13corpseReclaimDelays\x126\n" +
+	"\x17death_release_locations\x18\t \x01(\rR\x15deathReleaseLocations\x12!\n" +
+	"\fworld_resets\x18\n" +
+	" \x01(\rR\vworldResets2\x9a\x05\n" +
 	"\x06Module\x12H\n" +
 	"\x06Attack\x12\x1f.combat.module.v1.AttackRequest\x1a\x1d.combat.module.v1.CombatState\x12C\n" +
 	"\n" +
@@ -568,40 +765,42 @@ func file_module_proto_rawDescGZIP() []byte {
 	return file_module_proto_rawDescData
 }
 
-var file_module_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_module_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_module_proto_goTypes = []any{
 	(*AttackRequest)(nil),       // 0: combat.module.v1.AttackRequest
 	(*CastRequest)(nil),         // 1: combat.module.v1.CastRequest
-	(*CombatState)(nil),         // 2: combat.module.v1.CombatState
-	(*SpiritHealerRequest)(nil), // 3: combat.module.v1.SpiritHealerRequest
-	(*StatusResponse)(nil),      // 4: combat.module.v1.StatusResponse
-	(*emptypb.Empty)(nil),       // 5: google.protobuf.Empty
-	(*v1.WorldPacket)(nil),      // 6: agentwow.module.v1.WorldPacket
+	(*Vector3)(nil),             // 2: combat.module.v1.Vector3
+	(*CombatState)(nil),         // 3: combat.module.v1.CombatState
+	(*SpiritHealerRequest)(nil), // 4: combat.module.v1.SpiritHealerRequest
+	(*StatusResponse)(nil),      // 5: combat.module.v1.StatusResponse
+	(*emptypb.Empty)(nil),       // 6: google.protobuf.Empty
+	(*v1.WorldPacket)(nil),      // 7: agentwow.module.v1.WorldPacket
 }
 var file_module_proto_depIdxs = []int32{
-	0, // 0: combat.module.v1.Module.Attack:input_type -> combat.module.v1.AttackRequest
-	5, // 1: combat.module.v1.Module.StopAttack:input_type -> google.protobuf.Empty
-	1, // 2: combat.module.v1.Module.Cast:input_type -> combat.module.v1.CastRequest
-	5, // 3: combat.module.v1.Module.ReleaseSpirit:input_type -> google.protobuf.Empty
-	5, // 4: combat.module.v1.Module.ReclaimCorpse:input_type -> google.protobuf.Empty
-	3, // 5: combat.module.v1.Module.ResurrectAtSpiritHealer:input_type -> combat.module.v1.SpiritHealerRequest
-	5, // 6: combat.module.v1.Module.GetState:input_type -> google.protobuf.Empty
-	5, // 7: combat.module.v1.Module.Status:input_type -> google.protobuf.Empty
-	6, // 8: combat.module.v1.Module.OnPacket:input_type -> agentwow.module.v1.WorldPacket
-	2, // 9: combat.module.v1.Module.Attack:output_type -> combat.module.v1.CombatState
-	2, // 10: combat.module.v1.Module.StopAttack:output_type -> combat.module.v1.CombatState
-	2, // 11: combat.module.v1.Module.Cast:output_type -> combat.module.v1.CombatState
-	2, // 12: combat.module.v1.Module.ReleaseSpirit:output_type -> combat.module.v1.CombatState
-	2, // 13: combat.module.v1.Module.ReclaimCorpse:output_type -> combat.module.v1.CombatState
-	2, // 14: combat.module.v1.Module.ResurrectAtSpiritHealer:output_type -> combat.module.v1.CombatState
-	2, // 15: combat.module.v1.Module.GetState:output_type -> combat.module.v1.CombatState
-	4, // 16: combat.module.v1.Module.Status:output_type -> combat.module.v1.StatusResponse
-	5, // 17: combat.module.v1.Module.OnPacket:output_type -> google.protobuf.Empty
-	9, // [9:18] is the sub-list for method output_type
-	0, // [0:9] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	2,  // 0: combat.module.v1.CombatState.spirit_healer_position:type_name -> combat.module.v1.Vector3
+	0,  // 1: combat.module.v1.Module.Attack:input_type -> combat.module.v1.AttackRequest
+	6,  // 2: combat.module.v1.Module.StopAttack:input_type -> google.protobuf.Empty
+	1,  // 3: combat.module.v1.Module.Cast:input_type -> combat.module.v1.CastRequest
+	6,  // 4: combat.module.v1.Module.ReleaseSpirit:input_type -> google.protobuf.Empty
+	6,  // 5: combat.module.v1.Module.ReclaimCorpse:input_type -> google.protobuf.Empty
+	4,  // 6: combat.module.v1.Module.ResurrectAtSpiritHealer:input_type -> combat.module.v1.SpiritHealerRequest
+	6,  // 7: combat.module.v1.Module.GetState:input_type -> google.protobuf.Empty
+	6,  // 8: combat.module.v1.Module.Status:input_type -> google.protobuf.Empty
+	7,  // 9: combat.module.v1.Module.OnPacket:input_type -> agentwow.module.v1.WorldPacket
+	3,  // 10: combat.module.v1.Module.Attack:output_type -> combat.module.v1.CombatState
+	3,  // 11: combat.module.v1.Module.StopAttack:output_type -> combat.module.v1.CombatState
+	3,  // 12: combat.module.v1.Module.Cast:output_type -> combat.module.v1.CombatState
+	3,  // 13: combat.module.v1.Module.ReleaseSpirit:output_type -> combat.module.v1.CombatState
+	3,  // 14: combat.module.v1.Module.ReclaimCorpse:output_type -> combat.module.v1.CombatState
+	3,  // 15: combat.module.v1.Module.ResurrectAtSpiritHealer:output_type -> combat.module.v1.CombatState
+	3,  // 16: combat.module.v1.Module.GetState:output_type -> combat.module.v1.CombatState
+	5,  // 17: combat.module.v1.Module.Status:output_type -> combat.module.v1.StatusResponse
+	6,  // 18: combat.module.v1.Module.OnPacket:output_type -> google.protobuf.Empty
+	10, // [10:19] is the sub-list for method output_type
+	1,  // [1:10] is the sub-list for method input_type
+	1,  // [1:1] is the sub-list for extension type_name
+	1,  // [1:1] is the sub-list for extension extendee
+	0,  // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_module_proto_init() }
@@ -615,7 +814,7 @@ func file_module_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_module_proto_rawDesc), len(file_module_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

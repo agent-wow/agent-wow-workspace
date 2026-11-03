@@ -1,8 +1,10 @@
-"""Minimal per-character worker lifecycle.
+"""Per-character worker lifecycle and growth attachment.
 
-This unit deliberately contains no gameplay strategy. It establishes the
-boundaries U2 extends: OS single-writer lock, fencing token, STOP handling,
-startup intent recovery, and the epoch identity gate.
+The worker owns the OS single-writer lock, fencing token, STOP handling,
+startup intent recovery, and the epoch identity gate. An optional
+``SoloGrowthMachine`` runs after that gate; strategy stays in the machine and
+module/protocol access stays behind the adapter. This process never starts or
+stops a game session: ``session-keeper.py`` remains the sole owner of that.
 """
 from __future__ import annotations
 
@@ -30,6 +32,9 @@ class WorkerLocked(RuntimeError):
 class TickResult:
     epoch: int | str
     coordinator_error: str | None = None
+    state: str | None = None
+    action: str | None = None
+    detail: str | None = None
 
 
 class GrowthWorker:
@@ -42,6 +47,7 @@ class GrowthWorker:
         stop_flag: StopFlag | None = None,
         gate: EpochIdentityGate | None = None,
         coordinator: CoordinatorClient | None = None,
+        growth=None,
         epoch: int | str = 0,
         clock: Callable[[], float] = time.time,
         logger: Callable[[str], None] | None = None,
@@ -52,6 +58,7 @@ class GrowthWorker:
         self.stop_flag = stop_flag or StopFlag()
         self.gate = gate
         self.coordinator = coordinator
+        self.growth = growth
         self.epoch = epoch
         self.clock = clock
         self.log = logger or (lambda message: None)
@@ -108,11 +115,23 @@ class GrowthWorker:
         self.stop_flag.ensure_clear("continue a worker tick")
         if not self._started:
             raise RuntimeError("worker is not started")
-        if self.gate is not None and self.epoch:
+        if self.growth is None and self.gate is not None and self.epoch:
             self.gate.ensure(self.epoch)
 
-        # U1 only records liveness. U2 will attach event consumption and the
-        # single-character growth loop here, after the identity gate.
+        # Gameplay decisions run only after the per-epoch identity gate. The
+        # machine supplies the live epoch from its fresh server snapshot; the
+        # callback runs after readiness/epoch validation and before any action.
+        # A transport failure becomes an OFFLINE step instead of killing the
+        # worker, so one character cannot stall another process.
+        step = None
+        if self.growth is not None:
+            def before_action(view):
+                self.set_epoch(view.epoch)
+                if self.gate is not None:
+                    self.gate.ensure(view.epoch)
+
+            step = self.growth.step(
+                epoch_hint=self.epoch, before_action=before_action)
         self.store.set_meta("last_tick", str(self.clock()))
 
         coordinator_error = None
@@ -130,7 +149,13 @@ class GrowthWorker:
                 self.log(
                     f"{self.spec.account}/{self.spec.name}: "
                     f"coordinator unavailable, continuing solo: {exc}")
-        return TickResult(epoch=self.epoch, coordinator_error=coordinator_error)
+        return TickResult(
+            epoch=self.epoch,
+            coordinator_error=coordinator_error,
+            state=(step.state.value if step is not None else None),
+            action=(step.action if step is not None else None),
+            detail=(step.detail if step is not None else None),
+        )
 
     def stop(self) -> None:
         self._started = False

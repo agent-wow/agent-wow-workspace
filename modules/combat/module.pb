@@ -31,14 +31,18 @@ EmptyProtoPZ.google.golang.org/protobuf/types/known/emptypbø¢GPBªGoogle.P
 SendPacket%.agentwow.module.v1.SendPacketRequest.google.protobuf.EmptyE
 GetClock.google.protobuf.Empty!.agentwow.module.v1.ClockResponsea
 InvokeModule'.agentwow.module.v1.InvokeModuleRequest(.agentwow.module.v1.InvokeModuleResponseB5Z3github.com/agent-wow/agent-wow/pkg/modules/v1;modv1bproto3
-š
+±
 module.protocombat.module.v1api/module/v1/session.protogoogle/protobuf/empty.proto"#
 AttackRequest
 guid (Rguid"I
 CastRequest
 spell_id (RspellId
 target_guid (R
-targetGuid"Ç
+targetGuid"3
+Vector3
+x (Rx
+y (Ry
+z (Rz"Î	
 CombatState
 
 has_target (R	hasTarget
@@ -69,12 +73,25 @@ last_error (	R	lastError
 refusals (Rrefusals
 	level_ups (RlevelUps#
 cast_failures (RcastFailures
-	self_rage (RselfRage"W
+	self_rage (RselfRage&
+self_power_type (RselfPowerType
+
+self_power (R	selfPower$
+self_max_power (RselfMaxPower
+
+self_ghost (R	selfGhost5
+corpse_reclaim_delay_ms (RcorpseReclaimDelayMs=
+corpse_reclaim_remaining_ms (RcorpseReclaimRemainingMs/
+spirit_healer_map_id (RspiritHealerMapId;
+has_spirit_healer_location (RhasSpiritHealerLocationO
+spirit_healer_position (2.combat.module.v1.Vector3RspiritHealerPosition!
+target_level  (RtargetLevel!
+target_entry! (RtargetEntry"W
 SpiritHealerRequest
 healer_guid (R
 healerGuid
 packed_guid (R
-packedGuid"Ç
+packedGuid"¢
 StatusResponse
 packets (Rpackets!
 parse_errors (RparseErrors#
@@ -84,7 +101,10 @@ packedGuid"Ç
 last_error (	R	lastError'
 gossip_messages (RgossipMessages4
 spirit_healer_confirms (RspiritHealerConfirms2
-corpse_reclaim_delays (RcorpseReclaimDelays2š
+corpse_reclaim_delays (RcorpseReclaimDelays6
+death_release_locations	 (RdeathReleaseLocations!
+world_resets
+ (RworldResets2š
 ModuleH
 Attack.combat.module.v1.AttackRequest.combat.module.v1.CombatStateC
 

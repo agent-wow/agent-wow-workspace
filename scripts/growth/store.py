@@ -22,6 +22,8 @@ from typing import Iterable, Iterator
 from .lock import ExclusiveLock, LockError
 from .permissions import ensure_private_dir
 
+METRICS_KEY = "growth_metrics"
+
 INTENT_STATES = (
     "planned", "sending", "sent", "confirmed", "failed", "unknown", "abandoned",
 )
@@ -468,6 +470,26 @@ class CheckpointStore:
         if row is None:
             return {"candidate": None, "applied": None, "updated": None}
         return dict(row)
+
+    # --------------------------------------------------------------- metrics
+
+    def save_metrics(self, document: dict) -> None:
+        """Persist the sampled growth metrics inside the checkpoint store."""
+        if not isinstance(document, dict):
+            raise StoreError("metrics document must be a mapping")
+        self.set_meta(
+            METRICS_KEY,
+            json.dumps(document, ensure_ascii=False, sort_keys=True))
+
+    def load_metrics(self) -> dict | None:
+        raw = self.get_meta(METRICS_KEY)
+        if raw is None:
+            return None
+        try:
+            document = json.loads(raw)
+        except (TypeError, json.JSONDecodeError):
+            return None
+        return document if isinstance(document, dict) else None
 
     # ---------------------------------------------------------------- backup
 

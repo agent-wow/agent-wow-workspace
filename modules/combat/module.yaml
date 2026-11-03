@@ -16,6 +16,8 @@ rpc:
   get_state: /combat.module.v1.Module/GetState
   status: /combat.module.v1.Module/Status
 packets:
+  SMSG_LOGIN_VERIFY_WORLD: /combat.module.v1.Module/OnPacket
+  SMSG_NEW_WORLD: /combat.module.v1.Module/OnPacket
   SMSG_ATTACKSTART: /combat.module.v1.Module/OnPacket
   SMSG_ATTACKSTOP: /combat.module.v1.Module/OnPacket
   SMSG_ATTACKSWING_NOTINRANGE: /combat.module.v1.Module/OnPacket
@@ -28,6 +30,7 @@ packets:
   SMSG_GOSSIP_MESSAGE: /combat.module.v1.Module/OnPacket
   SMSG_SPIRIT_HEALER_CONFIRM: /combat.module.v1.Module/OnPacket
   SMSG_CORPSE_RECLAIM_DELAY: /combat.module.v1.Module/OnPacket
+  SMSG_DEATH_RELEASE_LOC: /combat.module.v1.Module/OnPacket
   SMSG_UPDATE_OBJECT: /combat.module.v1.Module/OnPacket
   SMSG_COMPRESSED_UPDATE_OBJECT: /combat.module.v1.Module/OnPacket
   SMSG_DESTROY_OBJECT: /combat.module.v1.Module/OnPacket

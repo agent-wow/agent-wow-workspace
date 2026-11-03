@@ -110,7 +110,21 @@ type Unit struct {
 	Faction     uint32 `protobuf:"varint,20,opt,name=faction,proto3" json:"faction,omitempty"`
 	InCombat    bool   `protobuf:"varint,21,opt,name=in_combat,json=inCombat,proto3" json:"in_combat,omitempty"`
 	// Copper carried by the character (PLAYER_FIELD_COIN1).
-	Money         uint64 `protobuf:"varint,22,opt,name=money,proto3" json:"money,omitempty"`
+	Money uint64 `protobuf:"varint,22,opt,name=money,proto3" json:"money,omitempty"`
+	// Primary power type from UNIT_FIELD_BYTES_0 byte 3: 0 mana, 1 rage,
+	// 2 focus, 3 energy, 4 happiness, 5 rune, 6 runic power.
+	PowerType uint32 `protobuf:"varint,23,opt,name=power_type,json=powerType,proto3" json:"power_type,omitempty"`
+	// Current and maximum primary power, read from the slot for power_type.
+	Power     uint32 `protobuf:"varint,24,opt,name=power,proto3" json:"power,omitempty"`
+	MaxPower  uint32 `protobuf:"varint,25,opt,name=max_power,json=maxPower,proto3" json:"max_power,omitempty"`
+	DisplayId uint32 `protobuf:"varint,26,opt,name=display_id,json=displayId,proto3" json:"display_id,omitempty"`
+	// UNIT_DYNAMIC_FLAGS low byte (lootable/skinnable/tagged) and UNIT_NPC_FLAGS
+	// low bytes (gossip, questgiver, vendor, trainer, spirit healer).
+	DynamicFlags uint32 `protobuf:"varint,27,opt,name=dynamic_flags,json=dynamicFlags,proto3" json:"dynamic_flags,omitempty"`
+	NpcFlags     uint32 `protobuf:"varint,28,opt,name=npc_flags,json=npcFlags,proto3" json:"npc_flags,omitempty"`
+	// Visible aura slots reported for this unit. Empty until an aura packet for
+	// the unit arrives.
+	Auras         []*Aura `protobuf:"bytes,29,rep,name=auras,proto3" json:"auras,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -299,6 +313,384 @@ func (x *Unit) GetMoney() uint64 {
 	return 0
 }
 
+func (x *Unit) GetPowerType() uint32 {
+	if x != nil {
+		return x.PowerType
+	}
+	return 0
+}
+
+func (x *Unit) GetPower() uint32 {
+	if x != nil {
+		return x.Power
+	}
+	return 0
+}
+
+func (x *Unit) GetMaxPower() uint32 {
+	if x != nil {
+		return x.MaxPower
+	}
+	return 0
+}
+
+func (x *Unit) GetDisplayId() uint32 {
+	if x != nil {
+		return x.DisplayId
+	}
+	return 0
+}
+
+func (x *Unit) GetDynamicFlags() uint32 {
+	if x != nil {
+		return x.DynamicFlags
+	}
+	return 0
+}
+
+func (x *Unit) GetNpcFlags() uint32 {
+	if x != nil {
+		return x.NpcFlags
+	}
+	return 0
+}
+
+func (x *Unit) GetAuras() []*Aura {
+	if x != nil {
+		return x.Auras
+	}
+	return nil
+}
+
+// Aura is one visible aura slot. spell_id zero means the slot was cleared.
+type Aura struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Slot          uint32                 `protobuf:"varint,1,opt,name=slot,proto3" json:"slot,omitempty"`
+	SpellId       uint32                 `protobuf:"varint,2,opt,name=spell_id,json=spellId,proto3" json:"spell_id,omitempty"`
+	Flags         uint32                 `protobuf:"varint,3,opt,name=flags,proto3" json:"flags,omitempty"`
+	CasterLevel   uint32                 `protobuf:"varint,4,opt,name=caster_level,json=casterLevel,proto3" json:"caster_level,omitempty"`
+	Stacks        uint32                 `protobuf:"varint,5,opt,name=stacks,proto3" json:"stacks,omitempty"`
+	CasterGuid    uint64                 `protobuf:"varint,6,opt,name=caster_guid,json=casterGuid,proto3" json:"caster_guid,omitempty"`
+	HasCaster     bool                   `protobuf:"varint,7,opt,name=has_caster,json=hasCaster,proto3" json:"has_caster,omitempty"`
+	MaxDurationMs uint32                 `protobuf:"varint,8,opt,name=max_duration_ms,json=maxDurationMs,proto3" json:"max_duration_ms,omitempty"`
+	DurationMs    uint32                 `protobuf:"varint,9,opt,name=duration_ms,json=durationMs,proto3" json:"duration_ms,omitempty"`
+	HasDuration   bool                   `protobuf:"varint,10,opt,name=has_duration,json=hasDuration,proto3" json:"has_duration,omitempty"`
+	Positive      bool                   `protobuf:"varint,11,opt,name=positive,proto3" json:"positive,omitempty"`
+	Negative      bool                   `protobuf:"varint,12,opt,name=negative,proto3" json:"negative,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Aura) Reset() {
+	*x = Aura{}
+	mi := &file_module_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Aura) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Aura) ProtoMessage() {}
+
+func (x *Aura) ProtoReflect() protoreflect.Message {
+	mi := &file_module_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Aura.ProtoReflect.Descriptor instead.
+func (*Aura) Descriptor() ([]byte, []int) {
+	return file_module_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Aura) GetSlot() uint32 {
+	if x != nil {
+		return x.Slot
+	}
+	return 0
+}
+
+func (x *Aura) GetSpellId() uint32 {
+	if x != nil {
+		return x.SpellId
+	}
+	return 0
+}
+
+func (x *Aura) GetFlags() uint32 {
+	if x != nil {
+		return x.Flags
+	}
+	return 0
+}
+
+func (x *Aura) GetCasterLevel() uint32 {
+	if x != nil {
+		return x.CasterLevel
+	}
+	return 0
+}
+
+func (x *Aura) GetStacks() uint32 {
+	if x != nil {
+		return x.Stacks
+	}
+	return 0
+}
+
+func (x *Aura) GetCasterGuid() uint64 {
+	if x != nil {
+		return x.CasterGuid
+	}
+	return 0
+}
+
+func (x *Aura) GetHasCaster() bool {
+	if x != nil {
+		return x.HasCaster
+	}
+	return false
+}
+
+func (x *Aura) GetMaxDurationMs() uint32 {
+	if x != nil {
+		return x.MaxDurationMs
+	}
+	return 0
+}
+
+func (x *Aura) GetDurationMs() uint32 {
+	if x != nil {
+		return x.DurationMs
+	}
+	return 0
+}
+
+func (x *Aura) GetHasDuration() bool {
+	if x != nil {
+		return x.HasDuration
+	}
+	return false
+}
+
+func (x *Aura) GetPositive() bool {
+	if x != nil {
+		return x.Positive
+	}
+	return false
+}
+
+func (x *Aura) GetNegative() bool {
+	if x != nil {
+		return x.Negative
+	}
+	return false
+}
+
+// Cooldown is one server-reported spell cooldown. cooldown_ms is the duration
+// the server applied; remaining_ms is computed from the module's receipt time.
+type Cooldown struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SpellId       uint32                 `protobuf:"varint,1,opt,name=spell_id,json=spellId,proto3" json:"spell_id,omitempty"`
+	CooldownMs    uint32                 `protobuf:"varint,2,opt,name=cooldown_ms,json=cooldownMs,proto3" json:"cooldown_ms,omitempty"`
+	RemainingMs   uint32                 `protobuf:"varint,3,opt,name=remaining_ms,json=remainingMs,proto3" json:"remaining_ms,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Cooldown) Reset() {
+	*x = Cooldown{}
+	mi := &file_module_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Cooldown) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Cooldown) ProtoMessage() {}
+
+func (x *Cooldown) ProtoReflect() protoreflect.Message {
+	mi := &file_module_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Cooldown.ProtoReflect.Descriptor instead.
+func (*Cooldown) Descriptor() ([]byte, []int) {
+	return file_module_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Cooldown) GetSpellId() uint32 {
+	if x != nil {
+		return x.SpellId
+	}
+	return 0
+}
+
+func (x *Cooldown) GetCooldownMs() uint32 {
+	if x != nil {
+		return x.CooldownMs
+	}
+	return 0
+}
+
+func (x *Cooldown) GetRemainingMs() uint32 {
+	if x != nil {
+		return x.RemainingMs
+	}
+	return 0
+}
+
+// GameObject is a visible game object (herb/mining node, quest object, door,
+// chest) from the create block and game object update fields.
+type GameObject struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Guid          uint64                 `protobuf:"varint,1,opt,name=guid,proto3" json:"guid,omitempty"`
+	Entry         uint32                 `protobuf:"varint,2,opt,name=entry,proto3" json:"entry,omitempty"`
+	TypeId        uint32                 `protobuf:"varint,3,opt,name=type_id,json=typeId,proto3" json:"type_id,omitempty"`
+	DisplayId     uint32                 `protobuf:"varint,4,opt,name=display_id,json=displayId,proto3" json:"display_id,omitempty"`
+	Flags         uint32                 `protobuf:"varint,5,opt,name=flags,proto3" json:"flags,omitempty"`
+	State         uint32                 `protobuf:"varint,6,opt,name=state,proto3" json:"state,omitempty"`
+	AnimProgress  uint32                 `protobuf:"varint,7,opt,name=anim_progress,json=animProgress,proto3" json:"anim_progress,omitempty"`
+	Level         uint32                 `protobuf:"varint,8,opt,name=level,proto3" json:"level,omitempty"`
+	Faction       uint32                 `protobuf:"varint,9,opt,name=faction,proto3" json:"faction,omitempty"`
+	Position      *Vector3               `protobuf:"bytes,10,opt,name=position,proto3" json:"position,omitempty"`
+	Orientation   float32                `protobuf:"fixed32,11,opt,name=orientation,proto3" json:"orientation,omitempty"`
+	HasPosition   bool                   `protobuf:"varint,12,opt,name=has_position,json=hasPosition,proto3" json:"has_position,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GameObject) Reset() {
+	*x = GameObject{}
+	mi := &file_module_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GameObject) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GameObject) ProtoMessage() {}
+
+func (x *GameObject) ProtoReflect() protoreflect.Message {
+	mi := &file_module_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GameObject.ProtoReflect.Descriptor instead.
+func (*GameObject) Descriptor() ([]byte, []int) {
+	return file_module_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GameObject) GetGuid() uint64 {
+	if x != nil {
+		return x.Guid
+	}
+	return 0
+}
+
+func (x *GameObject) GetEntry() uint32 {
+	if x != nil {
+		return x.Entry
+	}
+	return 0
+}
+
+func (x *GameObject) GetTypeId() uint32 {
+	if x != nil {
+		return x.TypeId
+	}
+	return 0
+}
+
+func (x *GameObject) GetDisplayId() uint32 {
+	if x != nil {
+		return x.DisplayId
+	}
+	return 0
+}
+
+func (x *GameObject) GetFlags() uint32 {
+	if x != nil {
+		return x.Flags
+	}
+	return 0
+}
+
+func (x *GameObject) GetState() uint32 {
+	if x != nil {
+		return x.State
+	}
+	return 0
+}
+
+func (x *GameObject) GetAnimProgress() uint32 {
+	if x != nil {
+		return x.AnimProgress
+	}
+	return 0
+}
+
+func (x *GameObject) GetLevel() uint32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *GameObject) GetFaction() uint32 {
+	if x != nil {
+		return x.Faction
+	}
+	return 0
+}
+
+func (x *GameObject) GetPosition() *Vector3 {
+	if x != nil {
+		return x.Position
+	}
+	return nil
+}
+
+func (x *GameObject) GetOrientation() float32 {
+	if x != nil {
+		return x.Orientation
+	}
+	return 0
+}
+
+func (x *GameObject) GetHasPosition() bool {
+	if x != nil {
+		return x.HasPosition
+	}
+	return false
+}
+
 // Skill is one skill line of the character, decoded from the player's own
 // skill block. The name comes from the client data skill line table.
 type Skill struct {
@@ -318,7 +710,7 @@ type Skill struct {
 
 func (x *Skill) Reset() {
 	*x = Skill{}
-	mi := &file_module_proto_msgTypes[2]
+	mi := &file_module_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -330,7 +722,7 @@ func (x *Skill) String() string {
 func (*Skill) ProtoMessage() {}
 
 func (x *Skill) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[2]
+	mi := &file_module_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -343,7 +735,7 @@ func (x *Skill) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Skill.ProtoReflect.Descriptor instead.
 func (*Skill) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{2}
+	return file_module_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Skill) GetId() uint32 {
@@ -401,14 +793,39 @@ type SelfResponse struct {
 	MapId   uint32                 `protobuf:"varint,2,opt,name=map_id,json=mapId,proto3" json:"map_id,omitempty"`
 	InWorld bool                   `protobuf:"varint,3,opt,name=in_world,json=inWorld,proto3" json:"in_world,omitempty"`
 	// Skill lines of the character, professions included.
-	Skills        []*Skill `protobuf:"bytes,4,rep,name=skills,proto3" json:"skills,omitempty"`
+	Skills []*Skill `protobuf:"bytes,4,rep,name=skills,proto3" json:"skills,omitempty"`
+	// State epoch. It increments on every SMSG_LOGIN_VERIFY_WORLD and every
+	// SMSG_NEW_WORLD (map transition), invalidating cursors, GUIDs and position
+	// assumptions from the previous epoch.
+	Epoch uint64 `protobuf:"varint,5,opt,name=epoch,proto3" json:"epoch,omitempty"`
+	// Ready is the cold-start gate for this epoch: the character has entered the
+	// world, a map is known, and the first post-transition update carried the
+	// self health, max health, level, class/power type and primary power fields.
+	// It is derived from server packets, never set by the caller.
+	Ready bool `protobuf:"varint,6,opt,name=ready,proto3" json:"ready,omitempty"`
+	// Number of map transitions observed in this process.
+	MapChanges uint32 `protobuf:"varint,7,opt,name=map_changes,json=mapChanges,proto3" json:"map_changes,omitempty"`
+	// Has_map distinguishes a known map id from the valid map 0 (Eastern
+	// Kingdoms).
+	HasMap    bool        `protobuf:"varint,8,opt,name=has_map,json=hasMap,proto3" json:"has_map,omitempty"`
+	Auras     []*Aura     `protobuf:"bytes,9,rep,name=auras,proto3" json:"auras,omitempty"`
+	Cooldowns []*Cooldown `protobuf:"bytes,10,rep,name=cooldowns,proto3" json:"cooldowns,omitempty"`
+	// Combo points and their target (SMSG_UPDATE_COMBO_POINTS). Zero points or
+	// a zero target mean no active combo.
+	ComboPoints     uint32 `protobuf:"varint,11,opt,name=combo_points,json=comboPoints,proto3" json:"combo_points,omitempty"`
+	ComboTargetGuid uint64 `protobuf:"varint,12,opt,name=combo_target_guid,json=comboTargetGuid,proto3" json:"combo_target_guid,omitempty"`
+	// Top-level identity of the character this module is attached to. These
+	// duplicate unit.guid/unit.name so a cold-start gate can validate the
+	// session from the snapshot root without flattening nested messages.
+	Guid          uint64 `protobuf:"varint,13,opt,name=guid,proto3" json:"guid,omitempty"`
+	Name          string `protobuf:"bytes,14,opt,name=name,proto3" json:"name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SelfResponse) Reset() {
 	*x = SelfResponse{}
-	mi := &file_module_proto_msgTypes[3]
+	mi := &file_module_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -420,7 +837,7 @@ func (x *SelfResponse) String() string {
 func (*SelfResponse) ProtoMessage() {}
 
 func (x *SelfResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[3]
+	mi := &file_module_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -433,7 +850,7 @@ func (x *SelfResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SelfResponse.ProtoReflect.Descriptor instead.
 func (*SelfResponse) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{3}
+	return file_module_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *SelfResponse) GetUnit() *Unit {
@@ -464,6 +881,76 @@ func (x *SelfResponse) GetSkills() []*Skill {
 	return nil
 }
 
+func (x *SelfResponse) GetEpoch() uint64 {
+	if x != nil {
+		return x.Epoch
+	}
+	return 0
+}
+
+func (x *SelfResponse) GetReady() bool {
+	if x != nil {
+		return x.Ready
+	}
+	return false
+}
+
+func (x *SelfResponse) GetMapChanges() uint32 {
+	if x != nil {
+		return x.MapChanges
+	}
+	return 0
+}
+
+func (x *SelfResponse) GetHasMap() bool {
+	if x != nil {
+		return x.HasMap
+	}
+	return false
+}
+
+func (x *SelfResponse) GetAuras() []*Aura {
+	if x != nil {
+		return x.Auras
+	}
+	return nil
+}
+
+func (x *SelfResponse) GetCooldowns() []*Cooldown {
+	if x != nil {
+		return x.Cooldowns
+	}
+	return nil
+}
+
+func (x *SelfResponse) GetComboPoints() uint32 {
+	if x != nil {
+		return x.ComboPoints
+	}
+	return 0
+}
+
+func (x *SelfResponse) GetComboTargetGuid() uint64 {
+	if x != nil {
+		return x.ComboTargetGuid
+	}
+	return 0
+}
+
+func (x *SelfResponse) GetGuid() uint64 {
+	if x != nil {
+		return x.Guid
+	}
+	return 0
+}
+
+func (x *SelfResponse) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
 type SkillsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Skills        []*Skill               `protobuf:"bytes,1,rep,name=skills,proto3" json:"skills,omitempty"`
@@ -473,7 +960,7 @@ type SkillsResponse struct {
 
 func (x *SkillsResponse) Reset() {
 	*x = SkillsResponse{}
-	mi := &file_module_proto_msgTypes[4]
+	mi := &file_module_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -485,7 +972,7 @@ func (x *SkillsResponse) String() string {
 func (*SkillsResponse) ProtoMessage() {}
 
 func (x *SkillsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[4]
+	mi := &file_module_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -498,7 +985,7 @@ func (x *SkillsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SkillsResponse.ProtoReflect.Descriptor instead.
 func (*SkillsResponse) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{4}
+	return file_module_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *SkillsResponse) GetSkills() []*Skill {
@@ -512,15 +999,19 @@ type NearbyRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Zero means no distance filter.
 	Radius float32 `protobuf:"fixed32,1,opt,name=radius,proto3" json:"radius,omitempty"`
-	// Zero means the default of 32 units, capped at 200.
-	Limit         uint32 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// Zero means the default of 32 units, capped at 200. The cap applies to
+	// units and game objects separately.
+	Limit uint32 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	// Include game objects (nodes, quest objects, doors, chests). Off by
+	// default so existing unit-only callers keep their ordering and size.
+	IncludeGameObjects bool `protobuf:"varint,3,opt,name=include_game_objects,json=includeGameObjects,proto3" json:"include_game_objects,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *NearbyRequest) Reset() {
 	*x = NearbyRequest{}
-	mi := &file_module_proto_msgTypes[5]
+	mi := &file_module_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -532,7 +1023,7 @@ func (x *NearbyRequest) String() string {
 func (*NearbyRequest) ProtoMessage() {}
 
 func (x *NearbyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[5]
+	mi := &file_module_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -545,7 +1036,7 @@ func (x *NearbyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NearbyRequest.ProtoReflect.Descriptor instead.
 func (*NearbyRequest) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{5}
+	return file_module_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *NearbyRequest) GetRadius() float32 {
@@ -562,17 +1053,26 @@ func (x *NearbyRequest) GetLimit() uint32 {
 	return 0
 }
 
+func (x *NearbyRequest) GetIncludeGameObjects() bool {
+	if x != nil {
+		return x.IncludeGameObjects
+	}
+	return false
+}
+
 type NearbyResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Units         []*Unit                `protobuf:"bytes,1,rep,name=units,proto3" json:"units,omitempty"`
-	KnownUnits    uint32                 `protobuf:"varint,2,opt,name=known_units,json=knownUnits,proto3" json:"known_units,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Units            []*Unit                `protobuf:"bytes,1,rep,name=units,proto3" json:"units,omitempty"`
+	KnownUnits       uint32                 `protobuf:"varint,2,opt,name=known_units,json=knownUnits,proto3" json:"known_units,omitempty"`
+	GameObjects      []*GameObject          `protobuf:"bytes,3,rep,name=game_objects,json=gameObjects,proto3" json:"game_objects,omitempty"`
+	KnownGameObjects uint32                 `protobuf:"varint,4,opt,name=known_game_objects,json=knownGameObjects,proto3" json:"known_game_objects,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *NearbyResponse) Reset() {
 	*x = NearbyResponse{}
-	mi := &file_module_proto_msgTypes[6]
+	mi := &file_module_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -584,7 +1084,7 @@ func (x *NearbyResponse) String() string {
 func (*NearbyResponse) ProtoMessage() {}
 
 func (x *NearbyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[6]
+	mi := &file_module_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -597,7 +1097,7 @@ func (x *NearbyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NearbyResponse.ProtoReflect.Descriptor instead.
 func (*NearbyResponse) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{6}
+	return file_module_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *NearbyResponse) GetUnits() []*Unit {
@@ -614,18 +1114,35 @@ func (x *NearbyResponse) GetKnownUnits() uint32 {
 	return 0
 }
 
+func (x *NearbyResponse) GetGameObjects() []*GameObject {
+	if x != nil {
+		return x.GameObjects
+	}
+	return nil
+}
+
+func (x *NearbyResponse) GetKnownGameObjects() uint32 {
+	if x != nil {
+		return x.KnownGameObjects
+	}
+	return 0
+}
+
 type TargetResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	HasTarget     bool                   `protobuf:"varint,1,opt,name=has_target,json=hasTarget,proto3" json:"has_target,omitempty"`
-	TargetGuid    uint64                 `protobuf:"varint,2,opt,name=target_guid,json=targetGuid,proto3" json:"target_guid,omitempty"`
-	Unit          *Unit                  `protobuf:"bytes,3,opt,name=unit,proto3" json:"unit,omitempty"`
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	HasTarget  bool                   `protobuf:"varint,1,opt,name=has_target,json=hasTarget,proto3" json:"has_target,omitempty"`
+	TargetGuid uint64                 `protobuf:"varint,2,opt,name=target_guid,json=targetGuid,proto3" json:"target_guid,omitempty"`
+	Unit       *Unit                  `protobuf:"bytes,3,opt,name=unit,proto3" json:"unit,omitempty"`
+	// Game_object is set when the current selection is a game object rather
+	// than a unit/player.
+	GameObject    *GameObject `protobuf:"bytes,4,opt,name=game_object,json=gameObject,proto3" json:"game_object,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *TargetResponse) Reset() {
 	*x = TargetResponse{}
-	mi := &file_module_proto_msgTypes[7]
+	mi := &file_module_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -637,7 +1154,7 @@ func (x *TargetResponse) String() string {
 func (*TargetResponse) ProtoMessage() {}
 
 func (x *TargetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[7]
+	mi := &file_module_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -650,7 +1167,7 @@ func (x *TargetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TargetResponse.ProtoReflect.Descriptor instead.
 func (*TargetResponse) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{7}
+	return file_module_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *TargetResponse) GetHasTarget() bool {
@@ -674,6 +1191,13 @@ func (x *TargetResponse) GetUnit() *Unit {
 	return nil
 }
 
+func (x *TargetResponse) GetGameObject() *GameObject {
+	if x != nil {
+		return x.GameObject
+	}
+	return nil
+}
+
 type SelectTargetRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Guid          uint64                 `protobuf:"varint,1,opt,name=guid,proto3" json:"guid,omitempty"`
@@ -683,7 +1207,7 @@ type SelectTargetRequest struct {
 
 func (x *SelectTargetRequest) Reset() {
 	*x = SelectTargetRequest{}
-	mi := &file_module_proto_msgTypes[8]
+	mi := &file_module_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -695,7 +1219,7 @@ func (x *SelectTargetRequest) String() string {
 func (*SelectTargetRequest) ProtoMessage() {}
 
 func (x *SelectTargetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[8]
+	mi := &file_module_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -708,7 +1232,7 @@ func (x *SelectTargetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SelectTargetRequest.ProtoReflect.Descriptor instead.
 func (*SelectTargetRequest) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{8}
+	return file_module_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *SelectTargetRequest) GetGuid() uint64 {
@@ -727,7 +1251,7 @@ type QueryNameRequest struct {
 
 func (x *QueryNameRequest) Reset() {
 	*x = QueryNameRequest{}
-	mi := &file_module_proto_msgTypes[9]
+	mi := &file_module_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -739,7 +1263,7 @@ func (x *QueryNameRequest) String() string {
 func (*QueryNameRequest) ProtoMessage() {}
 
 func (x *QueryNameRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[9]
+	mi := &file_module_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -752,7 +1276,7 @@ func (x *QueryNameRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryNameRequest.ProtoReflect.Descriptor instead.
 func (*QueryNameRequest) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{9}
+	return file_module_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *QueryNameRequest) GetGuid() uint64 {
@@ -769,13 +1293,20 @@ type StatusResponse struct {
 	KnownUnits      uint32                 `protobuf:"varint,3,opt,name=known_units,json=knownUnits,proto3" json:"known_units,omitempty"`
 	NameQueries     uint32                 `protobuf:"varint,4,opt,name=name_queries,json=nameQueries,proto3" json:"name_queries,omitempty"`
 	CreatureQueries uint32                 `protobuf:"varint,5,opt,name=creature_queries,json=creatureQueries,proto3" json:"creature_queries,omitempty"`
+	Epoch           uint64                 `protobuf:"varint,6,opt,name=epoch,proto3" json:"epoch,omitempty"`
+	Ready           bool                   `protobuf:"varint,7,opt,name=ready,proto3" json:"ready,omitempty"`
+	MapId           uint32                 `protobuf:"varint,8,opt,name=map_id,json=mapId,proto3" json:"map_id,omitempty"`
+	MapChanges      uint32                 `protobuf:"varint,9,opt,name=map_changes,json=mapChanges,proto3" json:"map_changes,omitempty"`
+	AuraUpdates     uint32                 `protobuf:"varint,10,opt,name=aura_updates,json=auraUpdates,proto3" json:"aura_updates,omitempty"`
+	CooldownPackets uint32                 `protobuf:"varint,11,opt,name=cooldown_packets,json=cooldownPackets,proto3" json:"cooldown_packets,omitempty"`
+	CooldownEvents  uint32                 `protobuf:"varint,12,opt,name=cooldown_events,json=cooldownEvents,proto3" json:"cooldown_events,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
 
 func (x *StatusResponse) Reset() {
 	*x = StatusResponse{}
-	mi := &file_module_proto_msgTypes[10]
+	mi := &file_module_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -787,7 +1318,7 @@ func (x *StatusResponse) String() string {
 func (*StatusResponse) ProtoMessage() {}
 
 func (x *StatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[10]
+	mi := &file_module_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -800,7 +1331,7 @@ func (x *StatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatusResponse.ProtoReflect.Descriptor instead.
 func (*StatusResponse) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{10}
+	return file_module_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *StatusResponse) GetPackets() uint32 {
@@ -838,6 +1369,55 @@ func (x *StatusResponse) GetCreatureQueries() uint32 {
 	return 0
 }
 
+func (x *StatusResponse) GetEpoch() uint64 {
+	if x != nil {
+		return x.Epoch
+	}
+	return 0
+}
+
+func (x *StatusResponse) GetReady() bool {
+	if x != nil {
+		return x.Ready
+	}
+	return false
+}
+
+func (x *StatusResponse) GetMapId() uint32 {
+	if x != nil {
+		return x.MapId
+	}
+	return 0
+}
+
+func (x *StatusResponse) GetMapChanges() uint32 {
+	if x != nil {
+		return x.MapChanges
+	}
+	return 0
+}
+
+func (x *StatusResponse) GetAuraUpdates() uint32 {
+	if x != nil {
+		return x.AuraUpdates
+	}
+	return 0
+}
+
+func (x *StatusResponse) GetCooldownPackets() uint32 {
+	if x != nil {
+		return x.CooldownPackets
+	}
+	return 0
+}
+
+func (x *StatusResponse) GetCooldownEvents() uint32 {
+	if x != nil {
+		return x.CooldownEvents
+	}
+	return 0
+}
+
 // MonsterMoveSamples returns recent SMSG_MONSTER_MOVE payloads as hex so the
 // wire layout can be verified against the live server.
 type MonsterMoveSamples struct {
@@ -849,7 +1429,7 @@ type MonsterMoveSamples struct {
 
 func (x *MonsterMoveSamples) Reset() {
 	*x = MonsterMoveSamples{}
-	mi := &file_module_proto_msgTypes[11]
+	mi := &file_module_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -861,7 +1441,7 @@ func (x *MonsterMoveSamples) String() string {
 func (*MonsterMoveSamples) ProtoMessage() {}
 
 func (x *MonsterMoveSamples) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[11]
+	mi := &file_module_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -874,7 +1454,7 @@ func (x *MonsterMoveSamples) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MonsterMoveSamples.ProtoReflect.Descriptor instead.
 func (*MonsterMoveSamples) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{11}
+	return file_module_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *MonsterMoveSamples) GetPayloads() []string {
@@ -895,7 +1475,7 @@ type FieldSlot struct {
 
 func (x *FieldSlot) Reset() {
 	*x = FieldSlot{}
-	mi := &file_module_proto_msgTypes[12]
+	mi := &file_module_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -907,7 +1487,7 @@ func (x *FieldSlot) String() string {
 func (*FieldSlot) ProtoMessage() {}
 
 func (x *FieldSlot) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[12]
+	mi := &file_module_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -920,7 +1500,7 @@ func (x *FieldSlot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FieldSlot.ProtoReflect.Descriptor instead.
 func (*FieldSlot) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{12}
+	return file_module_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *FieldSlot) GetIndex() uint32 {
@@ -948,7 +1528,7 @@ type FieldDump struct {
 
 func (x *FieldDump) Reset() {
 	*x = FieldDump{}
-	mi := &file_module_proto_msgTypes[13]
+	mi := &file_module_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -960,7 +1540,7 @@ func (x *FieldDump) String() string {
 func (*FieldDump) ProtoMessage() {}
 
 func (x *FieldDump) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[13]
+	mi := &file_module_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -973,7 +1553,7 @@ func (x *FieldDump) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FieldDump.ProtoReflect.Descriptor instead.
 func (*FieldDump) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{13}
+	return file_module_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *FieldDump) GetSlots() []*FieldSlot {
@@ -991,7 +1571,7 @@ const file_module_proto_rawDesc = "" +
 	"\aVector3\x12\f\n" +
 	"\x01x\x18\x01 \x01(\x02R\x01x\x12\f\n" +
 	"\x01y\x18\x02 \x01(\x02R\x01y\x12\f\n" +
-	"\x01z\x18\x03 \x01(\x02R\x01z\"\xdc\x04\n" +
+	"\x01z\x18\x03 \x01(\x02R\x01z\"\xbc\x06\n" +
 	"\x04Unit\x12\x12\n" +
 	"\x04guid\x18\x01 \x01(\x04R\x04guid\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
@@ -1017,7 +1597,54 @@ const file_module_proto_rawDesc = "" +
 	"\x04dead\x18\x13 \x01(\bR\x04dead\x12\x18\n" +
 	"\afaction\x18\x14 \x01(\rR\afaction\x12\x1b\n" +
 	"\tin_combat\x18\x15 \x01(\bR\binCombat\x12\x14\n" +
-	"\x05money\x18\x16 \x01(\x04R\x05money\"\xa3\x01\n" +
+	"\x05money\x18\x16 \x01(\x04R\x05money\x12\x1d\n" +
+	"\n" +
+	"power_type\x18\x17 \x01(\rR\tpowerType\x12\x14\n" +
+	"\x05power\x18\x18 \x01(\rR\x05power\x12\x1b\n" +
+	"\tmax_power\x18\x19 \x01(\rR\bmaxPower\x12\x1d\n" +
+	"\n" +
+	"display_id\x18\x1a \x01(\rR\tdisplayId\x12#\n" +
+	"\rdynamic_flags\x18\x1b \x01(\rR\fdynamicFlags\x12\x1b\n" +
+	"\tnpc_flags\x18\x1c \x01(\rR\bnpcFlags\x12+\n" +
+	"\x05auras\x18\x1d \x03(\v2\x15.sense.module.v1.AuraR\x05auras\"\xea\x02\n" +
+	"\x04Aura\x12\x12\n" +
+	"\x04slot\x18\x01 \x01(\rR\x04slot\x12\x19\n" +
+	"\bspell_id\x18\x02 \x01(\rR\aspellId\x12\x14\n" +
+	"\x05flags\x18\x03 \x01(\rR\x05flags\x12!\n" +
+	"\fcaster_level\x18\x04 \x01(\rR\vcasterLevel\x12\x16\n" +
+	"\x06stacks\x18\x05 \x01(\rR\x06stacks\x12\x1f\n" +
+	"\vcaster_guid\x18\x06 \x01(\x04R\n" +
+	"casterGuid\x12\x1d\n" +
+	"\n" +
+	"has_caster\x18\a \x01(\bR\thasCaster\x12&\n" +
+	"\x0fmax_duration_ms\x18\b \x01(\rR\rmaxDurationMs\x12\x1f\n" +
+	"\vduration_ms\x18\t \x01(\rR\n" +
+	"durationMs\x12!\n" +
+	"\fhas_duration\x18\n" +
+	" \x01(\bR\vhasDuration\x12\x1a\n" +
+	"\bpositive\x18\v \x01(\bR\bpositive\x12\x1a\n" +
+	"\bnegative\x18\f \x01(\bR\bnegative\"i\n" +
+	"\bCooldown\x12\x19\n" +
+	"\bspell_id\x18\x01 \x01(\rR\aspellId\x12\x1f\n" +
+	"\vcooldown_ms\x18\x02 \x01(\rR\n" +
+	"cooldownMs\x12!\n" +
+	"\fremaining_ms\x18\x03 \x01(\rR\vremainingMs\"\xea\x02\n" +
+	"\n" +
+	"GameObject\x12\x12\n" +
+	"\x04guid\x18\x01 \x01(\x04R\x04guid\x12\x14\n" +
+	"\x05entry\x18\x02 \x01(\rR\x05entry\x12\x17\n" +
+	"\atype_id\x18\x03 \x01(\rR\x06typeId\x12\x1d\n" +
+	"\n" +
+	"display_id\x18\x04 \x01(\rR\tdisplayId\x12\x14\n" +
+	"\x05flags\x18\x05 \x01(\rR\x05flags\x12\x14\n" +
+	"\x05state\x18\x06 \x01(\rR\x05state\x12#\n" +
+	"\ranim_progress\x18\a \x01(\rR\fanimProgress\x12\x14\n" +
+	"\x05level\x18\b \x01(\rR\x05level\x12\x18\n" +
+	"\afaction\x18\t \x01(\rR\afaction\x124\n" +
+	"\bposition\x18\n" +
+	" \x01(\v2\x18.sense.module.v1.Vector3R\bposition\x12 \n" +
+	"\vorientation\x18\v \x01(\x02R\vorientation\x12!\n" +
+	"\fhas_position\x18\f \x01(\bR\vhasPosition\"\xa3\x01\n" +
 	"\x05Skill\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\rR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
@@ -1027,38 +1654,64 @@ const file_module_proto_rawDesc = "" +
 	"\x04step\x18\x06 \x01(\rR\x04step\x12\x1e\n" +
 	"\n" +
 	"profession\x18\a \x01(\bR\n" +
-	"profession\"\x9b\x01\n" +
+	"profession\"\xde\x03\n" +
 	"\fSelfResponse\x12)\n" +
 	"\x04unit\x18\x01 \x01(\v2\x15.sense.module.v1.UnitR\x04unit\x12\x15\n" +
 	"\x06map_id\x18\x02 \x01(\rR\x05mapId\x12\x19\n" +
 	"\bin_world\x18\x03 \x01(\bR\ainWorld\x12.\n" +
-	"\x06skills\x18\x04 \x03(\v2\x16.sense.module.v1.SkillR\x06skills\"@\n" +
+	"\x06skills\x18\x04 \x03(\v2\x16.sense.module.v1.SkillR\x06skills\x12\x14\n" +
+	"\x05epoch\x18\x05 \x01(\x04R\x05epoch\x12\x14\n" +
+	"\x05ready\x18\x06 \x01(\bR\x05ready\x12\x1f\n" +
+	"\vmap_changes\x18\a \x01(\rR\n" +
+	"mapChanges\x12\x17\n" +
+	"\ahas_map\x18\b \x01(\bR\x06hasMap\x12+\n" +
+	"\x05auras\x18\t \x03(\v2\x15.sense.module.v1.AuraR\x05auras\x127\n" +
+	"\tcooldowns\x18\n" +
+	" \x03(\v2\x19.sense.module.v1.CooldownR\tcooldowns\x12!\n" +
+	"\fcombo_points\x18\v \x01(\rR\vcomboPoints\x12*\n" +
+	"\x11combo_target_guid\x18\f \x01(\x04R\x0fcomboTargetGuid\x12\x12\n" +
+	"\x04guid\x18\r \x01(\x04R\x04guid\x12\x12\n" +
+	"\x04name\x18\x0e \x01(\tR\x04name\"@\n" +
 	"\x0eSkillsResponse\x12.\n" +
-	"\x06skills\x18\x01 \x03(\v2\x16.sense.module.v1.SkillR\x06skills\"=\n" +
+	"\x06skills\x18\x01 \x03(\v2\x16.sense.module.v1.SkillR\x06skills\"o\n" +
 	"\rNearbyRequest\x12\x16\n" +
 	"\x06radius\x18\x01 \x01(\x02R\x06radius\x12\x14\n" +
-	"\x05limit\x18\x02 \x01(\rR\x05limit\"^\n" +
+	"\x05limit\x18\x02 \x01(\rR\x05limit\x120\n" +
+	"\x14include_game_objects\x18\x03 \x01(\bR\x12includeGameObjects\"\xcc\x01\n" +
 	"\x0eNearbyResponse\x12+\n" +
 	"\x05units\x18\x01 \x03(\v2\x15.sense.module.v1.UnitR\x05units\x12\x1f\n" +
 	"\vknown_units\x18\x02 \x01(\rR\n" +
-	"knownUnits\"{\n" +
+	"knownUnits\x12>\n" +
+	"\fgame_objects\x18\x03 \x03(\v2\x1b.sense.module.v1.GameObjectR\vgameObjects\x12,\n" +
+	"\x12known_game_objects\x18\x04 \x01(\rR\x10knownGameObjects\"\xb9\x01\n" +
 	"\x0eTargetResponse\x12\x1d\n" +
 	"\n" +
 	"has_target\x18\x01 \x01(\bR\thasTarget\x12\x1f\n" +
 	"\vtarget_guid\x18\x02 \x01(\x04R\n" +
 	"targetGuid\x12)\n" +
-	"\x04unit\x18\x03 \x01(\v2\x15.sense.module.v1.UnitR\x04unit\")\n" +
+	"\x04unit\x18\x03 \x01(\v2\x15.sense.module.v1.UnitR\x04unit\x12<\n" +
+	"\vgame_object\x18\x04 \x01(\v2\x1b.sense.module.v1.GameObjectR\n" +
+	"gameObject\")\n" +
 	"\x13SelectTargetRequest\x12\x12\n" +
 	"\x04guid\x18\x01 \x01(\x04R\x04guid\"&\n" +
 	"\x10QueryNameRequest\x12\x12\n" +
-	"\x04guid\x18\x01 \x01(\x04R\x04guid\"\xbc\x01\n" +
+	"\x04guid\x18\x01 \x01(\x04R\x04guid\"\x97\x03\n" +
 	"\x0eStatusResponse\x12\x18\n" +
 	"\apackets\x18\x01 \x01(\rR\apackets\x12!\n" +
 	"\fparse_errors\x18\x02 \x01(\rR\vparseErrors\x12\x1f\n" +
 	"\vknown_units\x18\x03 \x01(\rR\n" +
 	"knownUnits\x12!\n" +
 	"\fname_queries\x18\x04 \x01(\rR\vnameQueries\x12)\n" +
-	"\x10creature_queries\x18\x05 \x01(\rR\x0fcreatureQueries\"0\n" +
+	"\x10creature_queries\x18\x05 \x01(\rR\x0fcreatureQueries\x12\x14\n" +
+	"\x05epoch\x18\x06 \x01(\x04R\x05epoch\x12\x14\n" +
+	"\x05ready\x18\a \x01(\bR\x05ready\x12\x15\n" +
+	"\x06map_id\x18\b \x01(\rR\x05mapId\x12\x1f\n" +
+	"\vmap_changes\x18\t \x01(\rR\n" +
+	"mapChanges\x12!\n" +
+	"\faura_updates\x18\n" +
+	" \x01(\rR\vauraUpdates\x12)\n" +
+	"\x10cooldown_packets\x18\v \x01(\rR\x0fcooldownPackets\x12'\n" +
+	"\x0fcooldown_events\x18\f \x01(\rR\x0ecooldownEvents\"0\n" +
 	"\x12MonsterMoveSamples\x12\x1a\n" +
 	"\bpayloads\x18\x01 \x03(\tR\bpayloads\"7\n" +
 	"\tFieldSlot\x12\x14\n" +
@@ -1091,60 +1744,69 @@ func file_module_proto_rawDescGZIP() []byte {
 	return file_module_proto_rawDescData
 }
 
-var file_module_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_module_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_module_proto_goTypes = []any{
 	(*Vector3)(nil),             // 0: sense.module.v1.Vector3
 	(*Unit)(nil),                // 1: sense.module.v1.Unit
-	(*Skill)(nil),               // 2: sense.module.v1.Skill
-	(*SelfResponse)(nil),        // 3: sense.module.v1.SelfResponse
-	(*SkillsResponse)(nil),      // 4: sense.module.v1.SkillsResponse
-	(*NearbyRequest)(nil),       // 5: sense.module.v1.NearbyRequest
-	(*NearbyResponse)(nil),      // 6: sense.module.v1.NearbyResponse
-	(*TargetResponse)(nil),      // 7: sense.module.v1.TargetResponse
-	(*SelectTargetRequest)(nil), // 8: sense.module.v1.SelectTargetRequest
-	(*QueryNameRequest)(nil),    // 9: sense.module.v1.QueryNameRequest
-	(*StatusResponse)(nil),      // 10: sense.module.v1.StatusResponse
-	(*MonsterMoveSamples)(nil),  // 11: sense.module.v1.MonsterMoveSamples
-	(*FieldSlot)(nil),           // 12: sense.module.v1.FieldSlot
-	(*FieldDump)(nil),           // 13: sense.module.v1.FieldDump
-	(*emptypb.Empty)(nil),       // 14: google.protobuf.Empty
-	(*v1.WorldPacket)(nil),      // 15: agentwow.module.v1.WorldPacket
+	(*Aura)(nil),                // 2: sense.module.v1.Aura
+	(*Cooldown)(nil),            // 3: sense.module.v1.Cooldown
+	(*GameObject)(nil),          // 4: sense.module.v1.GameObject
+	(*Skill)(nil),               // 5: sense.module.v1.Skill
+	(*SelfResponse)(nil),        // 6: sense.module.v1.SelfResponse
+	(*SkillsResponse)(nil),      // 7: sense.module.v1.SkillsResponse
+	(*NearbyRequest)(nil),       // 8: sense.module.v1.NearbyRequest
+	(*NearbyResponse)(nil),      // 9: sense.module.v1.NearbyResponse
+	(*TargetResponse)(nil),      // 10: sense.module.v1.TargetResponse
+	(*SelectTargetRequest)(nil), // 11: sense.module.v1.SelectTargetRequest
+	(*QueryNameRequest)(nil),    // 12: sense.module.v1.QueryNameRequest
+	(*StatusResponse)(nil),      // 13: sense.module.v1.StatusResponse
+	(*MonsterMoveSamples)(nil),  // 14: sense.module.v1.MonsterMoveSamples
+	(*FieldSlot)(nil),           // 15: sense.module.v1.FieldSlot
+	(*FieldDump)(nil),           // 16: sense.module.v1.FieldDump
+	(*emptypb.Empty)(nil),       // 17: google.protobuf.Empty
+	(*v1.WorldPacket)(nil),      // 18: agentwow.module.v1.WorldPacket
 }
 var file_module_proto_depIdxs = []int32{
 	0,  // 0: sense.module.v1.Unit.position:type_name -> sense.module.v1.Vector3
-	1,  // 1: sense.module.v1.SelfResponse.unit:type_name -> sense.module.v1.Unit
-	2,  // 2: sense.module.v1.SelfResponse.skills:type_name -> sense.module.v1.Skill
-	2,  // 3: sense.module.v1.SkillsResponse.skills:type_name -> sense.module.v1.Skill
-	1,  // 4: sense.module.v1.NearbyResponse.units:type_name -> sense.module.v1.Unit
-	1,  // 5: sense.module.v1.TargetResponse.unit:type_name -> sense.module.v1.Unit
-	12, // 6: sense.module.v1.FieldDump.slots:type_name -> sense.module.v1.FieldSlot
-	14, // 7: sense.module.v1.Module.GetSelf:input_type -> google.protobuf.Empty
-	14, // 8: sense.module.v1.Module.GetSkills:input_type -> google.protobuf.Empty
-	5,  // 9: sense.module.v1.Module.GetNearby:input_type -> sense.module.v1.NearbyRequest
-	14, // 10: sense.module.v1.Module.GetTarget:input_type -> google.protobuf.Empty
-	8,  // 11: sense.module.v1.Module.SelectTarget:input_type -> sense.module.v1.SelectTargetRequest
-	14, // 12: sense.module.v1.Module.ClearTarget:input_type -> google.protobuf.Empty
-	9,  // 13: sense.module.v1.Module.QueryName:input_type -> sense.module.v1.QueryNameRequest
-	14, // 14: sense.module.v1.Module.Status:input_type -> google.protobuf.Empty
-	14, // 15: sense.module.v1.Module.DebugMonsterMoves:input_type -> google.protobuf.Empty
-	14, // 16: sense.module.v1.Module.DebugFields:input_type -> google.protobuf.Empty
-	15, // 17: sense.module.v1.Module.OnPacket:input_type -> agentwow.module.v1.WorldPacket
-	3,  // 18: sense.module.v1.Module.GetSelf:output_type -> sense.module.v1.SelfResponse
-	4,  // 19: sense.module.v1.Module.GetSkills:output_type -> sense.module.v1.SkillsResponse
-	6,  // 20: sense.module.v1.Module.GetNearby:output_type -> sense.module.v1.NearbyResponse
-	7,  // 21: sense.module.v1.Module.GetTarget:output_type -> sense.module.v1.TargetResponse
-	14, // 22: sense.module.v1.Module.SelectTarget:output_type -> google.protobuf.Empty
-	14, // 23: sense.module.v1.Module.ClearTarget:output_type -> google.protobuf.Empty
-	14, // 24: sense.module.v1.Module.QueryName:output_type -> google.protobuf.Empty
-	10, // 25: sense.module.v1.Module.Status:output_type -> sense.module.v1.StatusResponse
-	11, // 26: sense.module.v1.Module.DebugMonsterMoves:output_type -> sense.module.v1.MonsterMoveSamples
-	13, // 27: sense.module.v1.Module.DebugFields:output_type -> sense.module.v1.FieldDump
-	14, // 28: sense.module.v1.Module.OnPacket:output_type -> google.protobuf.Empty
-	18, // [18:29] is the sub-list for method output_type
-	7,  // [7:18] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	2,  // 1: sense.module.v1.Unit.auras:type_name -> sense.module.v1.Aura
+	0,  // 2: sense.module.v1.GameObject.position:type_name -> sense.module.v1.Vector3
+	1,  // 3: sense.module.v1.SelfResponse.unit:type_name -> sense.module.v1.Unit
+	5,  // 4: sense.module.v1.SelfResponse.skills:type_name -> sense.module.v1.Skill
+	2,  // 5: sense.module.v1.SelfResponse.auras:type_name -> sense.module.v1.Aura
+	3,  // 6: sense.module.v1.SelfResponse.cooldowns:type_name -> sense.module.v1.Cooldown
+	5,  // 7: sense.module.v1.SkillsResponse.skills:type_name -> sense.module.v1.Skill
+	1,  // 8: sense.module.v1.NearbyResponse.units:type_name -> sense.module.v1.Unit
+	4,  // 9: sense.module.v1.NearbyResponse.game_objects:type_name -> sense.module.v1.GameObject
+	1,  // 10: sense.module.v1.TargetResponse.unit:type_name -> sense.module.v1.Unit
+	4,  // 11: sense.module.v1.TargetResponse.game_object:type_name -> sense.module.v1.GameObject
+	15, // 12: sense.module.v1.FieldDump.slots:type_name -> sense.module.v1.FieldSlot
+	17, // 13: sense.module.v1.Module.GetSelf:input_type -> google.protobuf.Empty
+	17, // 14: sense.module.v1.Module.GetSkills:input_type -> google.protobuf.Empty
+	8,  // 15: sense.module.v1.Module.GetNearby:input_type -> sense.module.v1.NearbyRequest
+	17, // 16: sense.module.v1.Module.GetTarget:input_type -> google.protobuf.Empty
+	11, // 17: sense.module.v1.Module.SelectTarget:input_type -> sense.module.v1.SelectTargetRequest
+	17, // 18: sense.module.v1.Module.ClearTarget:input_type -> google.protobuf.Empty
+	12, // 19: sense.module.v1.Module.QueryName:input_type -> sense.module.v1.QueryNameRequest
+	17, // 20: sense.module.v1.Module.Status:input_type -> google.protobuf.Empty
+	17, // 21: sense.module.v1.Module.DebugMonsterMoves:input_type -> google.protobuf.Empty
+	17, // 22: sense.module.v1.Module.DebugFields:input_type -> google.protobuf.Empty
+	18, // 23: sense.module.v1.Module.OnPacket:input_type -> agentwow.module.v1.WorldPacket
+	6,  // 24: sense.module.v1.Module.GetSelf:output_type -> sense.module.v1.SelfResponse
+	7,  // 25: sense.module.v1.Module.GetSkills:output_type -> sense.module.v1.SkillsResponse
+	9,  // 26: sense.module.v1.Module.GetNearby:output_type -> sense.module.v1.NearbyResponse
+	10, // 27: sense.module.v1.Module.GetTarget:output_type -> sense.module.v1.TargetResponse
+	17, // 28: sense.module.v1.Module.SelectTarget:output_type -> google.protobuf.Empty
+	17, // 29: sense.module.v1.Module.ClearTarget:output_type -> google.protobuf.Empty
+	17, // 30: sense.module.v1.Module.QueryName:output_type -> google.protobuf.Empty
+	13, // 31: sense.module.v1.Module.Status:output_type -> sense.module.v1.StatusResponse
+	14, // 32: sense.module.v1.Module.DebugMonsterMoves:output_type -> sense.module.v1.MonsterMoveSamples
+	16, // 33: sense.module.v1.Module.DebugFields:output_type -> sense.module.v1.FieldDump
+	17, // 34: sense.module.v1.Module.OnPacket:output_type -> google.protobuf.Empty
+	24, // [24:35] is the sub-list for method output_type
+	13, // [13:24] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_module_proto_init() }
@@ -1158,7 +1820,7 @@ func file_module_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_module_proto_rawDesc), len(file_module_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

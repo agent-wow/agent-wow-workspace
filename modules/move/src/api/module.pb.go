@@ -28,7 +28,9 @@ type Position struct {
 	X     float32                `protobuf:"fixed32,1,opt,name=x,proto3" json:"x,omitempty"`
 	Y     float32                `protobuf:"fixed32,2,opt,name=y,proto3" json:"y,omitempty"`
 	Z     float32                `protobuf:"fixed32,3,opt,name=z,proto3" json:"z,omitempty"`
-	// Facing angle in radians; 0 faces north (+Y), growing clockwise.
+	// Facing angle in radians in the server's convention: 0 faces +X and the
+	// angle grows toward +Y, so the forward vector is (cos o, sin o) and facing
+	// a target is atan2(dy, dx).
 	Orientation   float32 `protobuf:"fixed32,4,opt,name=orientation,proto3" json:"orientation,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -383,13 +385,19 @@ func (x *RunSpeedRequest) GetYardsPerSecond() float32 {
 }
 
 type StatusResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Position      *Position              `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
-	HasPosition   bool                   `protobuf:"varint,2,opt,name=has_position,json=hasPosition,proto3" json:"has_position,omitempty"`
-	Moving        bool                   `protobuf:"varint,3,opt,name=moving,proto3" json:"moving,omitempty"`
-	RunSpeed      float32                `protobuf:"fixed32,4,opt,name=run_speed,json=runSpeed,proto3" json:"run_speed,omitempty"`
-	Packets       uint32                 `protobuf:"varint,5,opt,name=packets,proto3" json:"packets,omitempty"`
-	ParseErrors   uint32                 `protobuf:"varint,6,opt,name=parse_errors,json=parseErrors,proto3" json:"parse_errors,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Position    *Position              `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
+	HasPosition bool                   `protobuf:"varint,2,opt,name=has_position,json=hasPosition,proto3" json:"has_position,omitempty"`
+	Moving      bool                   `protobuf:"varint,3,opt,name=moving,proto3" json:"moving,omitempty"`
+	RunSpeed    float32                `protobuf:"fixed32,4,opt,name=run_speed,json=runSpeed,proto3" json:"run_speed,omitempty"`
+	Packets     uint32                 `protobuf:"varint,5,opt,name=packets,proto3" json:"packets,omitempty"`
+	ParseErrors uint32                 `protobuf:"varint,6,opt,name=parse_errors,json=parseErrors,proto3" json:"parse_errors,omitempty"`
+	// World epoch, incremented by SMSG_LOGIN_VERIFY_WORLD and SMSG_NEW_WORLD.
+	// A move started in an older epoch aborts with codes.Aborted; callers should
+	// discard positions and cursors captured before the epoch changed.
+	WorldEpoch    uint64 `protobuf:"varint,7,opt,name=world_epoch,json=worldEpoch,proto3" json:"world_epoch,omitempty"`
+	MapId         uint32 `protobuf:"varint,8,opt,name=map_id,json=mapId,proto3" json:"map_id,omitempty"`
+	HasMap        bool   `protobuf:"varint,9,opt,name=has_map,json=hasMap,proto3" json:"has_map,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -466,6 +474,27 @@ func (x *StatusResponse) GetParseErrors() uint32 {
 	return 0
 }
 
+func (x *StatusResponse) GetWorldEpoch() uint64 {
+	if x != nil {
+		return x.WorldEpoch
+	}
+	return 0
+}
+
+func (x *StatusResponse) GetMapId() uint32 {
+	if x != nil {
+		return x.MapId
+	}
+	return 0
+}
+
+func (x *StatusResponse) GetHasMap() bool {
+	if x != nil {
+		return x.HasMap
+	}
+	return false
+}
+
 var File_module_proto protoreflect.FileDescriptor
 
 const file_module_proto_rawDesc = "" +
@@ -490,14 +519,18 @@ const file_module_proto_rawDesc = "" +
 	"\x01y\x18\x02 \x01(\x02R\x01y\x12\f\n" +
 	"\x01z\x18\x03 \x01(\x02R\x01z\";\n" +
 	"\x0fRunSpeedRequest\x12(\n" +
-	"\x10yards_per_second\x18\x01 \x01(\x02R\x0eyardsPerSecond\"\xdb\x01\n" +
+	"\x10yards_per_second\x18\x01 \x01(\x02R\x0eyardsPerSecond\"\xac\x02\n" +
 	"\x0eStatusResponse\x124\n" +
 	"\bposition\x18\x01 \x01(\v2\x18.move.module.v1.PositionR\bposition\x12!\n" +
 	"\fhas_position\x18\x02 \x01(\bR\vhasPosition\x12\x16\n" +
 	"\x06moving\x18\x03 \x01(\bR\x06moving\x12\x1b\n" +
 	"\trun_speed\x18\x04 \x01(\x02R\brunSpeed\x12\x18\n" +
 	"\apackets\x18\x05 \x01(\rR\apackets\x12!\n" +
-	"\fparse_errors\x18\x06 \x01(\rR\vparseErrors2\xac\x06\n" +
+	"\fparse_errors\x18\x06 \x01(\rR\vparseErrors\x12\x1f\n" +
+	"\vworld_epoch\x18\a \x01(\x04R\n" +
+	"worldEpoch\x12\x15\n" +
+	"\x06map_id\x18\b \x01(\rR\x05mapId\x12\x17\n" +
+	"\ahas_map\x18\t \x01(\bR\x06hasMap2\xac\x06\n" +
 	"\x06Module\x12G\n" +
 	"\vGetPosition\x12\x16.google.protobuf.Empty\x1a .move.module.v1.PositionResponse\x12H\n" +
 	"\aForward\x12\x1b.move.module.v1.MoveRequest\x1a .move.module.v1.PositionResponse\x12I\n" +

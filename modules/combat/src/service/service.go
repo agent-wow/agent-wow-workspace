@@ -32,6 +32,8 @@ type Service struct {
 	target          wow.GUID
 	targetHealth    uint32
 	targetMaxHP     uint32
+	targetLevel     uint32
+	targetEntry     uint32
 	targetDead      bool
 	attacking       bool
 	inCombat        bool
@@ -43,24 +45,38 @@ type Service struct {
 	selfNextXP      uint32
 	selfFlags       uint32
 	selfPlayerFlags uint32
-	selfRage        uint32
+	selfPowerType   uint32
+	selfPowers      [wow.MaxPowers]uint32
+	selfMaxPowers   [wow.MaxPowers]uint32
 	selfDead        bool
-	kills           uint32
-	deaths          uint32
-	lastXP          uint32
-	lastVictim      wow.GUID
-	lastError       string
-	refusals        uint32
-	levelUps        uint32
-	castFailures    uint32
-	castCount       uint8
-	packets         uint32
-	parseErrors     uint32
-	attackStarts    uint32
-	attackStops     uint32
-	gossipMessages  uint32
-	spiritConfirms  uint32
-	corpseDelays    uint32
+	selfGhost       bool
+
+	kills        uint32
+	deaths       uint32
+	lastXP       uint32
+	lastVictim   wow.GUID
+	lastError    string
+	refusals     uint32
+	levelUps     uint32
+	castFailures uint32
+	castCount    uint8
+
+	corpseDelay    time.Duration
+	corpseReceived time.Time
+
+	healerMapID  uint32
+	healerPos    wow.Position
+	hasHealerLoc bool
+
+	packets          uint32
+	parseErrors      uint32
+	attackStarts     uint32
+	attackStops      uint32
+	gossipMessages   uint32
+	spiritConfirms   uint32
+	corpseDelays     uint32
+	deathReleaseLocs uint32
+	worldResets      uint32
 }
 
 // New reads the identity agent-wow injects into the container.
@@ -210,14 +226,16 @@ func (s *Service) Status(context.Context, *emptypb.Empty) (*modulev1.StatusRespo
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return &modulev1.StatusResponse{
-		Packets:              s.packets,
-		ParseErrors:          s.parseErrors,
-		AttackStarts:         s.attackStarts,
-		AttackStops:          s.attackStops,
-		LastError:            s.lastError,
-		GossipMessages:       s.gossipMessages,
-		SpiritHealerConfirms: s.spiritConfirms,
-		CorpseReclaimDelays:  s.corpseDelays,
+		Packets:               s.packets,
+		ParseErrors:           s.parseErrors,
+		AttackStarts:          s.attackStarts,
+		AttackStops:           s.attackStops,
+		LastError:             s.lastError,
+		GossipMessages:        s.gossipMessages,
+		SpiritHealerConfirms:  s.spiritConfirms,
+		CorpseReclaimDelays:   s.corpseDelays,
+		DeathReleaseLocations: s.deathReleaseLocs,
+		WorldResets:           s.worldResets,
 	}, nil
 }
 
@@ -227,6 +245,29 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 	s.mu.Unlock()
 
 	switch packet.GetOpcode() {
+	case opcode.SMSGLoginVerifyWorld, opcode.SMSGNewWorld:
+		// A new world or a fresh login invalidates every GUID and position the
+		// combat target was based on. Keep progression counters, drop the
+		// target and transient death/combat facts until fresh fields arrive.
+		s.resetWorld()
+	case opcode.SMSGDeathReleaseLoc:
+		loc, err := wow.ParseDeathReleaseLoc(packet.GetPayload())
+		if err != nil {
+			s.recordParseError("death release location", err)
+			return &emptypb.Empty{}, nil
+		}
+		s.mu.Lock()
+		if loc.HasLocation {
+			s.healerMapID = loc.MapID
+			s.healerPos = loc.Position
+			s.hasHealerLoc = true
+		} else {
+			s.healerMapID = 0
+			s.healerPos = wow.Position{}
+			s.hasHealerLoc = false
+		}
+		s.deathReleaseLocs++
+		s.mu.Unlock()
 	case opcode.SMSGAttackstart:
 		ev, err := wow.ParseAttackStart(packet.GetPayload())
 		if err != nil {
@@ -275,7 +316,14 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 		s.spiritConfirms++
 		s.mu.Unlock()
 	case opcode.SMSGCorpseReclaimDelay:
+		delay, err := wow.ParseCorpseReclaimDelay(packet.GetPayload())
+		if err != nil {
+			s.recordParseError("corpse reclaim delay", err)
+			return &emptypb.Empty{}, nil
+		}
 		s.mu.Lock()
+		s.corpseDelay = time.Duration(delay) * time.Millisecond
+		s.corpseReceived = time.Now()
 		s.corpseDelays++
 		s.mu.Unlock()
 	case opcode.SMSGGossipMessage:
@@ -336,6 +384,39 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 	return &emptypb.Empty{}, nil
 }
 
+// resetWorld clears target and transient combat/death facts on an
+// authoritative world entry. Progression counters (kills, deaths, XP) and the
+// last level survive because the character keeps them across maps.
+func (s *Service) resetWorld() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.target = 0
+	s.targetHealth = 0
+	s.targetMaxHP = 0
+	s.targetLevel = 0
+	s.targetEntry = 0
+	s.targetDead = false
+	s.attacking = false
+	s.inCombat = false
+	s.selfHealth = 0
+	s.selfMaxHP = 0
+	s.selfHealthOK = false
+	s.selfPowerType = 0
+	s.selfPowers = [wow.MaxPowers]uint32{}
+	s.selfMaxPowers = [wow.MaxPowers]uint32{}
+	s.selfFlags = 0
+	s.selfPlayerFlags = 0
+	s.selfDead = false
+	s.selfGhost = false
+	s.corpseDelay = 0
+	s.corpseReceived = time.Time{}
+	s.healerMapID = 0
+	s.healerPos = wow.Position{}
+	s.hasHealerLoc = false
+	s.lastError = ""
+	s.worldResets++
+}
+
 func (s *Service) applyUpdate(body []byte, compressed bool) {
 	var (
 		update *wow.Update
@@ -374,8 +455,19 @@ func (s *Service) applySelfFields(fields wow.UpdateFields) {
 	if v, ok := fields.Uint32(wow.UnitFieldMaxHealth); ok {
 		s.selfMaxHP = v
 	}
-	if v, ok := fields.Uint32(wow.UnitFieldPower1); ok {
-		s.selfRage = v
+	// Every class keeps its primary resource in POWER1 + power type. Reading
+	// only POWER1 reports mana for everyone and hides a warrior's rage or a
+	// rogue's energy.
+	if v, ok := fields.Uint32(wow.UnitFieldBytes0); ok {
+		s.selfPowerType = wow.PowerTypeFromBytes0(v)
+	}
+	for powerType := uint32(0); powerType < wow.MaxPowers; powerType++ {
+		if v, ok := fields.Uint32(wow.UnitFieldPower1 + powerType); ok {
+			s.selfPowers[powerType] = v
+		}
+		if v, ok := fields.Uint32(wow.UnitFieldMaxPower1 + powerType); ok {
+			s.selfMaxPowers[powerType] = v
+		}
 	}
 	if v, ok := fields.Uint32(wow.UnitFieldLevel); ok {
 		s.selfLevel = v
@@ -393,7 +485,8 @@ func (s *Service) applySelfFields(fields wow.UpdateFields) {
 	if v, ok := fields.Uint32(wow.PlayerFlags); ok {
 		s.selfPlayerFlags = v
 	}
-	dead := (s.selfHealthOK && s.selfHealth == 0) || s.selfPlayerFlags&wow.PlayerFlagGhost != 0
+	s.selfGhost = s.selfPlayerFlags&wow.PlayerFlagGhost != 0
+	dead := (s.selfHealthOK && s.selfHealth == 0) || s.selfGhost
 	if dead && !s.selfDead {
 		s.deaths++
 		s.attacking = false
@@ -416,6 +509,12 @@ func (s *Service) applyTargetFields(fields wow.UpdateFields) {
 	if v, ok := fields.Uint32(wow.UnitFieldMaxHealth); ok {
 		s.targetMaxHP = v
 	}
+	if v, ok := fields.Uint32(wow.UnitFieldLevel); ok {
+		s.targetLevel = v
+	}
+	if v, ok := fields.Uint32(wow.ObjectFieldEntry); ok {
+		s.targetEntry = v
+	}
 }
 
 func (s *Service) refuse(reason string) {
@@ -436,7 +535,7 @@ func (s *Service) recordParseError(what string, err error) {
 func (s *Service) state() *modulev1.CombatState {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return &modulev1.CombatState{
+	out := &modulev1.CombatState{
 		HasTarget:       s.target != 0,
 		TargetGuid:      uint64(s.target),
 		Attacking:       s.attacking,
@@ -444,9 +543,12 @@ func (s *Service) state() *modulev1.CombatState {
 		TargetHealth:    s.targetHealth,
 		TargetMaxHealth: s.targetMaxHP,
 		TargetDead:      s.targetDead,
+		TargetLevel:     s.targetLevel,
+		TargetEntry:     s.targetEntry,
 		SelfHealth:      s.selfHealth,
 		SelfMaxHealth:   s.selfMaxHP,
 		SelfDead:        s.selfDead,
+		SelfGhost:       s.selfGhost,
 		SelfLevel:       s.selfLevel,
 		SelfXp:          s.selfXP,
 		SelfNextLevelXp: s.selfNextXP,
@@ -458,6 +560,27 @@ func (s *Service) state() *modulev1.CombatState {
 		Refusals:        s.refusals,
 		LevelUps:        s.levelUps,
 		CastFailures:    s.castFailures,
-		SelfRage:        s.selfRage,
+		SelfRage:        s.selfPowers[wow.PowerRage],
+		SelfPowerType:   s.selfPowerType,
 	}
+	if s.selfPowerType < wow.MaxPowers {
+		out.SelfPower = s.selfPowers[s.selfPowerType]
+		out.SelfMaxPower = s.selfMaxPowers[s.selfPowerType]
+	}
+	if s.corpseDelay > 0 {
+		out.CorpseReclaimDelayMs = uint32(s.corpseDelay / time.Millisecond)
+		remaining := s.corpseDelay - time.Since(s.corpseReceived)
+		if remaining < 0 {
+			remaining = 0
+		}
+		out.CorpseReclaimRemainingMs = uint32(remaining / time.Millisecond)
+	}
+	if s.hasHealerLoc {
+		out.HasSpiritHealerLocation = true
+		out.SpiritHealerMapId = s.healerMapID
+		out.SpiritHealerPosition = &modulev1.Vector3{
+			X: s.healerPos.X, Y: s.healerPos.Y, Z: s.healerPos.Z,
+		}
+	}
+	return out
 }

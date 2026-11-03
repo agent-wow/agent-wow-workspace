@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/binary"
+	"math"
 	"testing"
 
 	modv1 "github.com/agent-wow/agent-wow/pkg/modules/v1"
@@ -242,6 +243,227 @@ func TestRefusalDoesNotClearCombat(t *testing.T) {
 	}
 	if state := mustState(t, s); !state.InCombat || state.Attacking {
 		t.Fatalf("state after refusal = %+v", state)
+	}
+}
+
+func TestPrimaryPowerUsesClassSlot(t *testing.T) {
+	cases := []struct {
+		name      string
+		classID   uint32
+		powerType uint32
+		slot      uint32
+		power     uint32
+		maxPower  uint32
+		wantRage  uint32
+	}{
+		{name: "warrior rage", classID: 1, powerType: wow.PowerRage, slot: wow.UnitFieldPower2, power: 40, maxPower: 100, wantRage: 40},
+		{name: "priest mana", classID: 5, powerType: wow.PowerMana, slot: wow.UnitFieldPower1, power: 450, maxPower: 500, wantRage: 0},
+		{name: "rogue energy", classID: 4, powerType: wow.PowerEnergy, slot: wow.UnitFieldPower4, power: 60, maxPower: 100, wantRage: 0},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("AGENT_WOW_CHARACTER_GUID", "42")
+			s := New(nil)
+			bytes0 := (tc.powerType << 24) | (tc.classID << 8) | 1
+			values := map[uint32]uint32{
+				wow.UnitFieldBytes0: bytes0,
+				wow.UnitFieldHealth: 100,
+				tc.slot:             tc.power,
+			}
+			// MAXPOWER1 is eight slots after POWER1.
+			values[tc.slot+8] = tc.maxPower
+			if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+				Opcode: opcode.SMSGUpdateObject, Payload: selfValuesUpdate(42, values),
+			}); err != nil {
+				t.Fatal(err)
+			}
+			state := mustState(t, s)
+			if state.SelfPowerType != tc.powerType || state.SelfPower != tc.power || state.SelfMaxPower != tc.maxPower {
+				t.Fatalf("power = type %d %d/%d, want type %d %d/%d",
+					state.SelfPowerType, state.SelfPower, state.SelfMaxPower,
+					tc.powerType, tc.power, tc.maxPower)
+			}
+			if state.SelfRage != tc.wantRage {
+				t.Fatalf("legacy self_rage = %d, want %d", state.SelfRage, tc.wantRage)
+			}
+		})
+	}
+}
+
+func TestGhostAndDeathFacts(t *testing.T) {
+	t.Setenv("AGENT_WOW_CHARACTER_GUID", "42")
+	s := New(nil)
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGUpdateObject,
+		Payload: selfValuesUpdate(42, map[uint32]uint32{
+			wow.UnitFieldHealth: 0, wow.UnitFieldMaxHealth: 100,
+		}),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	state := mustState(t, s)
+	if !state.SelfDead || state.Deaths != 1 {
+		t.Fatalf("state after health zero = %+v", state)
+	}
+
+	// Releasing the spirit sets PLAYER_FLAGS ghost while health may be full.
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGUpdateObject,
+		Payload: selfValuesUpdate(42, map[uint32]uint32{
+			wow.UnitFieldHealth: 100,
+			wow.PlayerFlags:     wow.PlayerFlagGhost,
+		}),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	state = mustState(t, s)
+	if !state.SelfDead || !state.SelfGhost || state.Deaths != 1 {
+		t.Fatalf("state as ghost = %+v", state)
+	}
+}
+
+func TestCorpseReclaimAndSpiritHealerLocation(t *testing.T) {
+	t.Setenv("AGENT_WOW_CHARACTER_GUID", "42")
+	s := New(nil)
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode:  opcode.SMSGCorpseReclaimDelay,
+		Payload: binary.LittleEndian.AppendUint32(nil, 5000),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	state := mustState(t, s)
+	if state.CorpseReclaimDelayMs != 5000 || state.CorpseReclaimRemainingMs == 0 ||
+		state.CorpseReclaimRemainingMs > 5000 {
+		t.Fatalf("corpse reclaim = %d/%d", state.CorpseReclaimDelayMs, state.CorpseReclaimRemainingMs)
+	}
+
+	loc := binary.LittleEndian.AppendUint32(nil, 1)
+	loc = binary.LittleEndian.AppendUint32(loc, math.Float32bits(-8949.95))
+	loc = binary.LittleEndian.AppendUint32(loc, math.Float32bits(-132.49))
+	loc = binary.LittleEndian.AppendUint32(loc, math.Float32bits(83.53))
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGDeathReleaseLoc, Payload: loc,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	state = mustState(t, s)
+	if !state.HasSpiritHealerLocation || state.SpiritHealerMapId != 1 ||
+		state.SpiritHealerPosition.GetZ() != 83.53 {
+		t.Fatalf("healer location = %+v", state)
+	}
+
+	clear := binary.LittleEndian.AppendUint32(nil, ^uint32(0))
+	for i := 0; i < 3; i++ {
+		clear = binary.LittleEndian.AppendUint32(clear, 0)
+	}
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGDeathReleaseLoc, Payload: clear,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	state = mustState(t, s)
+	if state.HasSpiritHealerLocation || state.SpiritHealerPosition != nil {
+		t.Fatalf("cleared healer location = %+v", state)
+	}
+
+	status, err := s.Status(context.Background(), &emptypb.Empty{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if status.DeathReleaseLocations != 2 || status.CorpseReclaimDelays != 1 {
+		t.Fatalf("status = %+v", status)
+	}
+}
+
+func TestTargetUpdateFacts(t *testing.T) {
+	t.Setenv("AGENT_WOW_CHARACTER_GUID", "42")
+	s := New(nil)
+	start := binary.LittleEndian.AppendUint64(nil, 42)
+	start = binary.LittleEndian.AppendUint64(start, 99)
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGAttackstart, Payload: start,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGUpdateObject,
+		Payload: selfValuesUpdate(99, map[uint32]uint32{
+			wow.ObjectFieldEntry:   299,
+			wow.UnitFieldLevel:     5,
+			wow.UnitFieldHealth:    20,
+			wow.UnitFieldMaxHealth: 40,
+		}),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	state := mustState(t, s)
+	if state.TargetEntry != 299 || state.TargetLevel != 5 ||
+		state.TargetHealth != 20 || state.TargetMaxHealth != 40 {
+		t.Fatalf("target facts = %+v", state)
+	}
+}
+
+func TestWorldResetClearsTargetAndKeepsProgression(t *testing.T) {
+	t.Setenv("AGENT_WOW_CHARACTER_GUID", "42")
+	s := New(nil)
+	start := binary.LittleEndian.AppendUint64(nil, 42)
+	start = binary.LittleEndian.AppendUint64(start, 99)
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGAttackstart, Payload: start,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	xp := binary.LittleEndian.AppendUint64(nil, 99)
+	xp = binary.LittleEndian.AppendUint32(xp, 55)
+	xp = append(xp, 0)
+	xp = binary.LittleEndian.AppendUint32(xp, 50)
+	xp = binary.LittleEndian.AppendUint32(xp, 0)
+	xp = append(xp, 0)
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGLogXpgain, Payload: xp,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGUpdateObject,
+		Payload: selfValuesUpdate(42, map[uint32]uint32{
+			wow.UnitFieldHealth: 10, wow.PlayerFlags: wow.PlayerFlagGhost,
+		}),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGNewWorld, Payload: nil,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	state := mustState(t, s)
+	if state.HasTarget || state.TargetGuid != 0 || state.Attacking || state.InCombat {
+		t.Fatalf("target survived world change: %+v", state)
+	}
+	if state.SelfGhost || state.SelfDead || state.SelfHealth != 0 {
+		t.Fatalf("stale self death facts survived: %+v", state)
+	}
+	if state.Kills != 1 || state.LastXp != 55 {
+		t.Fatalf("progression was reset: %+v", state)
+	}
+	status, err := s.Status(context.Background(), &emptypb.Empty{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if status.WorldResets != 1 {
+		t.Fatalf("world resets = %d", status.WorldResets)
+	}
+
+	if _, err := s.OnPacket(context.Background(), &modv1.WorldPacket{
+		Opcode: opcode.SMSGLoginVerifyWorld, Payload: nil,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	status, _ = s.Status(context.Background(), &emptypb.Empty{})
+	if status.WorldResets != 2 {
+		t.Fatalf("world resets after login = %d", status.WorldResets)
 	}
 }
 

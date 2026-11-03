@@ -109,3 +109,52 @@ func TestParseUpdateObjectRejectsTruncated(t *testing.T) {
 		t.Fatal("expected truncation error")
 	}
 }
+
+func TestPowerFieldIndexByType(t *testing.T) {
+	// UNIT_FIELD_BYTES_0 carries the unit's primary power type in byte 3.
+	bytes0 := uint32(1) | uint32(9)<<8 | uint32(0)<<16 | PowerRage<<24
+	if got := PowerTypeFromBytes0(bytes0); got != PowerRage {
+		t.Fatalf("power type = %d, want %d", got, PowerRage)
+	}
+
+	tests := []struct {
+		name      string
+		powerType uint32
+		power     uint32
+		maxPower  uint32
+	}{
+		{"mana", PowerMana, 0x0019, 0x0021},
+		{"rage", PowerRage, 0x001A, 0x0022},
+		{"energy", PowerEnergy, 0x001C, 0x0024},
+		{"runic", PowerRunicPower, 0x001F, 0x0027},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			power, ok := PowerFieldIndex(test.powerType)
+			if !ok || power != test.power {
+				t.Fatalf("power field = 0x%x (ok=%v), want 0x%x", power, ok, test.power)
+			}
+			maxPower, ok := MaxPowerFieldIndex(test.powerType)
+			if !ok || maxPower != test.maxPower {
+				t.Fatalf("max power field = 0x%x (ok=%v), want 0x%x", maxPower, ok, test.maxPower)
+			}
+		})
+	}
+	if _, ok := PowerFieldIndex(MaxPowers); ok {
+		t.Fatal("unknown power type should not map to a field")
+	}
+}
+
+func TestGameObjectFieldOffsets(t *testing.T) {
+	// GAMEOBJECT_BYTES_1 packs state, type and animation progress into bytes.
+	var bytes1 uint32 = 2 | 5<<8 | 255<<24
+	if got := GameObjectState(bytes1); got != 2 {
+		t.Fatalf("state = %d", got)
+	}
+	if got := GameObjectTypeID(bytes1); got != 5 {
+		t.Fatalf("type = %d", got)
+	}
+	if got := GameObjectAnimProgress(bytes1); got != 255 {
+		t.Fatalf("anim progress = %d", got)
+	}
+}

@@ -10,7 +10,9 @@ message Position {
   float x = 1;
   float y = 2;
   float z = 3;
-  // Facing angle in radians; 0 faces north (+Y), growing clockwise.
+  // Facing angle in radians in the server's convention: 0 faces +X and the
+  // angle grows toward +Y, so the forward vector is (cos o, sin o) and facing
+  // a target is atan2(dy, dx).
   float orientation = 4;
 }
 
@@ -50,6 +52,12 @@ message StatusResponse {
   float run_speed = 4;
   uint32 packets = 5;
   uint32 parse_errors = 6;
+  // World epoch, incremented by SMSG_LOGIN_VERIFY_WORLD and SMSG_NEW_WORLD.
+  // A move started in an older epoch aborts with codes.Aborted; callers should
+  // discard positions and cursors captured before the epoch changed.
+  uint64 world_epoch = 7;
+  uint32 map_id = 8;
+  bool has_map = 9;
 }
 
 service Module {
