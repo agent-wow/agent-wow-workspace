@@ -8,6 +8,7 @@ stops a game session: ``session-keeper.py`` remains the sole owner of that.
 """
 from __future__ import annotations
 
+import json
 import os
 import time
 from dataclasses import dataclass
@@ -133,6 +134,11 @@ class GrowthWorker:
             step = self.growth.step(
                 epoch_hint=self.epoch, before_action=before_action)
         self.store.set_meta("last_tick", str(self.clock()))
+        if step is not None:
+            self.store.set_meta("last_decision", json.dumps({
+                "state": step.state.value, "action": step.action,
+                "detail": step.detail,
+            }, ensure_ascii=False, sort_keys=True))
 
         coordinator_error = None
         if self.coordinator is not None:

@@ -383,8 +383,10 @@ type InventoryState struct {
 	Revision      uint64                 `protobuf:"varint,12,opt,name=revision,proto3" json:"revision,omitempty"`
 	Trade         *TradeState            `protobuf:"bytes,13,opt,name=trade,proto3" json:"trade,omitempty"`
 	ItemTemplates []*Item                `protobuf:"bytes,14,rep,name=item_templates,json=itemTemplates,proto3" json:"item_templates,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// PLAYER_AMMO_ID selected by CMSG_SET_AMMO; zero means no selected ammo.
+	SelectedAmmoId uint32 `protobuf:"varint,15,opt,name=selected_ammo_id,json=selectedAmmoId,proto3" json:"selected_ammo_id,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *InventoryState) Reset() {
@@ -515,6 +517,13 @@ func (x *InventoryState) GetItemTemplates() []*Item {
 	return nil
 }
 
+func (x *InventoryState) GetSelectedAmmoId() uint32 {
+	if x != nil {
+		return x.SelectedAmmoId
+	}
+	return 0
+}
+
 type VendorRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	VendorGuid    uint64                 `protobuf:"varint,1,opt,name=vendor_guid,json=vendorGuid,proto3" json:"vendor_guid,omitempty"`
@@ -603,6 +612,50 @@ func (x *ItemQuery) GetItemId() uint32 {
 	return 0
 }
 
+type AmmoRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        uint32                 `protobuf:"varint,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AmmoRequest) Reset() {
+	*x = AmmoRequest{}
+	mi := &file_module_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AmmoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AmmoRequest) ProtoMessage() {}
+
+func (x *AmmoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_module_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AmmoRequest.ProtoReflect.Descriptor instead.
+func (*AmmoRequest) Descriptor() ([]byte, []int) {
+	return file_module_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *AmmoRequest) GetItemId() uint32 {
+	if x != nil {
+		return x.ItemId
+	}
+	return 0
+}
+
 type BuyRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	VendorGuid    uint64                 `protobuf:"varint,1,opt,name=vendor_guid,json=vendorGuid,proto3" json:"vendor_guid,omitempty"`
@@ -615,7 +668,7 @@ type BuyRequest struct {
 
 func (x *BuyRequest) Reset() {
 	*x = BuyRequest{}
-	mi := &file_module_proto_msgTypes[5]
+	mi := &file_module_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -627,7 +680,7 @@ func (x *BuyRequest) String() string {
 func (*BuyRequest) ProtoMessage() {}
 
 func (x *BuyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[5]
+	mi := &file_module_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -640,7 +693,7 @@ func (x *BuyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BuyRequest.ProtoReflect.Descriptor instead.
 func (*BuyRequest) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{5}
+	return file_module_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *BuyRequest) GetVendorGuid() uint64 {
@@ -682,7 +735,7 @@ type SellRequest struct {
 
 func (x *SellRequest) Reset() {
 	*x = SellRequest{}
-	mi := &file_module_proto_msgTypes[6]
+	mi := &file_module_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -694,7 +747,7 @@ func (x *SellRequest) String() string {
 func (*SellRequest) ProtoMessage() {}
 
 func (x *SellRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[6]
+	mi := &file_module_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -707,7 +760,7 @@ func (x *SellRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SellRequest.ProtoReflect.Descriptor instead.
 func (*SellRequest) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{6}
+	return file_module_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *SellRequest) GetVendorGuid() uint64 {
@@ -742,7 +795,7 @@ type RepairRequest struct {
 
 func (x *RepairRequest) Reset() {
 	*x = RepairRequest{}
-	mi := &file_module_proto_msgTypes[7]
+	mi := &file_module_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -754,7 +807,7 @@ func (x *RepairRequest) String() string {
 func (*RepairRequest) ProtoMessage() {}
 
 func (x *RepairRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[7]
+	mi := &file_module_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -767,7 +820,7 @@ func (x *RepairRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RepairRequest.ProtoReflect.Descriptor instead.
 func (*RepairRequest) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{7}
+	return file_module_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *RepairRequest) GetVendorGuid() uint64 {
@@ -801,7 +854,7 @@ type EquipRequest struct {
 
 func (x *EquipRequest) Reset() {
 	*x = EquipRequest{}
-	mi := &file_module_proto_msgTypes[8]
+	mi := &file_module_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -813,7 +866,7 @@ func (x *EquipRequest) String() string {
 func (*EquipRequest) ProtoMessage() {}
 
 func (x *EquipRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[8]
+	mi := &file_module_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -826,7 +879,7 @@ func (x *EquipRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EquipRequest.ProtoReflect.Descriptor instead.
 func (*EquipRequest) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{8}
+	return file_module_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *EquipRequest) GetItemGuid() uint64 {
@@ -853,7 +906,7 @@ type BuybackRequest struct {
 
 func (x *BuybackRequest) Reset() {
 	*x = BuybackRequest{}
-	mi := &file_module_proto_msgTypes[9]
+	mi := &file_module_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -865,7 +918,7 @@ func (x *BuybackRequest) String() string {
 func (*BuybackRequest) ProtoMessage() {}
 
 func (x *BuybackRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[9]
+	mi := &file_module_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -878,7 +931,7 @@ func (x *BuybackRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BuybackRequest.ProtoReflect.Descriptor instead.
 func (*BuybackRequest) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{9}
+	return file_module_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *BuybackRequest) GetVendorGuid() uint64 {
@@ -907,7 +960,7 @@ type TradeItem struct {
 
 func (x *TradeItem) Reset() {
 	*x = TradeItem{}
-	mi := &file_module_proto_msgTypes[10]
+	mi := &file_module_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -919,7 +972,7 @@ func (x *TradeItem) String() string {
 func (*TradeItem) ProtoMessage() {}
 
 func (x *TradeItem) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[10]
+	mi := &file_module_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -932,7 +985,7 @@ func (x *TradeItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TradeItem.ProtoReflect.Descriptor instead.
 func (*TradeItem) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{10}
+	return file_module_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *TradeItem) GetSlot() uint32 {
@@ -986,7 +1039,7 @@ type TradeState struct {
 
 func (x *TradeState) Reset() {
 	*x = TradeState{}
-	mi := &file_module_proto_msgTypes[11]
+	mi := &file_module_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -998,7 +1051,7 @@ func (x *TradeState) String() string {
 func (*TradeState) ProtoMessage() {}
 
 func (x *TradeState) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[11]
+	mi := &file_module_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1011,7 +1064,7 @@ func (x *TradeState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TradeState.ProtoReflect.Descriptor instead.
 func (*TradeState) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{11}
+	return file_module_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *TradeState) GetTradeId() uint32 {
@@ -1136,7 +1189,7 @@ type TradeRequest struct {
 
 func (x *TradeRequest) Reset() {
 	*x = TradeRequest{}
-	mi := &file_module_proto_msgTypes[12]
+	mi := &file_module_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1148,7 +1201,7 @@ func (x *TradeRequest) String() string {
 func (*TradeRequest) ProtoMessage() {}
 
 func (x *TradeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[12]
+	mi := &file_module_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1161,7 +1214,7 @@ func (x *TradeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TradeRequest.ProtoReflect.Descriptor instead.
 func (*TradeRequest) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{12}
+	return file_module_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *TradeRequest) GetAction() string {
@@ -1276,7 +1329,7 @@ const file_module_proto_rawDesc = "" +
 	"\titem_guid\x18\x03 \x01(\x04R\bitemGuid\x12\x17\n" +
 	"\aitem_id\x18\x04 \x01(\rR\x06itemId\x12%\n" +
 	"\x0erequired_level\x18\x05 \x01(\rR\rrequiredLevel\x12\x16\n" +
-	"\x06detail\x18\x06 \x01(\tR\x06detail\"\xf0\x04\n" +
+	"\x06detail\x18\x06 \x01(\tR\x06detail\"\x9a\x05\n" +
 	"\x0eInventoryState\x12/\n" +
 	"\x05items\x18\x01 \x03(\v2\x19.inventory.module.v1.ItemR\x05items\x12<\n" +
 	"\fvendor_items\x18\x02 \x03(\v2\x19.inventory.module.v1.ItemR\vvendorItems\x123\n" +
@@ -1294,11 +1347,14 @@ const file_module_proto_rawDesc = "" +
 	"\rvendor_loaded\x18\v \x01(\bR\fvendorLoaded\x12\x1a\n" +
 	"\brevision\x18\f \x01(\x04R\brevision\x125\n" +
 	"\x05trade\x18\r \x01(\v2\x1f.inventory.module.v1.TradeStateR\x05trade\x12@\n" +
-	"\x0eitem_templates\x18\x0e \x03(\v2\x19.inventory.module.v1.ItemR\ritemTemplates\"0\n" +
+	"\x0eitem_templates\x18\x0e \x03(\v2\x19.inventory.module.v1.ItemR\ritemTemplates\x12(\n" +
+	"\x10selected_ammo_id\x18\x0f \x01(\rR\x0eselectedAmmoId\"0\n" +
 	"\rVendorRequest\x12\x1f\n" +
 	"\vvendor_guid\x18\x01 \x01(\x04R\n" +
 	"vendorGuid\"$\n" +
 	"\tItemQuery\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\rR\x06itemId\"&\n" +
+	"\vAmmoRequest\x12\x17\n" +
 	"\aitem_id\x18\x01 \x01(\rR\x06itemId\"p\n" +
 	"\n" +
 	"BuyRequest\x12\x1f\n" +
@@ -1360,14 +1416,15 @@ const file_module_proto_rawDesc = "" +
 	"\x03bag\x18\x06 \x01(\rR\x03bag\x12\x12\n" +
 	"\x04slot\x18\a \x01(\rR\x04slot\x12\x1b\n" +
 	"\titem_guid\x18\b \x01(\x04R\bitemGuid\x12\x16\n" +
-	"\x06copper\x18\t \x01(\rR\x06copper2\xa8\x06\n" +
+	"\x06copper\x18\t \x01(\rR\x06copper2\xfa\x06\n" +
 	"\x06Module\x12G\n" +
 	"\bGetState\x12\x16.google.protobuf.Empty\x1a#.inventory.module.v1.InventoryState\x12X\n" +
 	"\rListInventory\x12\".inventory.module.v1.VendorRequest\x1a#.inventory.module.v1.InventoryState\x12K\n" +
 	"\x03Buy\x12\x1f.inventory.module.v1.BuyRequest\x1a#.inventory.module.v1.InventoryState\x12M\n" +
 	"\x04Sell\x12 .inventory.module.v1.SellRequest\x1a#.inventory.module.v1.InventoryState\x12Q\n" +
 	"\x06Repair\x12\".inventory.module.v1.RepairRequest\x1a#.inventory.module.v1.InventoryState\x12O\n" +
-	"\x05Equip\x12!.inventory.module.v1.EquipRequest\x1a#.inventory.module.v1.InventoryState\x12S\n" +
+	"\x05Equip\x12!.inventory.module.v1.EquipRequest\x1a#.inventory.module.v1.InventoryState\x12P\n" +
+	"\aSetAmmo\x12 .inventory.module.v1.AmmoRequest\x1a#.inventory.module.v1.InventoryState\x12S\n" +
 	"\aBuyback\x12#.inventory.module.v1.BuybackRequest\x1a#.inventory.module.v1.InventoryState\x12O\n" +
 	"\x05Trade\x12!.inventory.module.v1.TradeRequest\x1a#.inventory.module.v1.InventoryState\x12P\n" +
 	"\tQueryItem\x12\x1e.inventory.module.v1.ItemQuery\x1a#.inventory.module.v1.InventoryState\x12C\n" +
@@ -1385,57 +1442,60 @@ func file_module_proto_rawDescGZIP() []byte {
 	return file_module_proto_rawDescData
 }
 
-var file_module_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_module_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_module_proto_goTypes = []any{
 	(*Item)(nil),           // 0: inventory.module.v1.Item
 	(*Failure)(nil),        // 1: inventory.module.v1.Failure
 	(*InventoryState)(nil), // 2: inventory.module.v1.InventoryState
 	(*VendorRequest)(nil),  // 3: inventory.module.v1.VendorRequest
 	(*ItemQuery)(nil),      // 4: inventory.module.v1.ItemQuery
-	(*BuyRequest)(nil),     // 5: inventory.module.v1.BuyRequest
-	(*SellRequest)(nil),    // 6: inventory.module.v1.SellRequest
-	(*RepairRequest)(nil),  // 7: inventory.module.v1.RepairRequest
-	(*EquipRequest)(nil),   // 8: inventory.module.v1.EquipRequest
-	(*BuybackRequest)(nil), // 9: inventory.module.v1.BuybackRequest
-	(*TradeItem)(nil),      // 10: inventory.module.v1.TradeItem
-	(*TradeState)(nil),     // 11: inventory.module.v1.TradeState
-	(*TradeRequest)(nil),   // 12: inventory.module.v1.TradeRequest
-	nil,                    // 13: inventory.module.v1.Item.StatsEntry
-	(*emptypb.Empty)(nil),  // 14: google.protobuf.Empty
-	(*v1.WorldPacket)(nil), // 15: agentwow.module.v1.WorldPacket
+	(*AmmoRequest)(nil),    // 5: inventory.module.v1.AmmoRequest
+	(*BuyRequest)(nil),     // 6: inventory.module.v1.BuyRequest
+	(*SellRequest)(nil),    // 7: inventory.module.v1.SellRequest
+	(*RepairRequest)(nil),  // 8: inventory.module.v1.RepairRequest
+	(*EquipRequest)(nil),   // 9: inventory.module.v1.EquipRequest
+	(*BuybackRequest)(nil), // 10: inventory.module.v1.BuybackRequest
+	(*TradeItem)(nil),      // 11: inventory.module.v1.TradeItem
+	(*TradeState)(nil),     // 12: inventory.module.v1.TradeState
+	(*TradeRequest)(nil),   // 13: inventory.module.v1.TradeRequest
+	nil,                    // 14: inventory.module.v1.Item.StatsEntry
+	(*emptypb.Empty)(nil),  // 15: google.protobuf.Empty
+	(*v1.WorldPacket)(nil), // 16: agentwow.module.v1.WorldPacket
 }
 var file_module_proto_depIdxs = []int32{
-	13, // 0: inventory.module.v1.Item.stats:type_name -> inventory.module.v1.Item.StatsEntry
+	14, // 0: inventory.module.v1.Item.stats:type_name -> inventory.module.v1.Item.StatsEntry
 	0,  // 1: inventory.module.v1.InventoryState.items:type_name -> inventory.module.v1.Item
 	0,  // 2: inventory.module.v1.InventoryState.vendor_items:type_name -> inventory.module.v1.Item
 	0,  // 3: inventory.module.v1.InventoryState.buyback:type_name -> inventory.module.v1.Item
 	1,  // 4: inventory.module.v1.InventoryState.last_failure:type_name -> inventory.module.v1.Failure
-	11, // 5: inventory.module.v1.InventoryState.trade:type_name -> inventory.module.v1.TradeState
+	12, // 5: inventory.module.v1.InventoryState.trade:type_name -> inventory.module.v1.TradeState
 	0,  // 6: inventory.module.v1.InventoryState.item_templates:type_name -> inventory.module.v1.Item
-	10, // 7: inventory.module.v1.TradeState.own_items:type_name -> inventory.module.v1.TradeItem
-	10, // 8: inventory.module.v1.TradeState.trader_items:type_name -> inventory.module.v1.TradeItem
-	14, // 9: inventory.module.v1.Module.GetState:input_type -> google.protobuf.Empty
+	11, // 7: inventory.module.v1.TradeState.own_items:type_name -> inventory.module.v1.TradeItem
+	11, // 8: inventory.module.v1.TradeState.trader_items:type_name -> inventory.module.v1.TradeItem
+	15, // 9: inventory.module.v1.Module.GetState:input_type -> google.protobuf.Empty
 	3,  // 10: inventory.module.v1.Module.ListInventory:input_type -> inventory.module.v1.VendorRequest
-	5,  // 11: inventory.module.v1.Module.Buy:input_type -> inventory.module.v1.BuyRequest
-	6,  // 12: inventory.module.v1.Module.Sell:input_type -> inventory.module.v1.SellRequest
-	7,  // 13: inventory.module.v1.Module.Repair:input_type -> inventory.module.v1.RepairRequest
-	8,  // 14: inventory.module.v1.Module.Equip:input_type -> inventory.module.v1.EquipRequest
-	9,  // 15: inventory.module.v1.Module.Buyback:input_type -> inventory.module.v1.BuybackRequest
-	12, // 16: inventory.module.v1.Module.Trade:input_type -> inventory.module.v1.TradeRequest
-	4,  // 17: inventory.module.v1.Module.QueryItem:input_type -> inventory.module.v1.ItemQuery
-	15, // 18: inventory.module.v1.Module.OnPacket:input_type -> agentwow.module.v1.WorldPacket
-	2,  // 19: inventory.module.v1.Module.GetState:output_type -> inventory.module.v1.InventoryState
-	2,  // 20: inventory.module.v1.Module.ListInventory:output_type -> inventory.module.v1.InventoryState
-	2,  // 21: inventory.module.v1.Module.Buy:output_type -> inventory.module.v1.InventoryState
-	2,  // 22: inventory.module.v1.Module.Sell:output_type -> inventory.module.v1.InventoryState
-	2,  // 23: inventory.module.v1.Module.Repair:output_type -> inventory.module.v1.InventoryState
-	2,  // 24: inventory.module.v1.Module.Equip:output_type -> inventory.module.v1.InventoryState
-	2,  // 25: inventory.module.v1.Module.Buyback:output_type -> inventory.module.v1.InventoryState
-	2,  // 26: inventory.module.v1.Module.Trade:output_type -> inventory.module.v1.InventoryState
-	2,  // 27: inventory.module.v1.Module.QueryItem:output_type -> inventory.module.v1.InventoryState
-	14, // 28: inventory.module.v1.Module.OnPacket:output_type -> google.protobuf.Empty
-	19, // [19:29] is the sub-list for method output_type
-	9,  // [9:19] is the sub-list for method input_type
+	6,  // 11: inventory.module.v1.Module.Buy:input_type -> inventory.module.v1.BuyRequest
+	7,  // 12: inventory.module.v1.Module.Sell:input_type -> inventory.module.v1.SellRequest
+	8,  // 13: inventory.module.v1.Module.Repair:input_type -> inventory.module.v1.RepairRequest
+	9,  // 14: inventory.module.v1.Module.Equip:input_type -> inventory.module.v1.EquipRequest
+	5,  // 15: inventory.module.v1.Module.SetAmmo:input_type -> inventory.module.v1.AmmoRequest
+	10, // 16: inventory.module.v1.Module.Buyback:input_type -> inventory.module.v1.BuybackRequest
+	13, // 17: inventory.module.v1.Module.Trade:input_type -> inventory.module.v1.TradeRequest
+	4,  // 18: inventory.module.v1.Module.QueryItem:input_type -> inventory.module.v1.ItemQuery
+	16, // 19: inventory.module.v1.Module.OnPacket:input_type -> agentwow.module.v1.WorldPacket
+	2,  // 20: inventory.module.v1.Module.GetState:output_type -> inventory.module.v1.InventoryState
+	2,  // 21: inventory.module.v1.Module.ListInventory:output_type -> inventory.module.v1.InventoryState
+	2,  // 22: inventory.module.v1.Module.Buy:output_type -> inventory.module.v1.InventoryState
+	2,  // 23: inventory.module.v1.Module.Sell:output_type -> inventory.module.v1.InventoryState
+	2,  // 24: inventory.module.v1.Module.Repair:output_type -> inventory.module.v1.InventoryState
+	2,  // 25: inventory.module.v1.Module.Equip:output_type -> inventory.module.v1.InventoryState
+	2,  // 26: inventory.module.v1.Module.SetAmmo:output_type -> inventory.module.v1.InventoryState
+	2,  // 27: inventory.module.v1.Module.Buyback:output_type -> inventory.module.v1.InventoryState
+	2,  // 28: inventory.module.v1.Module.Trade:output_type -> inventory.module.v1.InventoryState
+	2,  // 29: inventory.module.v1.Module.QueryItem:output_type -> inventory.module.v1.InventoryState
+	15, // 30: inventory.module.v1.Module.OnPacket:output_type -> google.protobuf.Empty
+	20, // [20:31] is the sub-list for method output_type
+	9,  // [9:20] is the sub-list for method input_type
 	9,  // [9:9] is the sub-list for extension type_name
 	9,  // [9:9] is the sub-list for extension extendee
 	0,  // [0:9] is the sub-list for field type_name
@@ -1452,7 +1512,7 @@ func file_module_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_module_proto_rawDesc), len(file_module_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

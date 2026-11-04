@@ -27,6 +27,9 @@ func (s *Service) snapshot() *modulev1.InventoryState {
 		if money, ok := selfFields.Uint32(wow.PlayerCoinage); ok {
 			state.Money = money
 		}
+		if ammo, ok := selfFields.Uint32(wow.PlayerAmmoID); ok {
+			state.SelectedAmmoId = ammo
+		}
 	}
 
 	playerSlots := wow.DecodePlayerSlots(selfFields)

@@ -209,7 +209,9 @@ class CharacterGrowthRuntime:
         return self._open_trainer(now, view, state, spells)
 
     def _open_trainer(self, now, view, state, spells) -> RuntimeAction | None:
-        missing_class = any(skill.spell_id not in spells for skill in self.profile.skills)
+        missing_class = any(
+            skill.min_level <= view.level and skill.spell_id not in spells
+            for skill in self.profile.skills)
         missing_profession = any(row.trainer_spell_id not in spells
                                  for row in self.content.professions)
         missing_recipe = any(row.spell_id not in spells for row in self.content.recipes)

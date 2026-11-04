@@ -40,13 +40,19 @@ from scripts.growth.machine import SoloGrowthMachine  # noqa: E402
 from scripts.growth.cooperation import CooperationRuntime  # noqa: E402
 from scripts.growth.character_runtime import CharacterGrowthRuntime  # noqa: E402
 from scripts.growth.professions import load_professions  # noqa: E402
+from scripts.growth.quest_runtime import (  # noqa: E402
+    BatchQuestRuntime, QuestContentError, QuestRuntime, load_quest_content)
 from scripts.growth.permissions import (  # noqa: E402
     audit_accounts,
     audit_tree,
     enforce_tree,
     ensure_private_dir,
 )
-from scripts.growth.profiles import ProfileError, load_profile  # noqa: E402
+from scripts.growth.profiles import (  # noqa: E402
+    ProfileError,
+    load_profile,
+    with_route,
+)
 from scripts.growth.roster import load_roster  # noqa: E402
 from scripts.growth.routes import RouteError, load_route  # noqa: E402
 from scripts.growth.stop import StopFlag  # noqa: E402
@@ -170,7 +176,8 @@ def run_worker(args) -> int:
         return 2
     try:
         profile = load_profile(spec.class_name)
-        route = load_route(profile.route.zone)
+        route = load_route(spec.start_zone)
+        profile = with_route(profile, route)
     except (ProfileError, RouteError) as exc:
         log(f"growth content unavailable for {spec.class_name}: {exc}")
         return 2
@@ -189,10 +196,21 @@ def run_worker(args) -> int:
         roster, spec, adapter, store, profile.inventory)
     character_growth = CharacterGrowthRuntime(
         profile, load_professions(), adapter, store)
+    try:
+        quest_content = load_quest_content(spec.start_zone)
+    except QuestContentError as exc:
+        log(f"quest navigation unavailable for {spec.start_zone}: {exc}")
+        quest_content = None
+    runtime_class = (BatchQuestRuntime if quest_content is not None
+                     and any(row.batch for row in quest_content.quests)
+                     else QuestRuntime)
+    quests = (runtime_class(quest_content, adapter, store, logger=log)
+              if quest_content is not None else None)
     growth = SoloGrowthMachine(
         profile, route, adapter=adapter, store=store, logger=log,
         epoch_hint=args.epoch, cooperation=cooperation,
-        character_growth=character_growth, role=spec.role)
+        character_growth=character_growth, quests=quests, role=spec.role,
+        route_offset=spec.guid)
     worker = GrowthWorker(
         spec, store,
         lock_path=state / f"{spec.name}.worker.lock",
@@ -244,7 +262,7 @@ def main(argv: list[str] | None = None) -> int:
     worker.add_argument("--account", required=True)
     worker.add_argument("--character", required=True)
     worker.add_argument("--epoch", type=int, default=0)
-    worker.add_argument("--interval", type=int, default=5)
+    worker.add_argument("--interval", type=int, default=1)
     worker.add_argument("--once", action="store_true")
     worker.add_argument("--roster", default=None)
 

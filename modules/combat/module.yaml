@@ -28,6 +28,11 @@ packets:
   SMSG_LOG_XPGAIN: /combat.module.v1.Module/OnPacket
   SMSG_LEVELUP_INFO: /combat.module.v1.Module/OnPacket
   SMSG_CAST_FAILED: /combat.module.v1.Module/OnPacket
+  SMSG_SPELL_START: /combat.module.v1.Module/OnPacket
+  SMSG_SPELL_GO: /combat.module.v1.Module/OnPacket
+  SMSG_SPELL_FAILURE: /combat.module.v1.Module/OnPacket
+  SMSG_SPELL_FAILED_OTHER: /combat.module.v1.Module/OnPacket
+  SMSG_ATTACKERSTATEUPDATE: /combat.module.v1.Module/OnPacket
   SMSG_INITIAL_SPELLS: /combat.module.v1.Module/OnPacket
   SMSG_LEARNED_SPELL: /combat.module.v1.Module/OnPacket
   SMSG_GOSSIP_MESSAGE: /combat.module.v1.Module/OnPacket

@@ -102,6 +102,7 @@ class WorldView:
     nearby: tuple[dict, ...] = ()
     target: dict | None = None
     combat: dict = field(default_factory=dict)
+    quest: dict | None = None
 
     # Convenience accessors; all values originate in the snapshot.
     @property
@@ -206,6 +207,9 @@ class WorldAdapter:
     def get_combat(self) -> dict:
         return normalize_combat(self._call("combat.get_state"))
 
+    def get_quest_state(self) -> dict:
+        return normalize_quest_state(self._call("quest.get_state"))
+
     def get_game_objects(self, *, radius: float = 0.0, limit: int = 200) -> list[dict]:
         raw = self._call("sense.get_nearby", {
             "radius": float(radius), "limit": int(limit),
@@ -270,6 +274,12 @@ class WorldAdapter:
         nearby = self.get_nearby()
         combat = self.get_combat()
         try:
+            quest = self.get_quest_state()
+        except AdapterError:
+            # Quest content is optional; grinding remains available when an
+            # older session does not load the quest module.
+            quest = None
+        try:
             combat["known_spells"] = self.get_spells()
         except AdapterError:
             # Older combat modules have no spellbook RPC, and a fresh login has
@@ -287,6 +297,11 @@ class WorldAdapter:
         powers = dict(snapshot.get("powers") or {})
         powers.update(combat.get("powers") or {})
         self_state["powers"] = powers
+        # The combat packet stream observes UNIT_FLAG_IN_COMBAT before the
+        # sense snapshot in some engagements. Never let that lag make a low
+        # health character rest while it is actively being attacked.
+        if combat.get("in_combat"):
+            self_state["in_combat"] = True
         if not position:
             position = dict(snapshot.get("position") or {})
         if target is None:
@@ -302,6 +317,7 @@ class WorldAdapter:
             nearby=tuple(nearby),
             target=target,
             combat=combat,
+            quest=quest,
         )
 
     # ------------------------------------------------------------- actions
@@ -313,6 +329,9 @@ class WorldAdapter:
     def stop_attack(self) -> dict:
         return normalize_combat(self._call("combat.stop_attack", {}, timeout=15.0))
 
+    def stop_movement(self) -> dict:
+        return self._call("move.stop", {}, timeout=10.0)
+
     def cast(self, spell_id: int, target_guid: int, *,
              preserve_empty_target: bool = False,
              target_is_game_object: bool = False) -> dict:
@@ -322,6 +341,22 @@ class WorldAdapter:
              "preserveEmptyTarget": bool(preserve_empty_target),
              "targetIsGameObject": bool(target_is_game_object)},
             timeout=15.0))
+
+    def quest_gossip(self, guid: int) -> dict:
+        return normalize_quest_state(self._call(
+            "quest.gossip", {"guid": str(int(guid))}, timeout=15.0))
+
+    def quest_accept(self, guid: int, quest_id: int) -> dict:
+        return normalize_quest_state(self._call(
+            "quest.accept", {"guid": str(int(guid)), "questId": int(quest_id)},
+            timeout=15.0))
+
+    def quest_turn_in(self, guid: int, quest_id: int,
+                      reward_index: int = 0) -> dict:
+        return normalize_quest_state(self._call(
+            "quest.turn_in", {
+                "guid": str(int(guid)), "questId": int(quest_id),
+                "rewardIndex": int(reward_index)}, timeout=15.0))
 
     def open_trainer(self, trainer_guid: int) -> CharacterState:
         return normalize_character_state(self._call(
@@ -347,6 +382,14 @@ class WorldAdapter:
     def move_to(self, x: float, y: float, z: float) -> dict:
         raw = self._call(
             "move.move_to", {"x": float(x), "y": float(y), "z": float(z)},
+            timeout=45.0)
+        if isinstance(raw.get("position"), dict):
+            return {"position": _normalize_position(raw["position"])}
+        return {"position": _normalize_position(raw)}
+
+    def navigate(self, x: float, y: float, z: float) -> dict:
+        raw = self._call(
+            "move.navigate", {"x": float(x), "y": float(y), "z": float(z)},
             timeout=45.0)
         if isinstance(raw.get("position"), dict):
             return {"position": _normalize_position(raw["position"])}
@@ -396,6 +439,10 @@ class WorldAdapter:
                 "itemGuid": str(int(item_guid)),
                 "destinationSlot": int(destination_slot),
             }, timeout=15.0))
+
+    def set_ammo(self, item_id: int) -> InventoryState:
+        return normalize_inventory(self._call(
+            "inventory.set_ammo", {"itemId": int(item_id)}, timeout=15.0))
 
     def query_item(self, item_id: int) -> InventoryState:
         return normalize_inventory(self._call(
@@ -564,6 +611,7 @@ def normalize_unit(raw: dict) -> dict:
         has_position = True
     normalized = {
         "guid": _opt_int(_pick(raw, "guid", "GUID")),
+        "entry": _as_int(_pick(raw, "entry"), 0),
         "name": str(_pick(raw, "name") or ""),
         "type": _as_int(_pick(raw, "type"), 0),
         "level": _as_int(_pick(raw, "level"), 0),
@@ -575,6 +623,7 @@ def normalize_unit(raw: dict) -> dict:
         "dead": _as_bool(_pick(raw, "dead"), False),
         "in_combat": _as_bool(_pick(raw, "in_combat", "inCombat"), False),
         "faction": _as_int(_pick(raw, "faction"), 0),
+        "target_guid": _opt_int(_pick(raw, "target_guid", "targetGuid")),
         "flags": _as_int(_pick(raw, "flags"), 0),
         "player_flags": _as_int(_pick(raw, "player_flags", "playerFlags"), 0),
         "has_position": bool(has_position),
@@ -913,3 +962,38 @@ def normalize_combat(raw: dict) -> dict:
             out[target] = value
     out["powers"] = _normalize_powers(raw)
     return out
+
+
+def normalize_quest_state(raw: dict) -> dict:
+    if not isinstance(raw, dict):
+        return {}
+    active = []
+    for row in raw.get("active") or []:
+        if not isinstance(row, dict):
+            continue
+        objectives = []
+        for objective in row.get("objectives") or []:
+            if not isinstance(objective, dict):
+                continue
+            objectives.append({
+                "entry": _as_int(_pick(objective, "entry"), 0),
+                "current": _as_int(_pick(objective, "current"), 0),
+                "required": _as_int(_pick(objective, "required"), 0),
+            })
+        active.append({
+            "quest_id": _as_int(_pick(row, "quest_id", "questId"), 0),
+            "title": str(_pick(row, "title") or ""),
+            "complete": _as_bool(_pick(row, "complete"), False),
+            "objectives": objectives,
+        })
+    return {
+        "npc_guid": _opt_int(_pick(raw, "npc_guid", "npcGuid")),
+        "active": active,
+        "accepts": _as_int(_pick(raw, "accepts"), 0),
+        "completed": _as_int(_pick(raw, "completed"), 0),
+        "errors": _as_int(_pick(raw, "errors"), 0),
+        "last_error": str(_pick(raw, "last_error", "lastError") or ""),
+        "last_quest_id": _as_int(_pick(raw, "last_quest_id", "lastQuestId"), 0),
+        "turning_in_quest_id": _as_int(_pick(
+            raw, "turning_in_quest_id", "turningInQuestId"), 0),
+    }

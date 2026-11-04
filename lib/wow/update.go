@@ -142,6 +142,9 @@ const (
 	// far from the XP fields; the skill-info block (0x027C..) starts right
 	// after XP and is two-short pairs, not money.
 	PlayerCoinage uint32 = 0x0492
+	// PlayerAmmoID is PLAYER_AMMO_ID, the projectile entry selected through
+	// CMSG_SET_AMMO. Possessing ammunition does not populate this field.
+	PlayerAmmoID uint32 = 0x04AE
 )
 
 // Primary power types, from UNIT_FIELD_BYTES_0 byte 3 (SharedDefines.h Powers).

@@ -16,6 +16,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 POLICY="$ROOT/scripts/agent-policy.py"
+# Manual override for the human operator's own accounts. The console sets it
+# only for accounts outside agent-policy.json; the keeper and other automated
+# callers never set it, so autonomous access stays policy-bound.
+MANUAL="${AGENT_WOW_MANUAL:-0}"
 ACCOUNT="${ACCOUNT:-}"
 ACCOUNT="$(printf '%s' "$ACCOUNT" | tr '[:upper:]' '[:lower:]')"
 if [ -n "$ACCOUNT" ] && [ -z "${AGENT_WOW_VM_DIR:-}" ]; then
@@ -63,7 +67,9 @@ case "$CMD" in
 start)
 	CHAR="${2:-Reachbot}"
 	# The legacy (no ACCOUNT) layout belongs to the doumoman account.
-	python3 -I "$POLICY" char "${ACCOUNT:-doumoman}" "$CHAR" || exit $?
+	if [ "$MANUAL" != "1" ]; then
+		python3 -I "$POLICY" char "${ACCOUNT:-doumoman}" "$CHAR" || exit $?
+	fi
 	ACCOUNT="$ACCOUNT" AGENT_WOW_VM_DIR="$VM_DIR" "$ROOT/scripts/sync-to-vm.sh"
 	colima ssh -- env CHAR="$CHAR" ACCOUNT="$ACCOUNT" VM_DIR="$VM_DIR" sh -c '
 		cd $HOME/$VM_DIR || exit 1
@@ -88,7 +94,7 @@ stop)
 		pids=""
 		for pid in $(pgrep -f "[a]gent-wow.*char play" 2>/dev/null); do
 			cwd=$(readlink /proc/$pid/cwd 2>/dev/null || true)
-			[ "$cwd" = "$dir" ] && pids="$pids $pid"
+			[ "$cwd" = "$dir" ] || [ "$cwd" = "$dir (deleted)" ] && pids="$pids $pid"
 		done
 		for p in $pids; do kill "$p" 2>/dev/null || true; done
 		[ -n "$pids" ] && echo "killed: $pids" || echo "no session in $dir"
@@ -100,7 +106,9 @@ rpc)
 	[ -n "${2:-}" ] || { echo "usage: session.sh rpc <method> [json]" >&2; exit 2; }
 	# stop/logout runs through rpc_raw directly so a session on an off-limits
 	# account can still be removed.
-	python3 -I "$POLICY" account "${ACCOUNT:-doumoman}" || exit $?
+	if [ "$MANUAL" != "1" ]; then
+		python3 -I "$POLICY" account "${ACCOUNT:-doumoman}" || exit $?
+	fi
 	rpc_raw "$2" "${3-}"
 	echo
 	;;

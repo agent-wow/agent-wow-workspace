@@ -74,13 +74,22 @@ class CooperationRuntime:
 
     # --------------------------------------------------------------- public
 
-    def step(self, now: float, view: WorldView, class_mask: int) -> RuntimeAction | None:
+    def step(self, now: float, view: WorldView, class_mask: int, *,
+             questing: bool = False) -> RuntimeAction | None:
         try:
             party = self.adapter.get_party()
         except AdapterError:
             return None
         if party.in_group and self._group_has_outsider(party):
             return self._leave_group(party)
+        if questing:
+            # Quest navigation owns solo movement. Preserve the roster-only
+            # safety check above, but do not accept invites or negotiate grind
+            # agreements until the current ordered route is complete.
+            if party.pending_invite is not None:
+                return self._respond_invite(
+                    now, view, party.pending_invite, party, friends_ready=False)
+            return None
         friends_ready = self._friends_ready(now, party)
         if friends_ready:
             self._ingest_chat(now, view, party)
@@ -248,7 +257,11 @@ class CooperationRuntime:
             inviter is not None and inviter.guid != self.spec.guid
             and friends_ready and not party.in_group
             and self.invite_consent(invite, view))
-        key = f"party:invite_response:{invite.invite_id}:{accept}"
+        # Invite IDs are module-local and restart from one. The random party
+        # epoch distinguishes a new module session without weakening the
+        # at-most-once response guarantee for an invitation in this session.
+        key = (f"party:invite_response:{party.epoch}:"
+               f"{invite.invite_id}:{accept}")
         payload = {"invite_id": invite.invite_id, "inviter": invite.inviter,
                    "accept": accept}
         def readback() -> bool | None:
@@ -265,6 +278,10 @@ class CooperationRuntime:
             key, "party_invite_response", payload,
             lambda: self.adapter.respond_invite(invite.invite_id, invite.inviter, accept),
             readback)
+        if result.state != "confirmed":
+            # A lost response is reconciled by the durable intent without being
+            # redispatched. It must not freeze solo movement while the invite is stale.
+            return None
         return RuntimeAction("accept_invite" if accept else "decline_invite", result.state)
 
     def _leave_group(self, party: PartyState, *, reason: str = "non_roster") -> RuntimeAction:

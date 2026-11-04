@@ -11,6 +11,28 @@ function esc(s) {
   }[c]));
 }
 
+// Played time arrives as whole seconds. Short values keep seconds so a fresh
+// session does not read "0 分"; longer ones trade precision for readability.
+function durText(seconds) {
+  if (seconds === null || seconds === undefined || seconds === "") return "—";
+  const s = Math.max(0, Math.floor(Number(seconds) || 0));
+  if (s < 60) return `${s} 秒`;
+  const days = Math.floor(s / 86400);
+  const hours = Math.floor((s % 86400) / 3600);
+  const minutes = Math.floor((s % 3600) / 60);
+  if (days) return `${days} 天 ${hours} 小时`;
+  if (hours) return `${hours} 小时 ${minutes} 分`;
+  return `${minutes} 分`;
+}
+
+function clockText(unixSeconds) {
+  if (!unixSeconds) return "—";
+  return new Date(unixSeconds * 1000).toLocaleString("zh-CN", {
+    hour12: false, month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
+
 function uiOf(name) {
   if (!ui[name]) ui[name] = { form: {} };
   if (!ui[name].form) ui[name].form = {};
@@ -60,9 +82,13 @@ async function loadSelf(name) {
     const data = await api("/api/self?account=" + encodeURIComponent(name));
     if (data.error) {
       u.selfError = data.error;
+      u.played = null;
+      u.playedError = null;
     } else {
       u.self = data.self;
       u.selfError = null;
+      u.played = data.playedTime || null;
+      u.playedError = data.playedError || null;
     }
   } catch (e) {
     u.selfError = e.message;
@@ -194,6 +220,8 @@ function selfHTML(a) {
   const pos = unit.position || {};
   const dead = unit.dead || (unit.playerFlags & 0x10) !== 0;
   const mapId = self.mapId || 0;
+  const played = u.played;
+  const hasPlayed = played && played.hasData;
   const info = [
     ["等级", unit.level],
     ["种族", raceName(unit.raceId)],
@@ -202,6 +230,11 @@ function selfHTML(a) {
     ["地图", mapName(mapId)],
     ["经验", `${xpPct}%`],
     ["金钱", moneyText(unit.money)],
+    ["在线总时长", hasPlayed ? durText(played.totalSeconds ?? 0)
+      : (u.playedError ? "不可用" : "读取中…")],
+    ["此次在线", played ? durText(played.sessionSeconds ?? 0) : "—"],
+    ["本级时长", hasPlayed ? durText(played.levelSeconds ?? 0) : "—"],
+    ["本次登录", played ? clockText(played.sessionStartedUnix) : "—"],
   ];
   const professions = (self.skills || []).filter(s => s.profession);
   const skillsHTML = professions.length
@@ -249,19 +282,31 @@ function charsPanelHTML(a) {
   }
   const chars = u.chars || [];
   if (!chars.length) return '<div class="hint">该账号没有角色。</div>';
-  const rows = chars.map(c => `
+  const rows = chars.map(c => {
+    // Playtime is cached from the last time the character was online: the
+    // server only reports it to a logged-in client. Never invent a value.
+    const pt = c.playtime;
+    const totalText = pt ? durText(pt.totalSeconds ?? 0) : "—";
+    const lastText = pt && (pt.sessionSeconds ?? 0) > 0
+      ? `上次 ${durText(pt.sessionSeconds)}` : "";
+    return `
     <tr>
       <td><div class="char-name">${esc(c.name)}</div>
         <div class="char-sub">${esc(c.race)} · ${esc(c.class)}</div></td>
       <td class="num">${c.level}</td>
+      <td class="num">
+        <div>${totalText}</div>
+        ${lastText ? `<div class="char-sub">${lastText}</div>` : ""}
+      </td>
       <td class="char-sub">${esc(c.zone)}</td>
       <td class="num act"><button class="btn small primary" ${u.busy ? "disabled" : ""}
         onclick="startChar('${a.name}', '${esc(c.name)}')">上线</button></td>
       <td class="num act"><button class="btn small danger" ${u.busy ? "disabled" : ""}
         onclick="askDelete('${a.name}', '${esc(c.name)}', ${c.level})">删除</button></td>
-    </tr>`).join("");
+    </tr>`;
+  }).join("");
   return `<table class="chars-table">
-    <thead><tr><th>角色</th><th style="text-align:right">等级</th><th>所在区域</th><th></th><th></th></tr></thead>
+    <thead><tr><th>角色</th><th style="text-align:right">等级</th><th style="text-align:right">在线时长</th><th>所在区域</th><th></th><th></th></tr></thead>
     <tbody>${rows}</tbody></table>`;
 }
 
@@ -493,6 +538,8 @@ async function startChar(name, character) {
       toast(`已启动 ${character}，正在进入世界…`);
       u.charsOpen = false;
       u.self = null;
+      u.played = null;
+      u.playedError = null;
       await loadState();
       // The client needs a few seconds to enter the world; poll for it.
       setTimeout(() => loadSelf(name), 4000);
@@ -519,6 +566,8 @@ async function stopAccount(name) {
     if (data.ok) {
       toast(`${name} 已下线`);
       u.self = null;
+      u.played = null;
+      u.playedError = null;
     } else {
       toast(data.error || data.output || "下线失败", true);
     }

@@ -48,11 +48,36 @@ Enforcement points:
   session key and kicks the user). Re-running `init` on an existing account is
   checked too; `new`/first-time `init` stay open.
 - `web/server.py` checks `/api/start`, `/api/login`, `/api/create`,
-  `/api/delete`; `/api/stop` is allowed. `/api/chars` remains read-only.
+  `/api/delete` for **agent** accounts; `/api/stop` is allowed. `/api/chars`
+  remains read-only.
 
 The human accounts (`doumoman`, `isawall126`, `isawall317`) are not in the
 policy at all. They stay in `accounts/` so the user can manage them, but the
 agent must not log in, start a session, or create/delete characters there.
+
+## Manual mode for human accounts (2026-11-03)
+
+The first isolation pass was too strict: the console hid every human-account
+control and the backend policy-denied `/api/login`, so the user could not log
+in at all. Isolation now separates *who acts*:
+
+- Human accounts are manual-only. Their console cards expose 上线 / 下线 /
+  创建 / 删除 / 重新登录; `/api/start` calls `session.sh start` directly and
+  never writes a keeper intent. `/api/stop` stops directly.
+- `AGENT_WOW_MANUAL=1` is the explicit bypass for a human account in
+  `session.sh` and `account.sh`. The web backend sets it only for accounts
+  outside `agent-policy.json`; the keeper and agent tooling never set it.
+- `session_env()` strips `AGENT_WOW_MANUAL` for agent accounts, so an ambient
+  flag cannot widen autonomous access.
+- Human sessions are not auto-reconnected: clicking 上线 means "start once",
+  not the keeper-backed "online until 下线" contract used for agent accounts.
+
+CLI equivalent for the operator:
+
+```bash
+AGENT_WOW_MANUAL=1 scripts/account.sh login doumoman
+AGENT_WOW_MANUAL=1 scripts/account.sh play doumoman <character>
+```
 
 ## Final account inventory (2026-11-03)
 

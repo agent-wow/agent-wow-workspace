@@ -31,7 +31,7 @@ EmptyProtoPZ.google.golang.org/protobuf/types/known/emptypbø¢GPBªGoogle.P
 SendPacket%.agentwow.module.v1.SendPacketRequest.google.protobuf.EmptyE
 GetClock.google.protobuf.Empty!.agentwow.module.v1.ClockResponsea
 InvokeModule'.agentwow.module.v1.InvokeModuleRequest(.agentwow.module.v1.InvokeModuleResponseB5Z3github.com/agent-wow/agent-wow/pkg/modules/v1;modv1bproto3
-­
+Å
 module.protomove.module.v1api/module/v1/session.protogoogle/protobuf/empty.proto"V
 Position
 x (Rx
@@ -63,7 +63,7 @@ SendPacket%.agentwow.module.v1.SendPacketRequest.google.protobuf.EmptyE
 world_epoch (R
 worldEpoch
 map_id (RmapId
-has_map	 (RhasMap2¬
+has_map	 (RhasMap2Ä
 ModuleG
 GetPosition.google.protobuf.Empty .move.module.v1.PositionResponseH
 Forward.move.module.v1.MoveRequest .move.module.v1.PositionResponseI
@@ -71,8 +71,10 @@ worldEpoch
 TurnLeft.move.module.v1.TurnRequest .move.module.v1.PositionResponseJ
 	TurnRight.move.module.v1.TurnRequest .move.module.v1.PositionResponseI
 TurnTo.move.module.v1.TurnToRequest .move.module.v1.PositionResponseI
-MoveTo.move.module.v1.MoveToRequest .move.module.v1.PositionResponse@
-Stop.google.protobuf.Empty .move.module.v1.PositionResponseN
+MoveTo.move.module.v1.MoveToRequest .move.module.v1.PositionResponseK
+Navigate.move.module.v1.MoveToRequest .move.module.v1.PositionResponse@
+Stop.google.protobuf.Empty .move.module.v1.PositionResponseI
+RecoverGround.google.protobuf.Empty .move.module.v1.PositionResponseN
 SetRunSpeed.move.module.v1.RunSpeedRequest.move.module.v1.StatusResponse@
 Status.google.protobuf.Empty.move.module.v1.StatusResponseC
 OnPacket.agentwow.module.v1.WorldPacket.google.protobuf.EmptyB:Z8github.com/doumoman/agent-wow-mods/move/src/api;modulev1bproto3

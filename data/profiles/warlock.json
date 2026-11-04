@@ -1,0 +1,75 @@
+{
+  "version": 8,
+  "class": "warlock",
+  "source": "WotLK 3.3.5a warlock baseline; Shadow Bolt spell 686 and Corruption spell 172 are verified in 腰果术士's live spellbook. Version 5 shortens the preferred pull window to 12 yards for a controlled line-of-sight comparison. Version 6 adds Corruption 172 from hash-verified AzerothCore npc_trainer template 200009 and Spell.dbc (rank 1, instant, 30-yard range index); its conservative per-target reapply gate prevents repeated DoT casts while preserving Shadow Bolt filler. Version 7 records the live Dhugru purchase at level 5 for 95 copper and a verified caster-owned Corruption aura on a Dire Mottled Boar. Version 8 lets the instant DoT cast inside melee range instead of skipping every spell while Shadow Bolt retains the melee fallback",
+  "roles": ["dps"],
+  "resource": "mana",
+  "resource_scale": 1,
+  "skills": [
+    {
+      "name": "Corruption",
+      "spell_id": 172,
+      "cost": 35,
+      "priority": 15,
+      "min_level": 4,
+      "requires_target": true,
+      "in_combat_only": false,
+      "min_range": 0,
+      "reapply_seconds": 15
+    },
+    {
+      "name": "Shadow Bolt",
+      "spell_id": 686,
+      "cost": 30,
+      "priority": 10,
+      "min_level": 1,
+      "requires_target": true,
+      "in_combat_only": false,
+      "min_range": 4
+    }
+  ],
+  "training_reserve": 50,
+  "talents": {"dps": []},
+  "recovery": {
+    "rest_below_pct": 0.55,
+    "rest_until_pct": 0.85,
+    "flee_below_pct": 0.18,
+    "max_rest_seconds": 40,
+    "rest_step_seconds": 1
+  },
+  "combat": {
+    "engage_radius": 35,
+    "melee_range": 4,
+    "preferred_range": 12,
+    "auto_attack": false,
+    "approach_step": 12,
+    "dz_tolerance": 3,
+    "attack_reissue_seconds": 2,
+    "cast_interval_seconds": 3.5,
+    "stall_seconds": 10,
+    "no_kill_seconds": 120,
+    "max_approach_seconds": 20,
+    "blacklist_seconds": 45,
+    "side_step_distance": 20,
+    "crowd_radius": 8,
+    "max_crowd": 2,
+    "lost_target_limit": 3,
+    "spell_disable_seconds": 15
+  },
+  "route": {"zone": "durotar", "map_id": 1},
+  "inventory": {
+    "stat_weights": {
+      "intellect": 2.0,
+      "spirit": 1.0,
+      "stamina": 1.3,
+      "spell_power": 2.0
+    },
+    "armor_weight": 0.02,
+    "weapon_dps_weight": 1.0,
+    "min_free_slots": 2,
+    "sell_quality_max": 1,
+    "protected_item_ids": [],
+    "material_item_ids": [],
+    "supplies": []
+  }
+}

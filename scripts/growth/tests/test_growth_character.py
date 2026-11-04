@@ -246,6 +246,21 @@ class CharacterGrowthTests(unittest.TestCase):
         self.assertEqual(action.action, "trainer_open")
         self.assertIn(("open_trainer", (44,)), self.adapter.calls)
 
+    def test_future_class_spells_do_not_pull_a_low_level_character_to_trainer(self):
+        self.adapter.spells = {
+            78: False, 2366: False, 2259: False, 3273: False,
+            2330: False, 3275: False,
+        }
+        view = replace(self.view,
+                       self_state={**self.view.self_state, "level": 1},
+                       nearby=({
+            "guid": 44, "npc_flags": 0x30, "has_position": True,
+            "position": {"x": 10, "y": 0, "z": 0},
+        },))
+        self.assertIsNone(self.runtime.step(100, view, "tank"))
+        self.assertNotIn(("move_to", (10, 0, 0)), self.adapter.calls)
+        self.assertNotIn(("open_trainer", (44,)), self.adapter.calls)
+
     def test_talent_rank_zero_and_lost_reply_are_reconciled(self):
         profile = replace(WARRIOR, talents={"tank": (TalentChoice(1001, 10),)})
         runtime = CharacterGrowthRuntime(

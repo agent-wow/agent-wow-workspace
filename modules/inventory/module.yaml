@@ -13,6 +13,7 @@ rpc:
   sell: /inventory.module.v1.Module/Sell
   repair: /inventory.module.v1.Module/Repair
   equip: /inventory.module.v1.Module/Equip
+  set_ammo: /inventory.module.v1.Module/SetAmmo
   buyback: /inventory.module.v1.Module/Buyback
   trade: /inventory.module.v1.Module/Trade
   query_item: /inventory.module.v1.Module/QueryItem

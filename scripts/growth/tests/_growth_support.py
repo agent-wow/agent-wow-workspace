@@ -138,12 +138,24 @@ class FakeAdapter:
         self.calls.append(("stop_attack", ()))
         return {}
 
+    def stop_movement(self):
+        self.calls.append(("stop_movement", ()))
+        return {}
+
+    def set_ammo(self, item_id):
+        self.calls.append(("set_ammo", (int(item_id),)))
+        return {}
+
     def cast(self, spell_id, target_guid):
         self.calls.append(("cast", (int(spell_id), int(target_guid))))
         return {}
 
     def move_to(self, x, y, z):
         self.calls.append(("move_to", (float(x), float(y), float(z))))
+        return {"position": {"x": float(x), "y": float(y), "z": float(z)}}
+
+    def navigate(self, x, y, z):
+        self.calls.append(("navigate", (float(x), float(y), float(z))))
         return {"position": {"x": float(x), "y": float(y), "z": float(z)}}
 
     def turn_to(self, orientation):

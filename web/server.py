@@ -22,6 +22,9 @@ from urllib.parse import urlparse, parse_qs
 
 ROOT = Path(__file__).resolve().parent.parent
 ACCOUNTS = ROOT / "accounts"
+DATA = ROOT / "data"
+PLAYTIME = DATA / "playtime.json"
+PLAYTIME_LOCK = threading.Lock()
 STATIC = Path(__file__).resolve().parent / "static"
 SESSION_SH = ROOT / "scripts" / "session.sh"
 POLICY = ROOT / "scripts" / "agent-policy.py"
@@ -116,6 +119,55 @@ def log_action(message: str) -> None:
             fh.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {message}\n")
     except OSError:
         pass
+
+
+# ---------------------------------------------------------------- playtime
+
+def _read_playtime() -> dict[str, dict]:
+    """Load the last-known played-time snapshots keyed by account/character."""
+    try:
+        data = json.loads(PLAYTIME.read_text())
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return {}
+    chars = data.get("characters") if isinstance(data, dict) else None
+    return chars if isinstance(chars, dict) else {}
+
+
+def playtime_key(account: str, character: str) -> str:
+    return f"{account.lower()}/{character.lower()}"
+
+
+def cached_playtime(account: str, character: str) -> dict | None:
+    entry = _read_playtime().get(playtime_key(account, character))
+    return entry if isinstance(entry, dict) else None
+
+
+def remember_playtime(account: str, character: str, info: dict) -> None:
+    """Cache the live counters so offline rows keep the last known totals.
+
+    Total and level time are the server's own numbers (SMSG_PLAYED_TIME). The
+    console only stores them; a character never seen online has no entry, and
+    the UI shows an em dash rather than inventing a value.
+    """
+    if not character or "error" in info or not info.get("hasData"):
+        return
+    entry = {
+        "account": account,
+        "name": character,
+        "totalSeconds": int(info.get("totalSeconds") or 0),
+        "levelSeconds": int(info.get("levelSeconds") or 0),
+        "sessionSeconds": int(info.get("sessionSeconds") or 0),
+        "sessionStartedUnix": int(info.get("sessionStartedUnix") or 0),
+        "lastSeen": int(time.time()),
+    }
+    with PLAYTIME_LOCK:
+        chars = _read_playtime()
+        chars[playtime_key(account, character)] = entry
+        PLAYTIME.parent.mkdir(parents=True, exist_ok=True)
+        tmp = PLAYTIME.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(
+            {"version": 1, "characters": chars}, ensure_ascii=False, indent=2))
+        os.replace(tmp, PLAYTIME)
 
 
 # ---------------------------------------------------------------- session intent
@@ -301,6 +353,9 @@ def list_chars(account: str, refresh: bool = False) -> dict:
                 "class": cols[3], "gender": cols[4], "level": int(cols[5]),
                 "zone": cols[6], "map": cols[7],
             })
+    snapshots = _read_playtime()
+    for char in chars:
+        char["playtime"] = snapshots.get(playtime_key(account, char["name"]))
     data = {"chars": chars}
     with _cache_lock:
         _chars_cache[account] = (time.time(), data)
@@ -330,6 +385,8 @@ def start_session(account: str, character: str) -> dict:
         return {"error": f"unknown account: {account}"}
     if not character:
         return {"error": "character is required"}
+    with _cache_lock:
+        _chars_cache.pop(account, None)
     if account_is_agent(account):
         denied = policy_denied("char", account, character)
         if denied:
@@ -355,6 +412,10 @@ def start_session(account: str, character: str) -> dict:
 
 
 def stop_session(account: str) -> dict:
+    # The next character list must re-attach the played-time snapshot taken
+    # during this session instead of serving a pre-session cached list.
+    with _cache_lock:
+        _chars_cache.pop(account, None)
     if account_is_agent(account):
         # Clear the intent first so the keeper does not bring the character back.
         previous = read_intent(account).get("character", "")
@@ -368,6 +429,24 @@ def stop_session(account: str) -> dict:
     rc, out, err = run([str(SESSION_SH), "stop"], timeout=60, env=env)
     log_action(f"manual stop account={account!r} ok={rc == 0}")
     return {"ok": rc == 0, "output": f"{out}\n{err}".strip()}
+
+
+def get_self(account: str) -> dict:
+    """Live character snapshot plus the server's played-time counters."""
+    result = rpc(account, "sense.get_self")
+    if "error" in result:
+        return result
+    played = rpc(account, "sense.get_played_time")
+    payload = {"self": result}
+    if "error" in played:
+        # A module built before this RPC existed must not break the panel;
+        # only the time fields go missing.
+        payload["playedError"] = played["error"]
+    else:
+        payload["playedTime"] = played
+        character = (result.get("unit") or {}).get("name") or result.get("name") or ""
+        remember_playtime(account, character, played)
+    return payload
 
 
 def get_logs(account: str, lines: int = 50) -> dict:
@@ -531,9 +610,7 @@ class Handler(BaseHTTPRequestHandler):
                 refresh = qs.get("refresh", ["0"])[0] == "1"
                 self.send_json(list_chars(account, refresh))
             elif path == "/api/self":
-                account = qs.get("account", [""])[0]
-                result = rpc(account, "sense.get_self")
-                self.send_json(result if "error" in result else {"self": result})
+                self.send_json(get_self(qs.get("account", [""])[0]))
             elif path == "/api/logs":
                 account = qs.get("account", [""])[0]
                 lines = int(qs.get("lines", ["50"])[0])

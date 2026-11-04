@@ -14,12 +14,16 @@ rpc:
   turn_right: /move.module.v1.Module/TurnRight
   turn_to: /move.module.v1.Module/TurnTo
   move_to: /move.module.v1.Module/MoveTo
+  navigate: /move.module.v1.Module/Navigate
   stop: /move.module.v1.Module/Stop
+  recover_ground: /move.module.v1.Module/RecoverGround
   set_run_speed: /move.module.v1.Module/SetRunSpeed
   status: /move.module.v1.Module/Status
 packets:
   SMSG_LOGIN_VERIFY_WORLD: /move.module.v1.Module/OnPacket
   SMSG_NEW_WORLD: /move.module.v1.Module/OnPacket
+  SMSG_UPDATE_OBJECT: /move.module.v1.Module/OnPacket
+  SMSG_COMPRESSED_UPDATE_OBJECT: /move.module.v1.Module/OnPacket
   MSG_MOVE_START_FORWARD: /move.module.v1.Module/OnPacket
   MSG_MOVE_START_BACKWARD: /move.module.v1.Module/OnPacket
   MSG_MOVE_STOP: /move.module.v1.Module/OnPacket

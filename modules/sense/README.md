@@ -15,6 +15,7 @@ resources needed by a leveling worker.
 | `sense.select_target` | `guid` | — | Sends `CMSG_SET_SELECTION`; never echoed by the server |
 | `sense.clear_target` | — | — | Sends GUID 0 |
 | `sense.query_name` | `guid` | — | Sends `CMSG_NAME_QUERY`; answer is asynchronous |
+| `sense.get_played_time` | — | `PlayedTimeResponse` | Server `/played` counters plus this session's length; never blocks |
 | `sense.status` | — | counters | Packet/parse counters, epoch, readiness, map, aura/cooldown counters |
 | `sense.debug_monster_moves` | — | payload hex | Diagnostic only |
 | `sense.debug_fields` | — | raw field slots | Diagnostic only |
@@ -67,6 +68,20 @@ gameplay action in this module.
   self has the ghost `PLAYER_FLAGS` bit.
 - `in_combat` is `UNIT_FIELD_FLAGS & 0x80000`.
 
+## Played time
+
+`sense.get_played_time` exposes the same counters the client's `/played`
+command prints. `total_seconds` is cumulative across every session and
+`level_seconds` is time spent at the current level; both come straight from
+`SMSG_PLAYED_TIME`, so they are the server's numbers, not the module's guess.
+
+The module sends `CMSG_PLAYED_TIME` once after `SMSG_LOGIN_VERIFY_WORLD` and
+again whenever a read sees a sample older than 30 seconds. Reads never wait for
+the reply: `has_data` stays false (and `sampled_unix_ms` zero) until the first
+answer arrives. `session_seconds` is measured locally from the login that
+started this client process and keeps advancing between samples; a map
+transition does not reset it, a new login does.
+
 ## Game objects
 
 `get_nearby` keeps unit/player and game-object lists separate. Game objects are
@@ -83,7 +98,8 @@ Selecting a game object sends `CMSG_SET_SELECTION` like any other GUID.
 `SMSG_COMPRESSED_UPDATE_OBJECT`, `SMSG_DESTROY_OBJECT`,
 `SMSG_NAME_QUERY_RESPONSE`, `SMSG_CREATURE_QUERY_RESPONSE`,
 `SMSG_MONSTER_MOVE`, `SMSG_AURA_UPDATE`, `SMSG_AURA_UPDATE_ALL`,
-`SMSG_SPELL_COOLDOWN`, `SMSG_COOLDOWN_EVENT`, `SMSG_UPDATE_COMBO_POINTS`.
+`SMSG_SPELL_COOLDOWN`, `SMSG_COOLDOWN_EVENT`, `SMSG_UPDATE_COMBO_POINTS`,
+`SMSG_PLAYED_TIME`.
 
 Malformed packets are counted and dropped; `OnPacket` never returns an error,
 because that would take down the session owner loop. Name/creature queries are
@@ -106,5 +122,6 @@ Unit tests only (`go test ./...` in this module): class-specific power slots
 (warrior rage, priest mana, rogue energy), readiness before/after login and
 incremental self fields, map-transition invalidation of target/units/position,
 game objects in nearby/target, aura add/remove, cooldown remaining time, combo
-points and destroyed-target clearing. No live-server verification is claimed
+points, played-time sample replacement and destroyed-target clearing. No
+live-server verification is claimed
 for this revision.

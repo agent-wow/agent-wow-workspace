@@ -28,6 +28,7 @@ func TestSnapshotAccumulatesBagsEquipmentAndBuyback(t *testing.T) {
 	s.selfGUID = 1
 	s.objects[1] = &trackedObject{typ: wow.ObjectTypePlayer, fields: wow.UpdateFields{
 		wow.PlayerCoinage:                     1234,
+		wow.PlayerAmmoID:                      2512,
 		wow.PlayerFieldInvSlotHead:            100,
 		wow.PlayerFieldInvSlotHead + 1:        0,
 		wow.PlayerFieldInvSlotHead + 19*2:     200,
@@ -53,8 +54,8 @@ func TestSnapshotAccumulatesBagsEquipmentAndBuyback(t *testing.T) {
 	}
 
 	state := s.snapshot()
-	if state.GetMoney() != 1234 || state.GetFreeSlots() != 18 || len(state.GetItems()) != 4 {
-		t.Fatalf("unexpected inventory totals: money=%d free=%d items=%d", state.GetMoney(), state.GetFreeSlots(), len(state.GetItems()))
+	if state.GetMoney() != 1234 || state.GetSelectedAmmoId() != 2512 || state.GetFreeSlots() != 18 || len(state.GetItems()) != 4 {
+		t.Fatalf("unexpected inventory totals: money=%d ammo=%d free=%d items=%d", state.GetMoney(), state.GetSelectedAmmoId(), state.GetFreeSlots(), len(state.GetItems()))
 	}
 	if len(state.GetBuyback()) != 1 || state.GetBuyback()[0].GetBuyPrice() != 77 {
 		t.Fatalf("unexpected buyback: %+v", state.GetBuyback())
@@ -160,7 +161,10 @@ func TestActionValidationAndPackets(t *testing.T) {
 	if _, err := s.Equip(t.Context(), &modulev1.EquipRequest{ItemGuid: 42, DestinationSlot: 15}); err != nil {
 		t.Fatal(err)
 	}
-	want := []uint32{opcode.CMSGBuyItem, opcode.CMSGSellItem, opcode.CMSGAutoequipItemSlot}
+	if _, err := s.SetAmmo(t.Context(), &modulev1.AmmoRequest{ItemId: 2512}); err != nil {
+		t.Fatal(err)
+	}
+	want := []uint32{opcode.CMSGBuyItem, opcode.CMSGSellItem, opcode.CMSGAutoequipItemSlot, opcode.CMSGSetAmmo}
 	for _, op := range want {
 		select {
 		case packet := <-session.sent:

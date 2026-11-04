@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"math"
+	"reflect"
 	"testing"
 	"time"
 
@@ -334,6 +335,36 @@ func TestReadyGateWaitsForSelfFields(t *testing.T) {
 	}
 }
 
+func TestReadyGateAcceptsImplicitZeroRageOnSelfCreate(t *testing.T) {
+	t.Setenv("AGENT_WOW_CHARACTER_GUID", "42")
+	s := New(nil)
+	sendPacket(t, s, opcode.SMSGLoginVerifyWorld, loginPayload(1, 1, 2, 3, 0))
+
+	s.mu.Lock()
+	s.applyObject(wow.ObjectUpdate{
+		GUID: 42, Kind: wow.UpdateCreate, Type: wow.ObjectTypePlayer,
+		Fields: wow.UpdateFields{
+			wow.UnitFieldBytes0:    (wow.PowerRage << 24) | (1 << 8) | 2,
+			wow.UnitFieldHealth:    70,
+			wow.UnitFieldMaxHealth: 70,
+			wow.UnitFieldLevel:     1,
+			// A full create block implicitly defines omitted fields as zero. The
+			// live server omits POWER2 for a newly created warrior at zero rage.
+			wow.UnitFieldMaxPower2: 100,
+		},
+	})
+	s.markReadyLocked(true)
+	s.mu.Unlock()
+
+	self, err := s.GetSelf(context.Background(), &emptypb.Empty{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !self.Ready || self.Unit.Power != 0 || self.Unit.MaxPower != 100 {
+		t.Fatalf("zero-rage create snapshot = %+v", self)
+	}
+}
+
 func TestNewWorldInvalidatesSnapshot(t *testing.T) {
 	t.Setenv("AGENT_WOW_CHARACTER_GUID", "42")
 	s := New(nil)
@@ -589,5 +620,89 @@ func TestMalformedUpdateDoesNotFail(t *testing.T) {
 	}
 	if status.ParseErrors != 1 || status.Packets != 1 {
 		t.Fatalf("status = %+v", status)
+	}
+}
+
+func TestPlayedTimeSnapshot(t *testing.T) {
+	t.Setenv("AGENT_WOW_CHARACTER_GUID", "42")
+	t.Setenv("AGENT_WOW_CHARACTER_NAME", "Reachbot")
+	s := New(nil)
+
+	login := binary.LittleEndian.AppendUint32(nil, 1)
+	login = f32(login, 10)
+	login = f32(login, 20)
+	login = f32(login, 30)
+	login = f32(login, 1)
+	sendPacket(t, s, opcode.SMSGLoginVerifyWorld, login)
+
+	// The login starts the session clock before any server sample arrives.
+	got, err := s.GetPlayedTime(context.Background(), &emptypb.Empty{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.HasData || got.TotalSeconds != 0 || got.SessionStartedUnix == 0 {
+		t.Fatalf("pre-sample played time = %+v", got)
+	}
+
+	body := binary.LittleEndian.AppendUint32(nil, 3600)
+	body = binary.LittleEndian.AppendUint32(body, 600)
+	body = append(body, 0)
+	sendPacket(t, s, opcode.SMSGPlayedTime, body)
+
+	got, err = s.GetPlayedTime(context.Background(), &emptypb.Empty{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !got.HasData || got.TotalSeconds != 3600 || got.LevelSeconds != 600 {
+		t.Fatalf("played time = %+v", got)
+	}
+	if got.SampledUnixMs == 0 {
+		t.Fatalf("sample timestamp missing: %+v", got)
+	}
+
+	// A fresh reply replaces both counters; a map change must not reset the
+	// session clock.
+	body = binary.LittleEndian.AppendUint32(nil, 7200)
+	body = binary.LittleEndian.AppendUint32(body, 1200)
+	body = append(body, 0)
+	sendPacket(t, s, opcode.SMSGPlayedTime, body)
+	got, _ = s.GetPlayedTime(context.Background(), &emptypb.Empty{})
+	if got.TotalSeconds != 7200 || got.LevelSeconds != 1200 {
+		t.Fatalf("updated played time = %+v", got)
+	}
+}
+
+type fakeSession struct {
+	modv1.SessionClient
+	sent chan *modv1.SendPacketRequest
+}
+
+func (f *fakeSession) SendPacket(_ context.Context, req *modv1.SendPacketRequest, _ ...grpc.CallOption) (*emptypb.Empty, error) {
+	f.sent <- req
+	return &emptypb.Empty{}, nil
+}
+
+func TestPlayedTimeRequestsTheServer(t *testing.T) {
+	t.Setenv("AGENT_WOW_CHARACTER_GUID", "42")
+	t.Setenv("AGENT_WOW_CHARACTER_NAME", "Reachbot")
+	session := &fakeSession{sent: make(chan *modv1.SendPacketRequest, 1)}
+	s := New(session)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	s.Start(ctx)
+
+	if _, err := s.GetPlayedTime(context.Background(), &emptypb.Empty{}); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case req := <-session.sent:
+		if req.GetOpcode() != opcode.CMSGPlayedTime {
+			t.Fatalf("opcode = 0x%x", req.GetOpcode())
+		}
+		if !reflect.DeepEqual(req.GetPayload(), wow.EncodePlayedTime()) {
+			t.Fatalf("payload = %x", req.GetPayload())
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("played time request was not sent")
 	}
 }

@@ -18,7 +18,7 @@ from scripts.growth.permissions import (
     ensure_private_dir,
     ensure_private_file,
 )
-from scripts.growth.roster import RosterError, load_roster
+from scripts.growth.roster import load_roster
 from scripts.growth.stop import default_stop_path
 from scripts.growth.store import CheckpointStore
 
@@ -148,14 +148,18 @@ class PermissionTests(unittest.TestCase):
             with self.subTest(ignored=ignored_path):
                 self.assertTrue(ignored(ignored_path))
 
-    def test_versioned_roster_is_explicitly_unconfigured(self):
+    def test_versioned_roster_describes_the_five_live_characters(self):
         path = ROOT / "config" / "roster.yaml"
         self.assertTrue(path.is_file(), "config/roster.yaml must exist")
         data = json.loads(path.read_text(encoding="utf-8"))
-        self.assertFalse(data.get("configured"))
-        self.assertEqual(data.get("characters"), [])
-        with self.assertRaises(RosterError):
-            load_roster(path)
+        self.assertTrue(data.get("configured"))
+        self.assertEqual(len(data.get("characters") or []), 5)
+        roster = load_roster(path)
+        self.assertEqual(roster.faction, "horde")
+        self.assertEqual(roster.start_zone, "durotar")
+        self.assertEqual(
+            {spec.name for spec in roster.characters},
+            {"腰果战士", "腰果萨满", "腰果猎人", "腰果牧师", "腰果术士"})
 
 
 if __name__ == "__main__":

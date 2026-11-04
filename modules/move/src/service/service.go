@@ -21,12 +21,17 @@ import (
 )
 
 const (
-	defaultRunSpeed = 7.0
-	maxRunSpeed     = 20.0
-	heartbeat       = 500 * time.Millisecond
-	maxYards        = 40
-	maxMoveDuration = 8 * time.Second
+	defaultRunSpeed     = 7.0
+	maxRunSpeed         = 20.0
+	heartbeat           = 500 * time.Millisecond
+	maxYards            = 40
+	maxMoveDuration     = 8 * time.Second
+	maxGroundCorrection = 8.0
 )
+
+type groundSampler interface {
+	GroundHeight(mapID uint32, x, y float32) (float32, error)
+}
 
 // Service owns the character's movement state. Movement RPCs are serialized;
 // quick reads use a separate lock so they never wait for a whole walk.
@@ -34,6 +39,7 @@ type Service struct {
 	modulev1.UnimplementedModuleServer
 	session  modv1.SessionClient
 	selfGUID wow.GUID
+	terrain  groundSampler
 
 	moveMu sync.Mutex // serializes Forward/Backward/Turn/Stop
 
@@ -54,12 +60,21 @@ type Service struct {
 	worldCh    chan struct{}
 }
 
-// New reads the identity agent-wow injects into the container.
+// New reads the identity and local terrain path injected into the container.
 func New(session modv1.SessionClient) *Service {
+	mapsDir := os.Getenv("AGENT_WOW_MAPS_DIR")
+	if mapsDir == "" {
+		mapsDir = "/data/maps"
+	}
+	return newWithTerrain(session, wow.NewMapTerrain(mapsDir))
+}
+
+func newWithTerrain(session modv1.SessionClient, terrain groundSampler) *Service {
 	guid, _ := strconv.ParseUint(os.Getenv("AGENT_WOW_CHARACTER_GUID"), 10, 64)
 	return &Service{
 		session:  session,
 		selfGUID: wow.GUID(guid),
+		terrain:  terrain,
 		runSpeed: defaultRunSpeed,
 		worldCh:  make(chan struct{}),
 	}
@@ -125,6 +140,27 @@ func (s *Service) Stop(ctx context.Context, _ *emptypb.Empty) (*modulev1.Positio
 	return &modulev1.PositionResponse{Position: toProto(pos)}, nil
 }
 
+// RecoverGround repairs an operator-confirmed invalid saved Z. Unlike normal
+// locomotion, this explicit action bypasses the 8-yard correction guard.
+func (s *Service) RecoverGround(ctx context.Context, _ *emptypb.Empty) (*modulev1.PositionResponse, error) {
+	s.moveMu.Lock()
+	defer s.moveMu.Unlock()
+	start, _, epoch, mapID, _, err := s.startMove()
+	if err != nil {
+		return nil, err
+	}
+	defer s.endMove()
+	grounded, err := s.sampleGround(mapID, start)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.sendForEpoch(ctx, epoch, opcode.MSGMoveStop, 0, grounded); err != nil {
+		return nil, err
+	}
+	s.storeIfEpoch(epoch, grounded)
+	return &modulev1.PositionResponse{Position: toProto(grounded)}, nil
+}
+
 func (s *Service) SetRunSpeed(_ context.Context, req *modulev1.RunSpeedRequest) (*modulev1.StatusResponse, error) {
 	speed := req.GetYardsPerSecond()
 	if !finite(speed) || speed < 1 || speed > maxRunSpeed {
@@ -176,6 +212,30 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 		}
 		s.resetWorld(mapID, pos)
 		slog.Info("world changed", "map_id", mapID, "x", pos.X, "y", pos.Y, "z", pos.Z)
+	case opcode.SMSGUpdateObject, opcode.SMSGCompressedUpdateObject:
+		var update *wow.Update
+		var err error
+		if packet.GetOpcode() == opcode.SMSGCompressedUpdateObject {
+			update, err = wow.ParseCompressedUpdateObject(packet.GetPayload())
+		} else {
+			update, err = wow.ParseUpdateObject(packet.GetPayload())
+		}
+		if err != nil {
+			s.recordParseError("object update", err)
+			return &emptypb.Empty{}, nil
+		}
+		// Login position can be stale after a module-only restart. Object
+		// updates carry the server's current self position, including terrain
+		// corrections that never produce a self movement echo.
+		s.mu.Lock()
+		if !s.moving {
+			for _, obj := range update.Objects {
+				if obj.GUID == s.selfGUID && obj.HasPos {
+					s.pos, s.hasPos = obj.Position, true
+				}
+			}
+		}
+		s.mu.Unlock()
 	case opcode.MSGMoveTeleportAck:
 		guid, counter, pos, err := wow.ParseTeleportAck(packet.GetPayload())
 		if err != nil {
@@ -248,7 +308,7 @@ func (s *Service) travel(ctx context.Context, yards float32, backward bool) (*mo
 	}
 	s.moveMu.Lock()
 	defer s.moveMu.Unlock()
-	start, speed, epoch, worldCh, err := s.startMove()
+	start, speed, epoch, mapID, worldCh, err := s.startMove()
 	if err != nil {
 		return nil, err
 	}
@@ -261,18 +321,18 @@ func (s *Service) travel(ctx context.Context, yards float32, backward bool) (*mo
 		moveFlags = wow.MovementFlagBackward
 	}
 	end := wow.ForwardPosition(start, sign*float64(yards))
-	return s.walk(ctx, epoch, worldCh, start, end, moveFlags, startOp, speed)
+	return s.walk(ctx, epoch, mapID, worldCh, start, end, moveFlags, startOp, speed)
 }
 
-// MoveTo walks straight toward a world position, interpolating Z so slopes do
-// not leave the character at the origin's height. It does not pathfind.
+// MoveTo walks straight toward a world position and samples outdoor terrain
+// height along the way. It does not pathfind or avoid obstacles.
 func (s *Service) MoveTo(ctx context.Context, req *modulev1.MoveToRequest) (*modulev1.PositionResponse, error) {
 	if !finite(req.GetX()) || !finite(req.GetY()) || !finite(req.GetZ()) {
 		return nil, status.Error(codes.InvalidArgument, "coordinates must be finite")
 	}
 	s.moveMu.Lock()
 	defer s.moveMu.Unlock()
-	start, speed, epoch, worldCh, err := s.startMove()
+	start, speed, epoch, mapID, worldCh, err := s.startMove()
 	if err != nil {
 		return nil, err
 	}
@@ -288,6 +348,11 @@ func (s *Service) MoveTo(ctx context.Context, req *modulev1.MoveToRequest) (*mod
 		s.endMove()
 		return nil, status.Errorf(codes.InvalidArgument, "distance %.1f exceeds the %.0f yard step limit", distance, float64(maxYards))
 	}
+	end, err = s.groundPosition(mapID, end)
+	if err != nil {
+		s.endMove()
+		return nil, err
+	}
 	// Facing is atan2(dy, dx) on the server; atan2(dx, dy) leaves the
 	// character ~90 degrees off and swings get refused.
 	end.O = float32(wow.NormalizeOrientation(math.Atan2(dy, dx)))
@@ -296,24 +361,24 @@ func (s *Service) MoveTo(ctx context.Context, req *modulev1.MoveToRequest) (*mod
 		s.endMove()
 		return nil, err
 	}
-	return s.walk(ctx, epoch, worldCh, start, end, wow.MovementFlagForward, opcode.MSGMoveStartForward, speed)
+	return s.walk(ctx, epoch, mapID, worldCh, start, end, wow.MovementFlagForward, opcode.MSGMoveStartForward, speed)
 }
 
 // startMove locks in the start position and marks the character as moving. It
 // also snapshots the world epoch and reset channel so the walk can abort if
 // the map changes mid-step. The caller must hold moveMu and must call endMove
 // when the walk finishes.
-func (s *Service) startMove() (wow.Position, float32, uint64, <-chan struct{}, error) {
+func (s *Service) startMove() (wow.Position, float32, uint64, uint32, <-chan struct{}, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if !s.hasPos {
-		return wow.Position{}, 0, 0, nil, status.Error(codes.FailedPrecondition, "position unknown: wait for the character to enter the world")
+	if !s.hasPos || !s.hasMap {
+		return wow.Position{}, 0, 0, 0, nil, status.Error(codes.FailedPrecondition, "position and map unknown: wait for the character to enter the world")
 	}
 	if s.moving {
-		return wow.Position{}, 0, 0, nil, status.Error(codes.FailedPrecondition, "already moving")
+		return wow.Position{}, 0, 0, 0, nil, status.Error(codes.FailedPrecondition, "already moving")
 	}
 	s.moving = true
-	return s.pos, s.runSpeed, s.worldEpoch, s.worldCh, nil
+	return s.pos, s.runSpeed, s.worldEpoch, s.mapID, s.worldCh, nil
 }
 
 func (s *Service) endMove() {
@@ -326,8 +391,13 @@ func (s *Service) endMove() {
 // moveMu and has marked the character as moving. epoch and worldCh are the
 // snapshot taken by startMove; a world entry closes worldCh and aborts the walk
 // without sending a stop or storing a position that belongs to the old map.
-func (s *Service) walk(ctx context.Context, epoch uint64, worldCh <-chan struct{}, start, end wow.Position, moveFlags uint32, startOp uint32, speed float32) (*modulev1.PositionResponse, error) {
+func (s *Service) walk(ctx context.Context, epoch uint64, mapID uint32, worldCh <-chan struct{}, start, end wow.Position, moveFlags uint32, startOp uint32, speed float32) (*modulev1.PositionResponse, error) {
 	defer s.endMove()
+	start, err := s.groundPosition(mapID, start)
+	if err != nil {
+		return nil, err
+	}
+	s.storeIfEpoch(epoch, start)
 	if err := s.sendForEpoch(ctx, epoch, startOp, moveFlags, start); err != nil {
 		return nil, err
 	}
@@ -369,7 +439,13 @@ func (s *Service) walk(ctx context.Context, epoch uint64, worldCh <-chan struct{
 			if fraction > 1 {
 				fraction = 1
 			}
-			pos = lerpPosition(start, end, fraction)
+			next, err := s.groundPosition(mapID, lerpPosition(start, end, fraction))
+			if err != nil {
+				s.storeIfEpoch(epoch, pos)
+				s.stopDetached(epoch, pos)
+				return nil, err
+			}
+			pos = next
 			s.storeIfEpoch(epoch, pos)
 			if err := s.sendForEpoch(ctx, epoch, opcode.MSGMoveHeartbeat, moveFlags, pos); err != nil {
 				if status.Code(err) != codes.Aborted {
@@ -378,6 +454,12 @@ func (s *Service) walk(ctx context.Context, epoch uint64, worldCh <-chan struct{
 				return nil, err
 			}
 		case <-deadline.C:
+			end, err = s.groundPosition(mapID, end)
+			if err != nil {
+				s.storeIfEpoch(epoch, pos)
+				s.stopDetached(epoch, pos)
+				return nil, err
+			}
 			s.storeIfEpoch(epoch, end)
 			if err := s.sendForEpoch(ctx, epoch, opcode.MSGMoveStop, 0, end); err != nil {
 				return nil, err
@@ -385,6 +467,29 @@ func (s *Service) walk(ctx context.Context, epoch uint64, worldCh <-chan struct{
 			return &modulev1.PositionResponse{Position: toProto(end)}, nil
 		}
 	}
+}
+
+func (s *Service) groundPosition(mapID uint32, pos wow.Position) (wow.Position, error) {
+	grounded, err := s.sampleGround(mapID, pos)
+	if err != nil {
+		return pos, err
+	}
+	if math.Abs(float64(grounded.Z-pos.Z)) > maxGroundCorrection {
+		return pos, status.Errorf(codes.FailedPrecondition, "terrain height %.2f differs from estimated %.2f by more than %.0f yards; possible cliff, bridge or indoor area", grounded.Z, pos.Z, maxGroundCorrection)
+	}
+	return grounded, nil
+}
+
+func (s *Service) sampleGround(mapID uint32, pos wow.Position) (wow.Position, error) {
+	if s.terrain == nil {
+		return pos, status.Error(codes.FailedPrecondition, "terrain sampler is not configured")
+	}
+	z, err := s.terrain.GroundHeight(mapID, pos.X, pos.Y)
+	if err != nil {
+		return pos, status.Errorf(codes.Unavailable, "terrain height at map %d (%.2f, %.2f): %v", mapID, pos.X, pos.Y, err)
+	}
+	pos.Z = z
+	return pos, nil
 }
 
 func lerpPosition(a, b wow.Position, t float64) wow.Position {

@@ -67,10 +67,16 @@ service Module {
   rpc TurnLeft(TurnRequest) returns (PositionResponse);
   rpc TurnRight(TurnRequest) returns (PositionResponse);
   rpc TurnTo(TurnToRequest) returns (PositionResponse);
-  // MoveTo walks straight to a world position, interpolating Z, and caps the
-  // step at 40 yards. It does not pathfind or avoid obstacles.
+  // MoveTo walks straight toward a world position, samples terrain along the
+  // way, and caps the step at 40 yards. It does not pathfind or avoid obstacles.
   rpc MoveTo(MoveToRequest) returns (PositionResponse);
+  // Navigate follows a bounded outdoor-terrain A* path for up to 12 yards.
+  // It is a short-step detour primitive, not a long-running route worker.
+  rpc Navigate(MoveToRequest) returns (PositionResponse);
   rpc Stop(google.protobuf.Empty) returns (PositionResponse);
+  // RecoverGround sends one stop at the sampled outdoor terrain height. This
+  // deliberately bypasses the 8-yard guard for operator-confirmed bad saved Z.
+  rpc RecoverGround(google.protobuf.Empty) returns (PositionResponse);
   rpc SetRunSpeed(RunSpeedRequest) returns (StatusResponse);
   rpc Status(google.protobuf.Empty) returns (StatusResponse);
   rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);

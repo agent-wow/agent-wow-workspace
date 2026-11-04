@@ -150,6 +150,16 @@ func (s *Service) Equip(ctx context.Context, req *modulev1.EquipRequest) (*modul
 	return s.snapshot(), nil
 }
 
+func (s *Service) SetAmmo(ctx context.Context, req *modulev1.AmmoRequest) (*modulev1.InventoryState, error) {
+	if req.GetItemId() == 0 {
+		return nil, status.Error(codes.InvalidArgument, "item_id is required")
+	}
+	if _, err := s.send(ctx, opcode.CMSGSetAmmo, wow.EncodeSetAmmo(req.GetItemId())); err != nil {
+		return nil, err
+	}
+	return s.snapshot(), nil
+}
+
 func (s *Service) Buyback(ctx context.Context, req *modulev1.BuybackRequest) (*modulev1.InventoryState, error) {
 	if req.GetVendorGuid() == 0 || req.GetSlot() < 74 || req.GetSlot() >= 86 {
 		return nil, status.Error(codes.InvalidArgument, "vendor_guid and absolute buyback slot 74..85 are required")

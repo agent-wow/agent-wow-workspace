@@ -43,7 +43,8 @@ class VMBackupTests(unittest.TestCase):
                 "if [ \"$1\" = ssh ]; then shift 2; exec \"$@\"; fi\n"
                 "exit 2\n", encoding="utf-8")
             colima.chmod(0o755)
-            # The simulated VM is isolated from real host growth workers.
+            # The fake colima command executes locally, so isolate the VM
+            # process probe from real growth workers on the developer host.
             pgrep = fake_bin / "pgrep"
             pgrep.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
             pgrep.chmod(0o755)

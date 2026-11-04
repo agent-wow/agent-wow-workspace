@@ -6,6 +6,7 @@ main-hand plus off-hand comparison for a two-handed weapon.
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 
 from .profiles import InventoryRules, PurchaseRule
@@ -176,6 +177,35 @@ class InventoryPolicy:
         self.equipment = EquipmentPolicy(rules)
 
     def best_purchase(self, state: InventoryState) -> PurchaseDecision | None:
+        # A hunter with zero projectiles cannot use its ranged rotation. Buying
+        # a bag first can consume all cash and then free enough slots to stop
+        # junk sales, permanently starving ammunition. Save for and buy the
+        # depleted projectile supply before considering capacity upgrades.
+        for rule in self.rules.supplies:
+            if state.count_of(rule.item_id) != 0:
+                continue
+            row = next((row for row in state.vendor_items
+                        if row.item_id == rule.item_id and row.class_id == 6
+                        and self._valid_vendor_row(row)), None)
+            if row is None:
+                continue
+            count = self._vendor_count(rule.target_count, row)
+            if count <= 0 or (rule.max_price is not None
+                              and row.buy_price > rule.max_price):
+                continue
+            total = row.buy_price * count
+            if total > state.money:
+                # A depleted projectile is an emergency: buy as many complete
+                # vendor groups as possible rather than starving the rotation
+                # until the full target becomes affordable.
+                count = state.money // row.buy_price if row.buy_price else count
+                total = row.buy_price * count
+            if count <= 0 or total > state.money:
+                return None
+            return PurchaseDecision(
+                item=row, vendor_slot=row.slot, count=count,
+                total_price=total, reason="critical_projectile")
+
         largest_bag = max((row.container_slots for row in state.items
                            if row.class_id == 1), default=0)
         bags = [row for row in state.vendor_items
@@ -203,7 +233,7 @@ class InventoryPolicy:
                         and self._valid_vendor_row(row)), None)
             if row is None:
                 continue
-            count = needed if row.stock < 0 else min(needed, row.stock)
+            count = self._vendor_count(needed, row)
             if count <= 0 or (rule.max_price is not None
                               and row.buy_price > rule.max_price):
                 continue
@@ -227,9 +257,9 @@ class InventoryPolicy:
 
     def items_to_sell(
         self, state: InventoryState, *, level: int, class_mask: int,
-        skills: dict | None = None,
+        skills: dict | None = None, force: bool = False,
     ) -> tuple[Item, ...]:
-        if state.free_slots >= self.rules.min_free_slots:
+        if not force and state.free_slots >= self.rules.min_free_slots:
             return ()
         upgrades = self.equipment.upgrades(
             state, level=level, class_mask=class_mask, skills=skills)
@@ -251,6 +281,14 @@ class InventoryPolicy:
             row.sell_price * max(1, row.count), self.equipment.score(row),
             row.guid))
         return tuple(candidates)
+
+    @staticmethod
+    def _vendor_count(item_count: int, row: Item) -> int:
+        # CMSG_BUY_ITEM uses vendor groups. Ammunition advertises BuyCount=200,
+        # so three purchases produce 600 arrows and cost three vendor prices.
+        group_size = max(1, row.count)
+        count = math.ceil(item_count / group_size)
+        return count if row.stock < 0 else min(count, row.stock)
 
     @staticmethod
     def _valid_vendor_row(row: Item) -> bool:

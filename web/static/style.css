@@ -36,7 +36,7 @@ h1 { margin: 0; font-size: 20px; font-weight: 650; }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
   gap: 18px;
   padding: 24px 28px;
   max-width: 1500px;

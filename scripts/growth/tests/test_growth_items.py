@@ -123,6 +123,36 @@ class InventoryPolicyTests(unittest.TestCase):
         self.assertIsNone(policy.best_purchase(
             replace(state, vendor_items=(replace(bag, stock=0),))))
 
+    def test_depleted_projectiles_precede_bag_capacity(self):
+        from scripts.growth.profiles import PurchaseRule
+        policy = InventoryPolicy(replace(
+            WARRIOR.inventory,
+            supplies=(PurchaseRule(item_id=2512, target_count=600),)))
+        bag = item(10, class_id=1, inventory_type=0, equipment_slot=None,
+                   container_slots=6, slot=1, buy_price=30)
+        arrows = item(2512, class_id=6, inventory_type=0, equipment_slot=None,
+                      slot=2, buy_price=10, count=200)
+        state = InventoryState(items=(), vendor_items=(bag, arrows),
+                               money=1000, free_slots=8)
+
+        decision = policy.best_purchase(state)
+        self.assertEqual(decision.item.item_id, 2512)
+        self.assertEqual(decision.count, 3)
+        self.assertEqual(decision.total_price, 30)
+        self.assertEqual(decision.reason, "critical_projectile")
+        affordable = policy.best_purchase(replace(state, money=20))
+        self.assertEqual(affordable.count, 2,
+                         "two 200-arrow groups are better than starving at zero")
+        self.assertEqual(affordable.total_price, 20)
+        self.assertIsNone(policy.best_purchase(replace(state, money=0)),
+                          "cash is reserved for ammunition instead of a bag")
+
+        owned = replace(arrows, guid=2000, count=200, bag=1, slot=3)
+        decision = policy.best_purchase(replace(state, items=(owned,)))
+        # Once any ammunition exists, the pre-existing bag-first rule applies.
+        self.assertEqual(decision.item.item_id, 10)
+        self.assertEqual(decision.reason, "bag_capacity")
+
     def test_owned_bag_capacity_prevents_repeated_purchase(self):
         bag = item(10, class_id=1, inventory_type=0, equipment_slot=None,
                    container_slots=6, slot=1, buy_price=30)

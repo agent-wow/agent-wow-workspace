@@ -30,6 +30,10 @@ func TestVendorRequestLayouts(t *testing.T) {
 	if len(buyback) != 12 || binary.LittleEndian.Uint32(buyback[8:12]) != 74 {
 		t.Fatalf("bad buyback request: %x", buyback)
 	}
+	ammo := EncodeSetAmmo(2512)
+	if len(ammo) != 4 || binary.LittleEndian.Uint32(ammo) != 2512 {
+		t.Fatalf("bad ammo request: %x", ammo)
+	}
 }
 
 func TestParseVendorList(t *testing.T) {

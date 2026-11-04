@@ -61,6 +61,11 @@ func EncodeBuybackItem(vendor GUID, slot uint8) []byte {
 	return binary.LittleEndian.AppendUint32(body, uint32(slot))
 }
 
+// EncodeSetAmmo builds CMSG_SET_AMMO: the projectile item entry as uint32.
+func EncodeSetAmmo(itemID uint32) []byte {
+	return binary.LittleEndian.AppendUint32(nil, itemID)
+}
+
 func ParseListInventory(body []byte) (VendorList, error) {
 	r := &reader{b: body}
 	vendor, err := r.u64()

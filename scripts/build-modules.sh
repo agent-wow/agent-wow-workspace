@@ -4,7 +4,11 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TARGET="${1:-}"
-VM_DIR="${AGENT_WOW_VM_DIR:-aw}"
+if [ -n "${ACCOUNT:-}" ] && [ -z "${AGENT_WOW_VM_DIR:-}" ]; then
+	VM_DIR="aw-$ACCOUNT"
+else
+	VM_DIR="${AGENT_WOW_VM_DIR:-aw}"
+fi
 
 AGENT_WOW_VM_DIR="$VM_DIR" "$ROOT/scripts/sync-to-vm.sh"
 

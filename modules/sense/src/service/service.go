@@ -25,6 +25,9 @@ const (
 	maxNearbyLimit     = 200
 	nameQueueSize      = 64
 	creatureQueueSize  = 256
+	// playedSampleTTL bounds how stale a played-time sample may get before a
+	// read queues a fresh CMSG_PLAYED_TIME.
+	playedSampleTTL = 30 * time.Second
 )
 
 type unit struct {
@@ -99,6 +102,7 @@ type Service struct {
 	sawInitial      bool
 	self            unit
 	selfFields      wow.UpdateFields
+	selfCreated     bool
 	units           map[wow.GUID]*unit
 	target          wow.GUID
 	packets         uint32
@@ -117,6 +121,16 @@ type Service struct {
 	auraUpdates     uint32
 	comboPoints     uint8
 	comboTarget     wow.GUID
+
+	// Played time from SMSG_PLAYED_TIME, the server's own /played counters.
+	// sessionStarted is the wall-clock login time of this process; the session
+	// length is derived from it so it keeps advancing without new samples.
+	playedTotal    uint32
+	playedLevel    uint32
+	playedAt       time.Time
+	playedKnown    bool
+	sessionStarted time.Time
+	playedRequests chan struct{}
 }
 
 // livePos returns where the unit is now. Creature move packets only carry the
@@ -181,6 +195,7 @@ func New(session modv1.SessionClient) *Service {
 		names:           make(chan wow.GUID, nameQueueSize),
 		creatures:       make(chan creatureQuery, creatureQueueSize),
 		cooldowns:       make(map[uint32]cooldownEntry),
+		playedRequests:  make(chan struct{}, 1),
 	}
 }
 
@@ -217,6 +232,16 @@ func (s *Service) Start(ctx context.Context) {
 					delete(s.creatureQueried, q.entry)
 					s.mu.Unlock()
 					slog.Warn("creature query failed", "entry", q.entry, "error", err)
+				}
+			case <-s.playedRequests:
+				callCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+				_, err := s.session.SendPacket(callCtx, &modv1.SendPacketRequest{
+					Opcode:  opcode.CMSGPlayedTime,
+					Payload: wow.EncodePlayedTime(),
+				})
+				cancel()
+				if err != nil {
+					slog.Warn("played time query failed", "error", err)
 				}
 			}
 		}
@@ -294,6 +319,56 @@ func (s *Service) GetSkills(context.Context, *emptypb.Empty) (*modulev1.SkillsRe
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return &modulev1.SkillsResponse{Skills: toProtoSkills(wow.DecodeSkills(s.selfFields))}, nil
+}
+
+// GetPlayedTime returns the server's played-time counters and the length of
+// the current session. It never waits on the world server: when the sample is
+// missing or stale it queues a CMSG_PLAYED_TIME and returns what it has, so a
+// console poll stays fast and the next poll carries the new numbers.
+func (s *Service) GetPlayedTime(context.Context, *emptypb.Empty) (*modulev1.PlayedTimeResponse, error) {
+	s.mu.RLock()
+	resp := &modulev1.PlayedTimeResponse{
+		HasData:      s.playedKnown,
+		TotalSeconds: s.playedTotal,
+		LevelSeconds: s.playedLevel,
+	}
+	if !s.sessionStarted.IsZero() {
+		resp.SessionStartedUnix = uint64(s.sessionStarted.Unix())
+		resp.SessionSeconds = uint32(time.Since(s.sessionStarted) / time.Second)
+	}
+	if !s.playedAt.IsZero() {
+		resp.SampledUnixMs = uint64(s.playedAt.UnixMilli())
+	}
+	stale := s.playedAt.IsZero() || time.Since(s.playedAt) > playedSampleTTL
+	s.mu.RUnlock()
+	if stale {
+		s.requestPlayedTime()
+	}
+	return resp, nil
+}
+
+// requestPlayedTime queues one CMSG_PLAYED_TIME. The queue is size one, so a
+// burst of polls produces at most one outstanding request.
+func (s *Service) requestPlayedTime() {
+	select {
+	case s.playedRequests <- struct{}{}:
+	default:
+	}
+}
+
+// applyPlayedTime records a server reply. The caller does not hold s.mu.
+func (s *Service) applyPlayedTime(body []byte) {
+	played, err := wow.ParsePlayedTime(body)
+	if err != nil {
+		s.recordParseError("played time", err)
+		return
+	}
+	s.mu.Lock()
+	s.playedTotal = played.Total
+	s.playedLevel = played.Level
+	s.playedAt = time.Now()
+	s.playedKnown = true
+	s.mu.Unlock()
 }
 
 func (s *Service) GetNearby(_ context.Context, req *modulev1.NearbyRequest) (*modulev1.NearbyResponse, error) {
@@ -517,6 +592,9 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 	case opcode.SMSGUpdateComboPoints:
 		s.applyComboPoints(packet.GetPayload())
 		return &emptypb.Empty{}, nil
+	case opcode.SMSGPlayedTime:
+		s.applyPlayedTime(packet.GetPayload())
+		return &emptypb.Empty{}, nil
 	case opcode.SMSGUpdateObject:
 		update, err = wow.ParseUpdateObject(packet.GetPayload())
 	case opcode.SMSGCompressedUpdateObject:
@@ -645,12 +723,17 @@ func (s *Service) applyWorldReset(body []byte, mapChange bool) {
 	s.epoch++
 	if mapChange {
 		s.mapChanges++
+	} else {
+		// A login starts a new "this session" clock; a map transition does not.
+		s.sessionStarted = time.Now()
+		s.requestPlayedTime()
 	}
 	s.mapID = mapID
 	s.mapKnown = true
 	s.ready = false
 	s.sawInitial = false
 	s.selfFields = nil
+	s.selfCreated = false
 	s.units = make(map[wow.GUID]*unit)
 	s.self = unit{
 		guid:   s.selfGUID,
@@ -692,7 +775,7 @@ func (s *Service) markReadyLocked(hadObjects bool) {
 	if !okPower || !okMaxPower {
 		return
 	}
-	if _, ok := fields.Uint32(powerIndex); !ok {
+	if _, ok := fields.Uint32(powerIndex); !ok && !s.selfCreated {
 		return
 	}
 	if _, ok := fields.Uint32(maxPowerIndex); !ok {
@@ -875,6 +958,7 @@ func (s *Service) applyObject(obj wow.ObjectUpdate) *unit {
 		u.typ = obj.Type
 		if obj.GUID == s.selfGUID {
 			u.typ = wow.ObjectTypePlayer
+			s.selfCreated = true
 			if u.name == "" {
 				u.name = s.selfName
 			}

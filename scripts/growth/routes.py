@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -57,6 +57,15 @@ class RecoveryHints:
 
 
 @dataclass(frozen=True)
+class TrainingRoute:
+    position: dict
+    waypoints: tuple[dict, ...] = ()
+    vendor_position: dict | None = None
+    vendor_waypoints: tuple[dict, ...] = ()
+    minimum_money: int = 0
+
+
+@dataclass(frozen=True)
 class Route:
     version: int
     zone: str
@@ -65,6 +74,10 @@ class Route:
     bands: tuple[LevelBand, ...]
     targets: TargetHints
     recovery: RecoveryHints
+    training: dict[str, TrainingRoute] = field(default_factory=dict)
+
+    def training_for(self, class_name: str) -> TrainingRoute | None:
+        return self.training.get(class_name)
 
     def band_for(self, level: int) -> LevelBand | None:
         candidates = [
@@ -114,9 +127,48 @@ def parse_route(data: dict, *, expected_zone: str | None = None) -> Route:
 
     targets = _parse_targets(data.get("targets"))
     recovery = _parse_recovery(data.get("recovery"))
+    training = _parse_training(data.get("training", {}))
     return Route(
         version=version, zone=zone, map_id=map_id, source=source,
-        bands=bands, targets=targets, recovery=recovery)
+        bands=bands, targets=targets, recovery=recovery, training=training)
+
+
+def _parse_training(raw) -> dict[str, TrainingRoute]:
+    if not isinstance(raw, dict):
+        raise RouteError("route.training must be a mapping by class")
+    result = {}
+    for class_name, entry in raw.items():
+        if not isinstance(class_name, str) or not ZONE_RE.match(class_name):
+            raise RouteError("route.training contains an invalid class name")
+        if not isinstance(entry, dict):
+            raise RouteError(f"route.training.{class_name} must be a mapping")
+        vendor = entry.get("vendor_position")
+        minimum_money = entry.get("minimum_money", 0)
+        if (isinstance(minimum_money, bool) or not isinstance(minimum_money, int)
+                or minimum_money < 0):
+            raise RouteError(
+                f"route.training.{class_name}.minimum_money must be >= 0")
+        result[class_name] = TrainingRoute(
+            position=_parse_service_position(entry.get("position"), class_name),
+            waypoints=_parse_service_waypoints(entry.get("waypoints", [])),
+            vendor_position=(_parse_service_position(vendor, class_name)
+                             if vendor is not None else None),
+            vendor_waypoints=_parse_service_waypoints(
+                entry.get("vendor_waypoints", [])),
+            minimum_money=minimum_money)
+    return result
+
+
+def _parse_service_position(raw, class_name: str) -> dict:
+    if not isinstance(raw, dict):
+        raise RouteError(f"route.training.{class_name} positions must be mappings")
+    return {axis: _required_number(raw, axis) for axis in ("x", "y", "z")}
+
+
+def _parse_service_waypoints(raw) -> tuple[dict, ...]:
+    if not isinstance(raw, list):
+        raise RouteError("route.training waypoints must be lists")
+    return tuple(_parse_service_position(row, "waypoint") for row in raw)
 
 
 def _parse_band(raw: dict, index: int) -> LevelBand:

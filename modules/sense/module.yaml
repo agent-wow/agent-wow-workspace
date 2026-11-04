@@ -14,6 +14,7 @@ rpc:
   select_target: /sense.module.v1.Module/SelectTarget
   clear_target: /sense.module.v1.Module/ClearTarget
   query_name: /sense.module.v1.Module/QueryName
+  get_played_time: /sense.module.v1.Module/GetPlayedTime
   status: /sense.module.v1.Module/Status
   debug_monster_moves: /sense.module.v1.Module/DebugMonsterMoves
   debug_fields: /sense.module.v1.Module/DebugFields
@@ -31,3 +32,4 @@ packets:
   SMSG_AURA_UPDATE: /sense.module.v1.Module/OnPacket
   SMSG_AURA_UPDATE_ALL: /sense.module.v1.Module/OnPacket
   SMSG_UPDATE_COMBO_POINTS: /sense.module.v1.Module/OnPacket
+  SMSG_PLAYED_TIME: /sense.module.v1.Module/OnPacket

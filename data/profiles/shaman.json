@@ -1,0 +1,86 @@
+{
+  "version": 4,
+  "class": "shaman",
+  "source": "WotLK 3.3.5a level-one shaman baseline verified from 腰果萨满's live spellbook on 2026-11-03; Lightning Bolt pulls and Healing Wave is self-only below half health. Version 3 excludes damaging Lightning Bolt casts inside four yards. Version 4 adds Earth Shock 8042 from hash-verified AzerothCore npc_trainer template 200017 (level 4, 100 copper) and Spell.dbc (rank 1, instant, 20-yard range index, 6000 ms recovery); the per-target six-second gate leaves Lightning Bolt as filler",
+  "roles": ["dps", "healer"],
+  "resource": "mana",
+  "resource_scale": 1,
+  "skills": [
+    {
+      "name": "Healing Wave",
+      "spell_id": 331,
+      "cost": 25,
+      "priority": 20,
+      "min_level": 1,
+      "requires_target": false,
+      "in_combat_only": false,
+      "when_health_below_pct": 0.5
+    },
+    {
+      "name": "Earth Shock",
+      "spell_id": 8042,
+      "cost": 30,
+      "priority": 15,
+      "min_level": 4,
+      "requires_target": true,
+      "in_combat_only": false,
+      "min_range": 4,
+      "max_range": 20,
+      "reapply_seconds": 6
+    },
+    {
+      "name": "Lightning Bolt",
+      "spell_id": 403,
+      "cost": 30,
+      "priority": 10,
+      "min_level": 1,
+      "requires_target": true,
+      "in_combat_only": false,
+      "min_range": 4
+    }
+  ],
+  "training_reserve": 50,
+  "talents": {"dps": [], "healer": []},
+  "recovery": {
+    "rest_below_pct": 0.6,
+    "rest_until_pct": 0.85,
+    "flee_below_pct": 0.2,
+    "max_rest_seconds": 40,
+    "rest_step_seconds": 1
+  },
+  "combat": {
+    "engage_radius": 35,
+    "melee_range": 4,
+    "preferred_range": 28,
+    "auto_attack": false,
+    "approach_step": 12,
+    "dz_tolerance": 3,
+    "attack_reissue_seconds": 2,
+    "cast_interval_seconds": 2.5,
+    "stall_seconds": 10,
+    "no_kill_seconds": 120,
+    "max_approach_seconds": 20,
+    "blacklist_seconds": 45,
+    "side_step_distance": 20,
+    "crowd_radius": 8,
+    "max_crowd": 2,
+    "lost_target_limit": 3,
+    "spell_disable_seconds": 15
+  },
+  "route": {"zone": "durotar", "map_id": 1},
+  "inventory": {
+    "stat_weights": {
+      "intellect": 2.0,
+      "spirit": 1.2,
+      "stamina": 1.2,
+      "spell_power": 2.0
+    },
+    "armor_weight": 0.04,
+    "weapon_dps_weight": 1.0,
+    "min_free_slots": 2,
+    "sell_quality_max": 1,
+    "protected_item_ids": [],
+    "material_item_ids": [],
+    "supplies": []
+  }
+}

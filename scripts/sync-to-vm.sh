@@ -30,7 +30,7 @@ if [ "$FORCE" != "--force" ]; then
 		dir="$HOME/$VM_DIR"
 		for pid in $(pgrep -f "[a]gent-wow.*char play" 2>/dev/null); do
 			cwd=$(readlink /proc/$pid/cwd 2>/dev/null || true)
-			[ "$cwd" = "$dir" ] && exit 0
+			[ "$cwd" = "$dir" ] || [ "$cwd" = "$dir (deleted)" ] && exit 0
 		done
 		exit 1
 	' 2>/dev/null; then
@@ -40,6 +40,11 @@ if [ "$FORCE" != "--force" ]; then
 fi
 
 items=(config.yaml agent-policy.json config lib modules scripts AGENTS.md README.md)
+# Static terrain is runtime-independent data. Include it when fetched locally;
+# the VM keeps it across syncs just like the rest of data/.
+if [ -d "$ROOT/data/client-data/terrain-v20/maps" ]; then
+	items+=("data/client-data/terrain-v20/maps")
+fi
 if [ -n "$SYNC_ACCOUNT" ] && [ -d "$ROOT/accounts/$SYNC_ACCOUNT" ]; then
 	items+=("accounts/$SYNC_ACCOUNT")
 fi
@@ -71,6 +76,10 @@ COPYFILE_DISABLE=1 tar --no-xattrs -C "$STAGE" -czf - . 2>/dev/null |
 		tar xzf - -C .'"$VM_DIR"'.stage
 		for keep in data logs; do
 			if [ -d '"$VM_DIR"'/$keep ]; then
+				if [ "$keep" = data ] && [ -d .'"$VM_DIR"'.stage/data/client-data ]; then
+					mkdir -p '"$VM_DIR"'/data/client-data
+					cp -R .'"$VM_DIR"'.stage/data/client-data/. '"$VM_DIR"'/data/client-data/
+				fi
 				rm -rf .'"$VM_DIR"'.stage/$keep
 				mv '"$VM_DIR"'/$keep .'"$VM_DIR"'.stage/$keep
 			fi

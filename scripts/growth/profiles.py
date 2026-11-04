@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -39,6 +39,11 @@ class Skill:
     in_combat_only: bool = False
     when_health_below_pct: float | None = None
     when_health_above_pct: float | None = None
+    sustained: bool = False
+    min_range: float | None = None
+    max_range: float | None = None
+    ammo_item_id: int | None = None
+    reapply_seconds: float | None = None
 
 
 @dataclass(frozen=True)
@@ -68,6 +73,7 @@ class CombatRules:
     max_crowd: int
     lost_target_limit: int
     spell_disable_seconds: float
+    preferred_range: float | None = None
 
 
 @dataclass(frozen=True)
@@ -75,6 +81,14 @@ class PurchaseRule:
     item_id: int
     target_count: int
     max_price: int | None = None
+    restock_below: int | None = None
+    vendor_position: dict | None = None
+    vendor_waypoints: tuple[dict, ...] = ()
+
+    def is_low(self, count: int) -> bool:
+        threshold = (self.restock_below if self.restock_below is not None
+                     else max(1, self.target_count // 5))
+        return 0 < count <= threshold
 
 
 @dataclass(frozen=True)
@@ -87,6 +101,8 @@ class InventoryRules:
     protected_item_ids: tuple[int, ...] = ()
     material_item_ids: tuple[int, ...] = ()
     supplies: tuple[PurchaseRule, ...] = ()
+    repair_position: dict | None = None
+    repair_waypoints: tuple[dict, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -156,6 +172,17 @@ def load_profile(
     return parse_profile(data, expected_class=name)
 
 
+def with_route(profile: ClassProfile, route) -> ClassProfile:
+    """Bind class combat content to the roster's faction/start-zone route.
+
+    Class skills and recovery are reusable across factions; spawn waypoints are
+    not. The roster selects the live start zone, so the worker replaces only the
+    route selection after loading that zone's versioned route file.
+    """
+    return replace(
+        profile, route=RouteSelection(zone=route.zone, map_id=route.map_id))
+
+
 def parse_profile(data: dict, *, expected_class: str | None = None) -> ClassProfile:
     if not isinstance(data, dict):
         raise ProfileError("profile must be a mapping")
@@ -210,11 +237,19 @@ def _parse_skill(raw: dict, index: int) -> Skill:
     in_combat_only = _optional_bool(raw, "in_combat_only", False)
     below = _optional_pct(raw, "when_health_below_pct")
     above = _optional_pct(raw, "when_health_above_pct")
+    min_range = _optional_float(raw, "min_range", None, minimum=0.0)
+    max_range = _optional_float(raw, "max_range", None, minimum=0.0)
+    if min_range is not None and max_range is not None and min_range > max_range:
+        raise ProfileError(f"skills[{index}].min_range exceeds max_range")
     return Skill(
         name=name, spell_id=spell_id, cost=cost, priority=priority,
         min_level=min_level, requires_target=requires_target,
-        in_combat_only=in_combat_only,
-        when_health_below_pct=below, when_health_above_pct=above)
+        in_combat_only=in_combat_only, sustained=_optional_bool(raw, "sustained", False),
+        when_health_below_pct=below, when_health_above_pct=above,
+        min_range=min_range, max_range=max_range,
+        ammo_item_id=_optional_int(raw, "ammo_item_id", None, minimum=1),
+        reapply_seconds=_optional_float(
+            raw, "reapply_seconds", None, minimum=0.1))
 
 
 def _parse_talents(raw, roles) -> dict[str, tuple[TalentChoice, ...]]:
@@ -282,6 +317,7 @@ def _parse_combat(raw) -> CombatRules:
         max_crowd=_required_int(raw, "max_crowd", minimum=0),
         lost_target_limit=_required_int(raw, "lost_target_limit", minimum=1),
         spell_disable_seconds=_required_float(raw, "spell_disable_seconds", minimum=1.0),
+        preferred_range=_optional_float(raw, "preferred_range", None, minimum=1.0),
     )
 
 
@@ -327,11 +363,24 @@ def _parse_inventory(raw, class_name: str) -> InventoryRules:
         maximum = entry.get("max_price")
         if maximum is not None:
             maximum = _required_int(entry, "max_price", minimum=0)
+        restock_below = entry.get("restock_below")
+        if restock_below is not None:
+            restock_below = _required_int(entry, "restock_below", minimum=0)
+        vendor_waypoints = entry.get("vendor_waypoints", [])
+        if not isinstance(vendor_waypoints, list):
+            raise ProfileError(
+                f"inventory.supplies[{index}].vendor_waypoints must be a list")
         supplies.append(PurchaseRule(
             item_id=_required_int(entry, "item_id", minimum=1),
             target_count=_required_int(entry, "target_count", minimum=1),
             max_price=maximum,
+            restock_below=restock_below,
+            vendor_position=_optional_position(entry, "vendor_position"),
+            vendor_waypoints=tuple(_position(row) for row in vendor_waypoints),
         ))
+    repair_waypoints = raw.get("repair_waypoints", [])
+    if not isinstance(repair_waypoints, list):
+        raise ProfileError("inventory.repair_waypoints must be a list")
     return InventoryRules(
         stat_weights=weights,
         armor_weight=_optional_float(raw, "armor_weight", 0.0, minimum=0.0),
@@ -344,6 +393,8 @@ def _parse_inventory(raw, class_name: str) -> InventoryRules:
         material_item_ids=_int_tuple(raw.get("material_item_ids", []),
                                      "inventory.material_item_ids"),
         supplies=tuple(supplies),
+        repair_position=_optional_position(raw, "repair_position"),
+        repair_waypoints=tuple(_position(row) for row in repair_waypoints),
     )
 
 
@@ -359,6 +410,23 @@ def _int_tuple(raw, label: str) -> tuple[int, ...]:
 
 
 # --------------------------------------------------------------- primitives
+
+def _optional_position(raw: dict, key: str) -> dict | None:
+    value = raw.get(key)
+    return _position(value) if value is not None else None
+
+
+def _position(raw: dict) -> dict:
+    if not isinstance(raw, dict):
+        raise ProfileError("vendor positions and waypoints must be mappings")
+    position = {}
+    for key in ("x", "y", "z"):
+        value = raw.get(key)
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ProfileError(f"vendor position {key} must be a number")
+        position[key] = float(value)
+    return position
+
 
 def _required_text(raw: dict, key: str) -> str:
     value = raw.get(key)
@@ -383,8 +451,8 @@ def _optional_int(raw: dict, key: str, default: int, *, minimum: int) -> int:
 
 
 def _optional_float(
-    raw: dict, key: str, default: float, *, minimum: float
-) -> float:
+    raw: dict, key: str, default: float | None, *, minimum: float
+) -> float | None:
     if key not in raw:
         return default
     return _required_float(raw, key, minimum=minimum)

@@ -125,6 +125,21 @@ class AdapterNormalizationTests(unittest.TestCase):
         self.assertEqual(view.xp, 50)
         self.assertFalse(view.in_combat)
 
+    def test_live_combat_flag_overrides_a_lagging_sense_snapshot(self):
+        adapter = WorldAdapter(FakeTransport({
+            "sense.get_self": {
+                "ready": True,
+                "unit": {"guid": 1, "hasPosition": True, "inCombat": False},
+            },
+            "move.get_position": {"position": {"x": 0, "y": 0, "z": 0}},
+            "sense.get_nearby": {"units": []},
+            "combat.get_state": {"inCombat": True},
+        }))
+
+        view = adapter.read_view()
+
+        self.assertTrue(view.in_combat)
+
     def test_not_ready_view_skips_other_rpc_calls(self):
         transport = FakeTransport({
             "sense.get_self": {"ready": False, "unit": {"guid": 1}},

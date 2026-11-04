@@ -154,11 +154,29 @@ func (s *Service) Cast(ctx context.Context, req *modulev1.CastRequest) (*modulev
 		}
 		payload = wow.EncodeCastSpellGameObject(count, req.GetSpellId(), target)
 	}
+	if target != 0 && !req.GetTargetIsGameObject() {
+		if _, err := s.session.SendPacket(ctx, &modv1.SendPacketRequest{
+			Opcode:  opcode.CMSGSetSelection,
+			Payload: wow.EncodeSetSelection(target),
+		}); err != nil {
+			return nil, err
+		}
+	}
 	if _, err := s.session.SendPacket(ctx, &modv1.SendPacketRequest{
 		Opcode:  opcode.CMSGCastSpell,
 		Payload: payload,
 	}); err != nil {
 		return nil, err
+	}
+	if target != 0 && !req.GetTargetIsGameObject() {
+		s.mu.Lock()
+		if s.target != target {
+			s.target = target
+			s.targetHealth = 0
+			s.targetMaxHP = 0
+		}
+		s.targetDead = false
+		s.mu.Unlock()
 	}
 	return s.state(), nil
 }
@@ -410,6 +428,15 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 		s.mu.Lock()
 		s.knownSpells[spellID] = false
 		s.mu.Unlock()
+	case opcode.SMSGSpellStart, opcode.SMSGSpellGo,
+		opcode.SMSGSpellFailure, opcode.SMSGSpellFailedOther,
+		opcode.SMSGAttackerstateupdate:
+		payload := packet.GetPayload()
+		if len(payload) > 96 {
+			payload = payload[:96]
+		}
+		slog.Info("observed combat packet", "opcode", packet.GetOpcode(),
+			"length", len(packet.GetPayload()), "payload", fmt.Sprintf("%x", payload))
 	case opcode.SMSGCastFailed:
 		failure, err := wow.ParseCastFailed(packet.GetPayload())
 		if err != nil {

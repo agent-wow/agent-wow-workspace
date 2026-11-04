@@ -1,7 +1,7 @@
 {
-  "version": 3,
+  "version": 7,
   "class": "priest",
-  "source": "WotLK 3.3.5a mana-healer baseline; the heal is role-driven and only eligible below 50% health",
+  "source": "WotLK 3.3.5a mana-healer baseline; Smite 585 and Lesser Heal 2050 are live-verified. Version 6 excludes damaging Smite casts inside four yards while preserving self-healing. Version 7 adds Shadow Word: Pain 589 from hash-verified AzerothCore npc_trainer template 200011 (level 4, 100 copper) and Spell.dbc (rank 1, instant, 30-yard range index); its per-target 18-second reapply gate prevents repeated DoT casts",
   "roles": ["healer", "dps"],
   "resource": "mana",
   "resource_scale": 1,
@@ -17,13 +17,25 @@
       "when_health_below_pct": 0.5
     },
     {
+      "name": "Shadow Word: Pain",
+      "spell_id": 589,
+      "cost": 25,
+      "priority": 15,
+      "min_level": 4,
+      "requires_target": true,
+      "in_combat_only": false,
+      "min_range": 4,
+      "reapply_seconds": 18
+    },
+    {
       "name": "Smite",
       "spell_id": 585,
       "cost": 30,
       "priority": 10,
       "min_level": 1,
       "requires_target": true,
-      "in_combat_only": true
+      "in_combat_only": false,
+      "min_range": 4
     },
     {
       "name": "Lesser Heal",
@@ -42,7 +54,8 @@
       "priority": 11,
       "min_level": 6,
       "requires_target": true,
-      "in_combat_only": true
+      "in_combat_only": false,
+      "min_range": 4
     },
     {
       "name": "Lesser Heal",
@@ -61,7 +74,8 @@
       "priority": 12,
       "min_level": 14,
       "requires_target": true,
-      "in_combat_only": true
+      "in_combat_only": false,
+      "min_range": 4
     },
     {
       "name": "Heal",
@@ -88,12 +102,13 @@
   },
   "combat": {
     "engage_radius": 35,
-    "melee_range": 28,
+    "melee_range": 4,
+    "preferred_range": 28,
     "auto_attack": false,
     "approach_step": 12,
     "dz_tolerance": 3,
     "attack_reissue_seconds": 2,
-    "cast_interval_seconds": 2.5,
+    "cast_interval_seconds": 3.0,
     "stall_seconds": 10,
     "no_kill_seconds": 120,
     "max_approach_seconds": 20,

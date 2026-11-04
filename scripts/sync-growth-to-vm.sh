@@ -21,7 +21,7 @@ FORCE="${1:-}"
 # primary guard; live worker locks catch a process that is just starting.
 if [ "$FORCE" != "--force" ]; then
 	if colima ssh -- sh -c '
-		if pgrep -f "[g]rowth.*worker|[s]cripts.growth.*worker" >/dev/null 2>&1; then
+		if pgrep -f "[p]ython[0-9.]* .*scripts/growth/cli[.]py worker" >/dev/null 2>&1; then
 			exit 0
 		fi
 		dir="$HOME/aw-growth/data/growth"

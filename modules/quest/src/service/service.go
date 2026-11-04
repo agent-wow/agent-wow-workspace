@@ -4,6 +4,7 @@ package service
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"log/slog"
 	"sort"
@@ -40,16 +41,18 @@ type Service struct {
 	modulev1.UnimplementedModuleServer
 	session modv1.SessionClient
 
-	mu          sync.Mutex
-	npcGUID     wow.GUID
-	menu        []*modulev1.Quest
-	active      map[uint32]*modulev1.Quest
-	turningIn   *turnIn
-	accepts     uint32
-	completed   uint32
-	errors      uint32
-	lastError   string
-	lastQuestID uint32
+	mu              sync.Mutex
+	npcGUID         wow.GUID
+	menu            []*modulev1.Quest
+	active          map[uint32]*modulev1.Quest
+	turningIn       *turnIn
+	rewardRequested bool
+	rewardChosen    bool
+	accepts         uint32
+	completed       uint32
+	errors          uint32
+	lastError       string
+	lastQuestID     uint32
 
 	packets        uint32
 	parseErrors    uint32
@@ -162,6 +165,8 @@ func (s *Service) TurnIn(ctx context.Context, req *modulev1.TurnInRequest) (*mod
 		return nil, status.Errorf(codes.FailedPrecondition, "quest %d is already turning in", pending)
 	}
 	s.turningIn = &job
+	s.rewardRequested = false
+	s.rewardChosen = false
 	s.lastQuestID = job.questID
 	s.lastError = ""
 	s.mu.Unlock()
@@ -283,10 +288,21 @@ func (s *Service) OnPacket(_ context.Context, packet *modv1.WorldPacket) (*empty
 		s.mu.Unlock()
 	case opcode.SMSGQuestgiverQuestInvalid:
 		reason := "quest invalid"
+		code := int32(-1)
 		if len(packet.GetPayload()) >= 4 {
-			reason = fmt.Sprintf("quest invalid: reason %d", packet.GetPayload()[0])
+			code = int32(binary.LittleEndian.Uint32(packet.GetPayload()[:4]))
+			reason = fmt.Sprintf("quest invalid: reason %d", code)
 		}
-		s.failTurnIn(reason)
+		s.mu.Lock()
+		// Accept records an optimistic session-local row. ALREADY_ON confirms
+		// that row; every other refusal must not leave a fake active quest.
+		if code != 13 && code != 18 && s.lastQuestID != 0 {
+			delete(s.active, s.lastQuestID)
+		}
+		s.turningIn = nil
+		s.errors++
+		s.lastError = reason
+		s.mu.Unlock()
 	case opcode.SMSGQuestgiverQuestFailed:
 		s.questError("quest failed", packet.GetPayload())
 	case opcode.SMSGQuestupdateFailed:
@@ -314,6 +330,21 @@ func (s *Service) queueRewardStep(choose bool, body []byte) {
 	if s.turningIn == nil || s.turningIn.guid != guid || s.turningIn.questID != questID {
 		s.mu.Unlock()
 		return
+	}
+	// A rejected reward choice can make the server offer the same reward again.
+	// Answer each stage once per TurnIn call instead of forming a packet loop.
+	if choose {
+		if s.rewardChosen {
+			s.mu.Unlock()
+			return
+		}
+		s.rewardChosen = true
+	} else {
+		if s.rewardRequested {
+			s.mu.Unlock()
+			return
+		}
+		s.rewardRequested = true
 	}
 	job := rewardJob{turnIn: *s.turningIn, choose: choose}
 	s.mu.Unlock()

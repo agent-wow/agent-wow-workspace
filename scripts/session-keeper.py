@@ -76,7 +76,7 @@ AUTH_ERRORS = (
     "no saved session",
 )
 MODULE_NAMES = re.compile(
-    r"(?:^|[-_])(sense|move|combat|loot|quest|party|inventory|character)(?:[-_]|$)")
+    r"(?:^|[-_/])(sense|move|combat|loot|quest|party|inventory|character)(?:[-_/]|$)")
 REQUIRED_MODULES = frozenset(("sense", "move", "combat", "loot", "quest", "party"))
 
 _stop = False
@@ -187,7 +187,11 @@ def list_clients() -> dict[str, list[dict]]:
         if len(parts) != 3:
             continue
         pid, cwd, cmdline = parts
-        base = os.path.basename(cwd)
+        # Linux appends " (deleted)" when a runtime directory was replaced.
+        # It is still the same account's live client, not a new account that
+        # should trigger a duplicate session on the same worldrpc port.
+        normalized_cwd = cwd.removesuffix(" (deleted)")
+        base = os.path.basename(normalized_cwd)
         if base == "aw":
             account = "doumoman"          # legacy single-account directory
         elif base.startswith("aw-"):
@@ -261,20 +265,29 @@ def probe_rpc(account: str) -> tuple[bool, str]:
 
 
 def probe_modules(account: str) -> tuple[bool, str]:
-    """Bounded probe requiring every current gameplay module for this account."""
+    """Bounded probe requiring every current gameplay module for this account.
+
+    Current agent-wow names compose projects with a session hash, so the
+    account and module names live in the compose working-directory label rather
+    than in the container name. Keep accepting the older aw-<account>-<module>
+    names for already-running sessions and tests.
+    """
     rc, out, err = run(
-        ["colima", "ssh", "--", "docker", "ps", "--format", "{{.Names}}"],
+        ["colima", "ssh", "--", "docker", "ps", "--format",
+         '{{.Names}}\t{{.Label "com.docker.compose.project.working_dir"}}'],
         timeout=10)
     if rc != 0:
         return False, (err or f"rc={rc}")[:200]
-    names = [
-        line.strip() for line in out.splitlines()
-        if line.strip() and account in line
-    ]
-    present = {
-        match.group(1) for name in names
-        if (match := MODULE_NAMES.search(name)) is not None
-    }
+    present = set()
+    for line in out.splitlines():
+        name, _, working_dir = line.strip().partition("\t")
+        if not name:
+            continue
+        if account not in name and f"/aw-{account}/" not in working_dir:
+            continue
+        match = MODULE_NAMES.search(name) or MODULE_NAMES.search(working_dir)
+        if match is not None:
+            present.add(match.group(1))
     missing = sorted(REQUIRED_MODULES - present)
     if not missing:
         return True, "ok"
@@ -474,7 +487,7 @@ class Keeper:
 
         failures = self.health_failures.get(account, 0) + 1
         self.health_failures[account] = failures
-        reason = rpc_reason or module_reason or "health probe failed"
+        reason = module_reason if rpc_ok else rpc_reason
         self.logger(
             f"{account}: health failure {failures}/{self.health_threshold} "
             f"({reason})")

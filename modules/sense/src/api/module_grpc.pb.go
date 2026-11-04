@@ -28,6 +28,7 @@ const (
 	Module_SelectTarget_FullMethodName      = "/sense.module.v1.Module/SelectTarget"
 	Module_ClearTarget_FullMethodName       = "/sense.module.v1.Module/ClearTarget"
 	Module_QueryName_FullMethodName         = "/sense.module.v1.Module/QueryName"
+	Module_GetPlayedTime_FullMethodName     = "/sense.module.v1.Module/GetPlayedTime"
 	Module_Status_FullMethodName            = "/sense.module.v1.Module/Status"
 	Module_DebugMonsterMoves_FullMethodName = "/sense.module.v1.Module/DebugMonsterMoves"
 	Module_DebugFields_FullMethodName       = "/sense.module.v1.Module/DebugFields"
@@ -50,6 +51,9 @@ type ModuleClient interface {
 	ClearTarget(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// QueryName asks the server for a player/pet name; the answer is async.
 	QueryName(ctx context.Context, in *QueryNameRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// GetPlayedTime returns the last known played time. It never blocks on the
+	// server: a stale sample triggers an asynchronous CMSG_PLAYED_TIME.
+	GetPlayedTime(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PlayedTimeResponse, error)
 	Status(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StatusResponse, error)
 	DebugMonsterMoves(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*MonsterMoveSamples, error)
 	DebugFields(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*FieldDump, error)
@@ -134,6 +138,16 @@ func (c *moduleClient) QueryName(ctx context.Context, in *QueryNameRequest, opts
 	return out, nil
 }
 
+func (c *moduleClient) GetPlayedTime(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PlayedTimeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PlayedTimeResponse)
+	err := c.cc.Invoke(ctx, Module_GetPlayedTime_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *moduleClient) Status(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StatusResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(StatusResponse)
@@ -190,6 +204,9 @@ type ModuleServer interface {
 	ClearTarget(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	// QueryName asks the server for a player/pet name; the answer is async.
 	QueryName(context.Context, *QueryNameRequest) (*emptypb.Empty, error)
+	// GetPlayedTime returns the last known played time. It never blocks on the
+	// server: a stale sample triggers an asynchronous CMSG_PLAYED_TIME.
+	GetPlayedTime(context.Context, *emptypb.Empty) (*PlayedTimeResponse, error)
 	Status(context.Context, *emptypb.Empty) (*StatusResponse, error)
 	DebugMonsterMoves(context.Context, *emptypb.Empty) (*MonsterMoveSamples, error)
 	DebugFields(context.Context, *emptypb.Empty) (*FieldDump, error)
@@ -224,6 +241,9 @@ func (UnimplementedModuleServer) ClearTarget(context.Context, *emptypb.Empty) (*
 }
 func (UnimplementedModuleServer) QueryName(context.Context, *QueryNameRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryName not implemented")
+}
+func (UnimplementedModuleServer) GetPlayedTime(context.Context, *emptypb.Empty) (*PlayedTimeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPlayedTime not implemented")
 }
 func (UnimplementedModuleServer) Status(context.Context, *emptypb.Empty) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Status not implemented")
@@ -384,6 +404,24 @@ func _Module_QueryName_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Module_GetPlayedTime_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).GetPlayedTime(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_GetPlayedTime_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).GetPlayedTime(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Module_Status_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -490,6 +528,10 @@ var Module_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "QueryName",
 			Handler:    _Module_QueryName_Handler,
+		},
+		{
+			MethodName: "GetPlayedTime",
+			Handler:    _Module_GetPlayedTime_Handler,
 		},
 		{
 			MethodName: "Status",

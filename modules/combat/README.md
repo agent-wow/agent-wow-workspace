@@ -10,7 +10,7 @@ facts and actions only; it contains no combat strategy.
 |---|---|---|---|
 | `combat.attack` | `guid` | `CombatState` | Selects the GUID, sends `CMSG_ATTACKSWING` |
 | `combat.stop_attack` | — | `CombatState` | Sends `CMSG_ATTACKSTOP` |
-| `combat.cast` | `spell_id`, optional `target_guid`, `preserve_empty_target`, `target_is_game_object` | `CombatState` | Sends `CMSG_CAST_SPELL`; zero target means the tracked target unless empty-target preservation is requested. Gathering uses an explicit game-object target mask |
+| `combat.cast` | `spell_id`, optional `target_guid`, `preserve_empty_target`, `target_is_game_object` | `CombatState` | Selects an explicit unit target, then sends `CMSG_CAST_SPELL` without starting melee auto-attack; zero target means the tracked target unless empty-target preservation is requested. Gathering uses an explicit game-object target mask |
 | `combat.get_spells` | — | `SpellsResponse` | Current spellbook; `initialized` is false until the login's initial-spells packet |
 | `combat.release_spirit` | — | `CombatState` | Sends `CMSG_REPOP_REQUEST` |
 | `combat.reclaim_corpse` | — | `CombatState` | Sends `CMSG_RECLAIM_CORPSE` with the character GUID |

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -113,6 +114,43 @@ func TestGossipAcceptAndProgress(t *testing.T) {
 	}
 }
 
+func TestAcceptInvalidReconcilesOptimisticActiveQuest(t *testing.T) {
+	for _, test := range []struct {
+		name   string
+		reason uint32
+		active bool
+	}{
+		{name: "already on", reason: 13, active: true},
+		{name: "already on alternate", reason: 18, active: true},
+		{name: "already done", reason: 7, active: false},
+		{name: "requirements refused", reason: 0, active: false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			session := questSession{sent: make(chan *modv1.SendPacketRequest, 1)}
+			s := New(session)
+			if _, err := s.Accept(t.Context(), &modulev1.QuestRequest{
+				Guid: 99, QuestId: 788,
+			}); err != nil {
+				t.Fatal(err)
+			}
+			expectPacket(t, session, opcode.CMSGQuestgiverAcceptQuest)
+			if _, err := s.OnPacket(t.Context(), &modv1.WorldPacket{
+				Opcode:  opcode.SMSGQuestgiverQuestInvalid,
+				Payload: binary.LittleEndian.AppendUint32(nil, test.reason),
+			}); err != nil {
+				t.Fatal(err)
+			}
+			state, _ := s.GetState(t.Context(), &emptypb.Empty{})
+			if got := len(state.GetActive()) == 1; got != test.active {
+				t.Fatalf("active = %v, want %v: %+v", got, test.active, state)
+			}
+			if state.GetLastError() != fmt.Sprintf("quest invalid: reason %d", test.reason) {
+				t.Fatalf("last error = %q", state.GetLastError())
+			}
+		})
+	}
+}
+
 func TestTurnInSequence(t *testing.T) {
 	session := questSession{sent: make(chan *modv1.SendPacketRequest, 8)}
 	s := New(session)
@@ -182,6 +220,35 @@ func TestRewardResponseMustMatchTurnIn(t *testing.T) {
 		t.Fatal(err)
 	}
 	expectPacket(t, session, opcode.CMSGQuestgiverRequestReward)
+}
+
+func TestRepeatedRewardOfferDoesNotLoop(t *testing.T) {
+	session := questSession{sent: make(chan *modv1.SendPacketRequest, 4)}
+	s := New(session)
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	s.Start(ctx)
+	if _, err := s.TurnIn(t.Context(), &modulev1.TurnInRequest{Guid: 99, QuestId: 788}); err != nil {
+		t.Fatal(err)
+	}
+	expectPacket(t, session, opcode.CMSGQuestgiverCompleteQuest)
+	for range 2 {
+		if _, err := s.OnPacket(t.Context(), &modv1.WorldPacket{
+			Opcode: opcode.SMSGQuestgiverOfferReward, Payload: questRef(99, 788),
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	expectPacket(t, session, opcode.CMSGQuestgiverChooseReward)
+	select {
+	case packet := <-session.sent:
+		t.Fatalf("duplicate offer sent opcode 0x%x", packet.GetOpcode())
+	case <-time.After(50 * time.Millisecond):
+	}
+	status, _ := s.Status(t.Context(), &emptypb.Empty{})
+	if status.GetRewardChoices() != 1 {
+		t.Fatalf("reward choices = %d, want 1", status.GetRewardChoices())
+	}
 }
 
 func TestTurnInExpiresAndCanBeRetried(t *testing.T) {

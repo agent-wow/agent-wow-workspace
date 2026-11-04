@@ -22,6 +22,9 @@ class SyncScriptTests(unittest.TestCase):
             target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
             target.chmod(0o755)
             (root / "config.yaml").write_text("worldrpc:\n  port: 8086\n")
+            maps = root / "data" / "client-data" / "terrain-v20" / "maps"
+            maps.mkdir(parents=True)
+            (maps / "0003232.map").write_bytes(b"test-terrain")
             for account in ("doumoboy1", "doumoboy2"):
                 config = root / "accounts" / account / "config"
                 config.mkdir(parents=True)
@@ -59,6 +62,9 @@ class SyncScriptTests(unittest.TestCase):
                 name.endswith("accounts/doumoboy1/config/auth.json")
                 for name in names), names)
             self.assertFalse(any("doumoboy2" in name for name in names), names)
+            self.assertTrue(any(
+                name.endswith("data/client-data/terrain-v20/maps/0003232.map")
+                for name in names), names)
 
     def test_growth_sync_has_no_credentials_and_exports_only_port_map(self):
         with tempfile.TemporaryDirectory() as tmp:

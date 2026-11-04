@@ -182,6 +182,23 @@ message QueryNameRequest {
   uint64 guid = 1;
 }
 
+// PlayedTimeResponse reports the server's played-time counters, the same
+// numbers the client's /played command prints. Total is cumulative across all
+// sessions; Level is the time spent at the current level. Session is measured
+// by this module from the login that started the current process.
+message PlayedTimeResponse {
+  // False until the server has answered CMSG_PLAYED_TIME at least once.
+  bool has_data = 1;
+  uint32 total_seconds = 2;
+  uint32 level_seconds = 3;
+  // Seconds since this module entered the world (the current session).
+  uint32 session_seconds = 4;
+  // Unix seconds when the current session started.
+  uint64 session_started_unix = 5;
+  // Unix milliseconds when the server last answered CMSG_PLAYED_TIME.
+  uint64 sampled_unix_ms = 6;
+}
+
 message StatusResponse {
   uint32 packets = 1;
   uint32 parse_errors = 2;
@@ -228,6 +245,9 @@ service Module {
   rpc ClearTarget(google.protobuf.Empty) returns (google.protobuf.Empty);
   // QueryName asks the server for a player/pet name; the answer is async.
   rpc QueryName(QueryNameRequest) returns (google.protobuf.Empty);
+  // GetPlayedTime returns the last known played time. It never blocks on the
+  // server: a stale sample triggers an asynchronous CMSG_PLAYED_TIME.
+  rpc GetPlayedTime(google.protobuf.Empty) returns (PlayedTimeResponse);
   rpc Status(google.protobuf.Empty) returns (StatusResponse);
   rpc DebugMonsterMoves(google.protobuf.Empty) returns (MonsterMoveSamples);
   rpc DebugFields(google.protobuf.Empty) returns (FieldDump);

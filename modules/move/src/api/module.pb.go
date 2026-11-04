@@ -530,7 +530,7 @@ const file_module_proto_rawDesc = "" +
 	"\vworld_epoch\x18\a \x01(\x04R\n" +
 	"worldEpoch\x12\x15\n" +
 	"\x06map_id\x18\b \x01(\rR\x05mapId\x12\x17\n" +
-	"\ahas_map\x18\t \x01(\bR\x06hasMap2\xac\x06\n" +
+	"\ahas_map\x18\t \x01(\bR\x06hasMap2\xc4\a\n" +
 	"\x06Module\x12G\n" +
 	"\vGetPosition\x12\x16.google.protobuf.Empty\x1a .move.module.v1.PositionResponse\x12H\n" +
 	"\aForward\x12\x1b.move.module.v1.MoveRequest\x1a .move.module.v1.PositionResponse\x12I\n" +
@@ -538,8 +538,10 @@ const file_module_proto_rawDesc = "" +
 	"\bTurnLeft\x12\x1b.move.module.v1.TurnRequest\x1a .move.module.v1.PositionResponse\x12J\n" +
 	"\tTurnRight\x12\x1b.move.module.v1.TurnRequest\x1a .move.module.v1.PositionResponse\x12I\n" +
 	"\x06TurnTo\x12\x1d.move.module.v1.TurnToRequest\x1a .move.module.v1.PositionResponse\x12I\n" +
-	"\x06MoveTo\x12\x1d.move.module.v1.MoveToRequest\x1a .move.module.v1.PositionResponse\x12@\n" +
-	"\x04Stop\x12\x16.google.protobuf.Empty\x1a .move.module.v1.PositionResponse\x12N\n" +
+	"\x06MoveTo\x12\x1d.move.module.v1.MoveToRequest\x1a .move.module.v1.PositionResponse\x12K\n" +
+	"\bNavigate\x12\x1d.move.module.v1.MoveToRequest\x1a .move.module.v1.PositionResponse\x12@\n" +
+	"\x04Stop\x12\x16.google.protobuf.Empty\x1a .move.module.v1.PositionResponse\x12I\n" +
+	"\rRecoverGround\x12\x16.google.protobuf.Empty\x1a .move.module.v1.PositionResponse\x12N\n" +
 	"\vSetRunSpeed\x12\x1f.move.module.v1.RunSpeedRequest\x1a\x1e.move.module.v1.StatusResponse\x12@\n" +
 	"\x06Status\x12\x16.google.protobuf.Empty\x1a\x1e.move.module.v1.StatusResponse\x12C\n" +
 	"\bOnPacket\x12\x1f.agentwow.module.v1.WorldPacket\x1a\x16.google.protobuf.EmptyB:Z8github.com/doumoman/agent-wow-mods/move/src/api;modulev1b\x06proto3"
@@ -579,23 +581,27 @@ var file_module_proto_depIdxs = []int32{
 	3,  // 6: move.module.v1.Module.TurnRight:input_type -> move.module.v1.TurnRequest
 	4,  // 7: move.module.v1.Module.TurnTo:input_type -> move.module.v1.TurnToRequest
 	5,  // 8: move.module.v1.Module.MoveTo:input_type -> move.module.v1.MoveToRequest
-	8,  // 9: move.module.v1.Module.Stop:input_type -> google.protobuf.Empty
-	6,  // 10: move.module.v1.Module.SetRunSpeed:input_type -> move.module.v1.RunSpeedRequest
-	8,  // 11: move.module.v1.Module.Status:input_type -> google.protobuf.Empty
-	9,  // 12: move.module.v1.Module.OnPacket:input_type -> agentwow.module.v1.WorldPacket
-	1,  // 13: move.module.v1.Module.GetPosition:output_type -> move.module.v1.PositionResponse
-	1,  // 14: move.module.v1.Module.Forward:output_type -> move.module.v1.PositionResponse
-	1,  // 15: move.module.v1.Module.Backward:output_type -> move.module.v1.PositionResponse
-	1,  // 16: move.module.v1.Module.TurnLeft:output_type -> move.module.v1.PositionResponse
-	1,  // 17: move.module.v1.Module.TurnRight:output_type -> move.module.v1.PositionResponse
-	1,  // 18: move.module.v1.Module.TurnTo:output_type -> move.module.v1.PositionResponse
-	1,  // 19: move.module.v1.Module.MoveTo:output_type -> move.module.v1.PositionResponse
-	1,  // 20: move.module.v1.Module.Stop:output_type -> move.module.v1.PositionResponse
-	7,  // 21: move.module.v1.Module.SetRunSpeed:output_type -> move.module.v1.StatusResponse
-	7,  // 22: move.module.v1.Module.Status:output_type -> move.module.v1.StatusResponse
-	8,  // 23: move.module.v1.Module.OnPacket:output_type -> google.protobuf.Empty
-	13, // [13:24] is the sub-list for method output_type
-	2,  // [2:13] is the sub-list for method input_type
+	5,  // 9: move.module.v1.Module.Navigate:input_type -> move.module.v1.MoveToRequest
+	8,  // 10: move.module.v1.Module.Stop:input_type -> google.protobuf.Empty
+	8,  // 11: move.module.v1.Module.RecoverGround:input_type -> google.protobuf.Empty
+	6,  // 12: move.module.v1.Module.SetRunSpeed:input_type -> move.module.v1.RunSpeedRequest
+	8,  // 13: move.module.v1.Module.Status:input_type -> google.protobuf.Empty
+	9,  // 14: move.module.v1.Module.OnPacket:input_type -> agentwow.module.v1.WorldPacket
+	1,  // 15: move.module.v1.Module.GetPosition:output_type -> move.module.v1.PositionResponse
+	1,  // 16: move.module.v1.Module.Forward:output_type -> move.module.v1.PositionResponse
+	1,  // 17: move.module.v1.Module.Backward:output_type -> move.module.v1.PositionResponse
+	1,  // 18: move.module.v1.Module.TurnLeft:output_type -> move.module.v1.PositionResponse
+	1,  // 19: move.module.v1.Module.TurnRight:output_type -> move.module.v1.PositionResponse
+	1,  // 20: move.module.v1.Module.TurnTo:output_type -> move.module.v1.PositionResponse
+	1,  // 21: move.module.v1.Module.MoveTo:output_type -> move.module.v1.PositionResponse
+	1,  // 22: move.module.v1.Module.Navigate:output_type -> move.module.v1.PositionResponse
+	1,  // 23: move.module.v1.Module.Stop:output_type -> move.module.v1.PositionResponse
+	1,  // 24: move.module.v1.Module.RecoverGround:output_type -> move.module.v1.PositionResponse
+	7,  // 25: move.module.v1.Module.SetRunSpeed:output_type -> move.module.v1.StatusResponse
+	7,  // 26: move.module.v1.Module.Status:output_type -> move.module.v1.StatusResponse
+	8,  // 27: move.module.v1.Module.OnPacket:output_type -> google.protobuf.Empty
+	15, // [15:28] is the sub-list for method output_type
+	2,  // [2:15] is the sub-list for method input_type
 	2,  // [2:2] is the sub-list for extension type_name
 	2,  // [2:2] is the sub-list for extension extendee
 	0,  // [0:2] is the sub-list for field type_name

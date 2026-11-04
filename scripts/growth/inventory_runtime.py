@@ -16,8 +16,9 @@ from .adapter import AdapterError, WorldAdapter, WorldView
 from .items import InventoryPolicy, InventoryState
 
 NPC_FLAG_VENDOR = 0x00000080
+NPC_FLAG_REPAIR = 0x00001000
 VENDOR_INTERACT_RANGE = 8.0
-VENDOR_SEARCH_RANGE = 40.0
+VENDOR_SEARCH_RANGE = 60.0  # Gornek to Duokna is about 44.6 yards.
 
 
 @dataclass(frozen=True)
@@ -48,8 +49,17 @@ class InventoryRuntime:
         self._recovered = False
         self._list_vendor: int | None = None
         self._list_deadline = 0.0
+        self._supply_excluded_vendors: set[int] = set()
+        self._fallback_key: tuple[float, float] | None = None
+        self._fallback_waypoint: int | None = None
+        self._fallback_detour = False
 
-    def step(self, now: float, view: WorldView, class_mask: int) -> InventoryStep | None:
+    def step(self, now: float, view: WorldView, class_mask: int, *,
+             reserve_slots: int = 0,
+             fallback_position: dict | None = None,
+             fallback_waypoints: tuple[dict, ...] = (),
+             vendor_position: dict | None = None,
+             vendor_waypoints: tuple[dict, ...] = ()) -> InventoryStep | None:
         if self.executor is None:
             return None
         resumed = self._resume_one()
@@ -59,6 +69,12 @@ class InventoryRuntime:
             state = self.adapter.get_inventory()
         except AdapterError as exc:
             self.log(f"inventory read failed: {exc}")
+            if reserve_slots > 0:
+                return InventoryStep(None, "quest reward bag space is unavailable")
+            return None
+        if reserve_slots > 0 and state.free_slots >= reserve_slots:
+            # A full inventory makes the server re-offer an unclaimable reward.
+            # Routine maintenance must not buy or equip anything in this mode.
             return None
 
         skills = view.self_state.get("skills") or {}
@@ -80,22 +96,137 @@ class InventoryRuntime:
             if result is not None:
                 return result
 
-        vendor = self._nearest_vendor(view)
+        depleted = {rule.item_id for rule in self.policy.rules.supplies
+                    if state.count_of(rule.item_id) == 0}
+        low_supplies = {rule.item_id for rule in self.policy.rules.supplies
+                        if rule.is_low(state.count_of(rule.item_id))}
+        supply_rule = next((rule for rule in self.policy.rules.supplies
+                            if rule.item_id in depleted | low_supplies
+                            and rule.vendor_position is not None), None)
+        if supply_rule is not None:
+            # Supply content owns its measured town route. The current quest's
+            # turn-in may already have advanced to another zone and is not a
+            # safe substitute for an ammunition vendor.
+            vendor_position = supply_rule.vendor_position
+            vendor_waypoints = supply_rule.vendor_waypoints
+        if vendor_position is not None:
+            fallback_position = vendor_position
+            fallback_waypoints = vendor_waypoints
+        damaged = {str(item.guid): item.durability for item in state.items
+                   if item.equipped and item.max_durability > item.durability}
+        broken = any(item.equipped and item.max_durability > 0
+                     and item.durability <= 0 for item in state.items)
+        repair_route = None
+        if broken and not depleted and not low_supplies and reserve_slots <= 0:
+            repair_route = self.policy.rules.repair_position
+            if repair_route is not None:
+                fallback_position = repair_route
+                fallback_waypoints = self.policy.rules.repair_waypoints
+        sell_items = self.policy.items_to_sell(
+            state, level=view.level, class_mask=class_mask, skills=skills,
+            force=broken)
+        search_range = (120.0 if depleted or low_supplies or reserve_slots > 0
+                        else VENDOR_SEARCH_RANGE)
+        needs_repair_vendor = (
+            damaged and not depleted and not low_supplies and reserve_slots <= 0)
+        vendor = (self._nearest_vendor(
+            view, search_range=search_range,
+            required_flags=NPC_FLAG_VENDOR | NPC_FLAG_REPAIR)
+            if needs_repair_vendor else None)
+        if vendor is None and (not needs_repair_vendor or sell_items):
+            # Prefer an armorer for combined repair/sale maintenance. A normal
+            # merchant can still fund training by selling junk; repair_key below
+            # remains gated on the server's repair flag.
+            vendor = self._nearest_vendor(
+                view, search_range=search_range, required_flags=NPC_FLAG_VENDOR)
+        if (self._fallback_detour and vendor_position is not None
+                and view.position
+                and _distance(view.position, vendor_position)
+                > VENDOR_INTERACT_RANGE):
+            vendor = None
+        if (supply_rule is not None and view.position
+                and _distance(view.position, supply_rule.vendor_position)
+                > VENDOR_INTERACT_RANGE):
+            # A configured supply route is authoritative all the way to its
+            # vendor. Do not let a nearer food/drink NPC divert an empty-ammo
+            # character before it can verify the intended stockist's inventory.
+            vendor = None
         if vendor is None:
+            if (fallback_position and view.position
+                    and (reserve_slots > 0 or depleted or low_supplies
+                         or repair_route is not None)):
+                destination = self._fallback_destination(
+                    view, fallback_position, fallback_waypoints)
+                if _distance(view.position, destination) > 4.0:
+                    try:
+                        _move_toward(self.adapter, view, destination)
+                        detail = ("seeking a vendor near the quest turn-in"
+                                  if reserve_slots > 0 else
+                                  "returning to repair broken equipment"
+                                  if repair_route is not None else
+                                  "returning for depleted supplies")
+                        return InventoryStep("move_to", detail)
+                    except AdapterError as exc:
+                        self.log(f"vendor fallback approach failed: {exc}")
+                        if (depleted and fallback_waypoints
+                                and "terrain height" in str(exc)):
+                            self._fallback_detour = True
+                        if depleted or low_supplies:
+                            return InventoryStep(
+                                None, f"depleted supply route is blocked: {exc}")
+                        if repair_route is not None:
+                            return InventoryStep(
+                                None, f"broken equipment repair route is blocked: {exc}")
+            if reserve_slots > 0:
+                return InventoryStep(
+                    None, "quest reward needs a free bag slot and a nearby vendor")
+            if depleted or low_supplies:
+                return InventoryStep(
+                    None, "depleted supplies have no reachable vendor route")
+            if repair_route is not None:
+                return InventoryStep(None, "waiting for the repair vendor")
             return None
         vendor_guid = int(vendor["guid"])
         distance = _distance(view.position, vendor.get("position") or {})
+        repair_key = None
+        if (damaged and int(vendor.get("npc_flags") or 0) & NPC_FLAG_REPAIR
+                == NPC_FLAG_REPAIR):
+            signature = ",".join(
+                f"{guid}:{value}" for guid, value in sorted(damaged.items()))
+            repair_key = (
+                f"inventory.repair:{vendor_guid}:{state.money}:{signature}")
+        needs_repair = repair_key is not None and repair_key not in self._suppressed
+        if (not depleted and not low_supplies and reserve_slots <= 0
+                and not sell_items and not needs_repair
+                and (distance > VENDOR_INTERACT_RANGE
+                     or not state.vendor_loaded
+                     or state.vendor_guid != vendor_guid)):
+            # Do not oscillate between a quest route and a vendor merely to
+            # discover optional purchases. Detours need a concrete maintenance
+            # reason; an already-open vendor may still offer a useful bag.
+            return None
         if distance > VENDOR_INTERACT_RANGE:
             destination = vendor.get("position") or {}
             try:
-                self.adapter.move_to(
-                    float(destination.get("x", 0.0)),
-                    float(destination.get("y", 0.0)),
-                    float(destination.get("z", view.position.get("z", 0.0))),
-                )
+                _move_toward(self.adapter, view, destination)
                 return InventoryStep("move_to", f"approaching vendor {vendor_guid}")
             except AdapterError as exc:
                 self.log(f"vendor approach failed: {exc}")
+                if (fallback_waypoints and (depleted or low_supplies
+                                            or reserve_slots > 0)
+                        and "terrain height" in str(exc)):
+                    if fallback_position is not None:
+                        self._fallback_key = (
+                            float(fallback_position.get("x", 0.0)),
+                            float(fallback_position.get("y", 0.0)))
+                        self._fallback_waypoint = None
+                    self._fallback_detour = True
+                if reserve_slots > 0:
+                    return InventoryStep(
+                        None, f"quest reward vendor approach failed: {vendor_guid}")
+                if depleted or low_supplies:
+                    return InventoryStep(
+                        None, f"depleted supply vendor is unreachable: {vendor_guid}")
                 return None
 
         if not state.vendor_loaded or state.vendor_guid != vendor_guid:
@@ -112,8 +243,17 @@ class InventoryRuntime:
             return InventoryStep("list_inventory", f"opened vendor {vendor_guid}")
         self._list_vendor = None
 
-        for item in self.policy.items_to_sell(
-                state, level=view.level, class_mask=class_mask, skills=skills):
+        if (depleted or low_supplies) and any(not any(
+                row.item_id == item_id and self.policy._valid_vendor_row(row)
+                for row in state.vendor_items) for item_id in depleted | low_supplies):
+            # itemTemplates describe known items, not this vendor's stock. Move
+            # to another real vendor instead of concluding ammunition is sold
+            # everywhere merely because its template has been observed.
+            self._supply_excluded_vendors.add(vendor_guid)
+            self.log(f"vendor {vendor_guid} lacks depleted supplies; trying another")
+            return InventoryStep(None, f"vendor {vendor_guid} lacks depleted supplies")
+
+        for item in sell_items:
             count = item.count
             key = f"inventory.sell:{vendor_guid}:{item.guid}:{count}:{state.money}"
             result = self._start(key, "inventory.sell", {
@@ -136,6 +276,7 @@ class InventoryRuntime:
                 "vendor_guid": vendor_guid, "item_id": item.item_id,
                 "slot": purchase.vendor_slot, "count": purchase.count,
                 "before_count": before_count, "before_money": state.money,
+                "received_count": purchase.count * max(1, purchase.item.count),
                 "before_revision": state.revision,
                 "before_failure_count": state.failure_count,
                 "total_price": purchase.total_price,
@@ -143,12 +284,8 @@ class InventoryRuntime:
             if result is not None:
                 return result
 
-        damaged = {str(item.guid): item.durability for item in state.items
-                   if item.max_durability > item.durability}
-        if damaged:
-            signature = ",".join(f"{guid}:{value}" for guid, value in sorted(damaged.items()))
-            key = f"inventory.repair:{vendor_guid}:{signature}"
-            result = self._start(key, "inventory.repair", {
+        if repair_key is not None:
+            result = self._start(repair_key, "inventory.repair", {
                 "vendor_guid": vendor_guid, "item_guid": 0,
                 "before_durability": damaged, "before_money": state.money,
                 "before_revision": state.revision,
@@ -225,7 +362,8 @@ class InventoryRuntime:
                             and item.equipment_slot == int(payload["destination_slot"])) else None
         if kind == "inventory.buy":
             count_ok = state.count_of(int(payload["item_id"])) >= (
-                int(payload["before_count"]) + int(payload["count"]))
+                int(payload["before_count"])
+                + int(payload.get("received_count", payload["count"])))
             money_ok = state.money <= int(payload["before_money"]) - int(payload["total_price"])
             return True if count_ok and money_ok else None
         if kind == "inventory.sell":
@@ -248,19 +386,71 @@ class InventoryRuntime:
             return True if improved and state.money <= int(payload["before_money"]) else None
         return None
 
-    @staticmethod
-    def _nearest_vendor(view: WorldView) -> dict | None:
+    def _nearest_vendor(self, view: WorldView, *,
+                        search_range: float = VENDOR_SEARCH_RANGE,
+                        required_flags: int = NPC_FLAG_VENDOR) -> dict | None:
         best = None
-        best_distance = VENDOR_SEARCH_RANGE
+        best_distance = search_range
         for candidate in view.nearby:
-            if not int(candidate.get("npc_flags") or 0) & NPC_FLAG_VENDOR:
+            flags = int(candidate.get("npc_flags") or 0)
+            if flags & required_flags != required_flags:
                 continue
-            if candidate.get("guid") is None or not candidate.get("has_position"):
+            if (candidate.get("guid") is None
+                    or int(candidate["guid"]) in self._supply_excluded_vendors
+                    or not candidate.get("has_position")):
                 continue
             distance = _distance(view.position, candidate.get("position") or {})
             if distance < best_distance:
                 best, best_distance = candidate, distance
         return best
+
+    def _fallback_destination(self, view: WorldView, position: dict,
+                              waypoints: tuple[dict, ...]) -> dict:
+        key = (float(position.get("x", 0.0)), float(position.get("y", 0.0)))
+        if key != self._fallback_key:
+            self._fallback_key = key
+            self._fallback_waypoint = None
+            self._fallback_detour = False
+        if not waypoints or (_distance(view.position, position) <= 60.0
+                             and not self._fallback_detour):
+            self._fallback_waypoint = None
+            return position
+        if self._fallback_waypoint is None:
+            self._fallback_waypoint = min(
+                range(len(waypoints)),
+                key=lambda index: _distance(view.position, waypoints[index]))
+        while self._fallback_waypoint < len(waypoints):
+            waypoint = waypoints[self._fallback_waypoint]
+            if _distance(view.position, waypoint) > 4.0:
+                return waypoint
+            self._fallback_waypoint += 1
+        return position
+
+
+def _move_toward(adapter, view: WorldView, destination: dict) -> None:
+    distance = _distance(view.position, destination)
+    if distance <= 0.01:
+        return
+    dx = float(destination.get("x", 0.0)) - float(view.position.get("x", 0.0))
+    dy = float(destination.get("y", 0.0)) - float(view.position.get("y", 0.0))
+    z = float(view.position.get("z", destination.get("z", 0.0)))
+    last_error = None
+    for candidate in (20.0, 12.0, 8.0, 4.0):
+        step = min(candidate, distance)
+        try:
+            adapter.move_to(
+                float(view.position.get("x", 0.0)) + dx / distance * step,
+                float(view.position.get("y", 0.0)) + dy / distance * step,
+                z)
+            return
+        except AdapterError as exc:
+            last_error = exc
+            error = str(exc)
+            if not ("terrain height" in error
+                    and "differs from estimated" in error):
+                raise
+    if last_error is not None:
+        raise last_error
 
 
 def _failure_matches(state: InventoryState, kind: str, payload: dict) -> bool:

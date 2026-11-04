@@ -16,6 +16,7 @@
 # is Blizzard content and must not be committed.
 #
 #     scripts/fetch-client-data.sh
+#     scripts/fetch-client-data.sh --terrain  # also fetch outdoor height maps
 #
 # See docs/data-sources.md for the full provenance map.
 set -euo pipefail
@@ -29,6 +30,10 @@ SQL_URL="https://github.com/wowgaming/client-data/releases/download/dbc_sql_v1/A
 SQL_SHA256="e524aba0bc05aa06e2b6e5421eb80a2358fec1ae27f3ff352c15b2b75081737e"
 
 DBC_BASE="https://api.github.com/repos/wowgaming/node-dbc-reader/contents/data/dbc"
+
+TERRAIN_DIR="$DATA/terrain-v20"
+TERRAIN_URL="https://github.com/wowgaming/client-data/releases/download/v20.0/Data.zip"
+TERRAIN_SHA256="a3d4df635ae6c2c8f08052c32a79e0f806955150ad36b014a823dd08a32a4610"
 
 # Tables mirrored from the DBC archive. Keep the sha256 in sync with
 # upstream: `shasum -a 256 <file>`.
@@ -91,8 +96,37 @@ fetch_dbc() {
 	done
 }
 
-fetch_sql
-fetch_dbc
+fetch_terrain() {
+	local zip="$TERRAIN_DIR/Data.zip"
+	mkdir -p "$TERRAIN_DIR"
+	if [ ! -f "$zip" ] || [ "$(sha256_of "$zip")" != "$TERRAIN_SHA256" ]; then
+		echo "downloading $TERRAIN_URL"
+		curl -fSL --retry 3 -o "$zip.part" "$TERRAIN_URL"
+		verify "$zip.part" "$TERRAIN_SHA256"
+		mv "$zip.part" "$zip"
+	fi
+	echo "using verified $zip"
+	if zipinfo -1 "$zip" | grep -E '(^/|(^|/)\.\.(/|$))'; then
+		echo "unsafe path in terrain archive" >&2
+		exit 1
+	fi
+	unzip -o -q "$zip" "maps/*" -d "$TERRAIN_DIR"
+	echo "extracted outdoor terrain to $TERRAIN_DIR/maps"
+}
+
+case "${1:-}" in
+	"")
+		fetch_sql
+		fetch_dbc
+		;;
+	--terrain)
+		fetch_terrain
+		;;
+	*)
+		echo "usage: $0 [--terrain]" >&2
+		exit 2
+		;;
+esac
 
 echo
 echo "client data ready in $DATA"

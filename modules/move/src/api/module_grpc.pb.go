@@ -21,17 +21,19 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Module_GetPosition_FullMethodName = "/move.module.v1.Module/GetPosition"
-	Module_Forward_FullMethodName     = "/move.module.v1.Module/Forward"
-	Module_Backward_FullMethodName    = "/move.module.v1.Module/Backward"
-	Module_TurnLeft_FullMethodName    = "/move.module.v1.Module/TurnLeft"
-	Module_TurnRight_FullMethodName   = "/move.module.v1.Module/TurnRight"
-	Module_TurnTo_FullMethodName      = "/move.module.v1.Module/TurnTo"
-	Module_MoveTo_FullMethodName      = "/move.module.v1.Module/MoveTo"
-	Module_Stop_FullMethodName        = "/move.module.v1.Module/Stop"
-	Module_SetRunSpeed_FullMethodName = "/move.module.v1.Module/SetRunSpeed"
-	Module_Status_FullMethodName      = "/move.module.v1.Module/Status"
-	Module_OnPacket_FullMethodName    = "/move.module.v1.Module/OnPacket"
+	Module_GetPosition_FullMethodName   = "/move.module.v1.Module/GetPosition"
+	Module_Forward_FullMethodName       = "/move.module.v1.Module/Forward"
+	Module_Backward_FullMethodName      = "/move.module.v1.Module/Backward"
+	Module_TurnLeft_FullMethodName      = "/move.module.v1.Module/TurnLeft"
+	Module_TurnRight_FullMethodName     = "/move.module.v1.Module/TurnRight"
+	Module_TurnTo_FullMethodName        = "/move.module.v1.Module/TurnTo"
+	Module_MoveTo_FullMethodName        = "/move.module.v1.Module/MoveTo"
+	Module_Navigate_FullMethodName      = "/move.module.v1.Module/Navigate"
+	Module_Stop_FullMethodName          = "/move.module.v1.Module/Stop"
+	Module_RecoverGround_FullMethodName = "/move.module.v1.Module/RecoverGround"
+	Module_SetRunSpeed_FullMethodName   = "/move.module.v1.Module/SetRunSpeed"
+	Module_Status_FullMethodName        = "/move.module.v1.Module/Status"
+	Module_OnPacket_FullMethodName      = "/move.module.v1.Module/OnPacket"
 )
 
 // ModuleClient is the client API for Module service.
@@ -44,10 +46,16 @@ type ModuleClient interface {
 	TurnLeft(ctx context.Context, in *TurnRequest, opts ...grpc.CallOption) (*PositionResponse, error)
 	TurnRight(ctx context.Context, in *TurnRequest, opts ...grpc.CallOption) (*PositionResponse, error)
 	TurnTo(ctx context.Context, in *TurnToRequest, opts ...grpc.CallOption) (*PositionResponse, error)
-	// MoveTo walks straight to a world position, interpolating Z, and caps the
-	// step at 40 yards. It does not pathfind or avoid obstacles.
+	// MoveTo walks straight toward a world position, samples terrain along the
+	// way, and caps the step at 40 yards. It does not pathfind or avoid obstacles.
 	MoveTo(ctx context.Context, in *MoveToRequest, opts ...grpc.CallOption) (*PositionResponse, error)
+	// Navigate follows a bounded outdoor-terrain A* path for up to 12 yards.
+	// It is a short-step detour primitive, not a long-running route worker.
+	Navigate(ctx context.Context, in *MoveToRequest, opts ...grpc.CallOption) (*PositionResponse, error)
 	Stop(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PositionResponse, error)
+	// RecoverGround sends one stop at the sampled outdoor terrain height. This
+	// deliberately bypasses the 8-yard guard for operator-confirmed bad saved Z.
+	RecoverGround(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PositionResponse, error)
 	SetRunSpeed(ctx context.Context, in *RunSpeedRequest, opts ...grpc.CallOption) (*StatusResponse, error)
 	Status(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StatusResponse, error)
 	OnPacket(ctx context.Context, in *v1.WorldPacket, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -131,10 +139,30 @@ func (c *moduleClient) MoveTo(ctx context.Context, in *MoveToRequest, opts ...gr
 	return out, nil
 }
 
+func (c *moduleClient) Navigate(ctx context.Context, in *MoveToRequest, opts ...grpc.CallOption) (*PositionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PositionResponse)
+	err := c.cc.Invoke(ctx, Module_Navigate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *moduleClient) Stop(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PositionResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(PositionResponse)
 	err := c.cc.Invoke(ctx, Module_Stop_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *moduleClient) RecoverGround(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PositionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PositionResponse)
+	err := c.cc.Invoke(ctx, Module_RecoverGround_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -181,10 +209,16 @@ type ModuleServer interface {
 	TurnLeft(context.Context, *TurnRequest) (*PositionResponse, error)
 	TurnRight(context.Context, *TurnRequest) (*PositionResponse, error)
 	TurnTo(context.Context, *TurnToRequest) (*PositionResponse, error)
-	// MoveTo walks straight to a world position, interpolating Z, and caps the
-	// step at 40 yards. It does not pathfind or avoid obstacles.
+	// MoveTo walks straight toward a world position, samples terrain along the
+	// way, and caps the step at 40 yards. It does not pathfind or avoid obstacles.
 	MoveTo(context.Context, *MoveToRequest) (*PositionResponse, error)
+	// Navigate follows a bounded outdoor-terrain A* path for up to 12 yards.
+	// It is a short-step detour primitive, not a long-running route worker.
+	Navigate(context.Context, *MoveToRequest) (*PositionResponse, error)
 	Stop(context.Context, *emptypb.Empty) (*PositionResponse, error)
+	// RecoverGround sends one stop at the sampled outdoor terrain height. This
+	// deliberately bypasses the 8-yard guard for operator-confirmed bad saved Z.
+	RecoverGround(context.Context, *emptypb.Empty) (*PositionResponse, error)
 	SetRunSpeed(context.Context, *RunSpeedRequest) (*StatusResponse, error)
 	Status(context.Context, *emptypb.Empty) (*StatusResponse, error)
 	OnPacket(context.Context, *v1.WorldPacket) (*emptypb.Empty, error)
@@ -219,8 +253,14 @@ func (UnimplementedModuleServer) TurnTo(context.Context, *TurnToRequest) (*Posit
 func (UnimplementedModuleServer) MoveTo(context.Context, *MoveToRequest) (*PositionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MoveTo not implemented")
 }
+func (UnimplementedModuleServer) Navigate(context.Context, *MoveToRequest) (*PositionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Navigate not implemented")
+}
 func (UnimplementedModuleServer) Stop(context.Context, *emptypb.Empty) (*PositionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Stop not implemented")
+}
+func (UnimplementedModuleServer) RecoverGround(context.Context, *emptypb.Empty) (*PositionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RecoverGround not implemented")
 }
 func (UnimplementedModuleServer) SetRunSpeed(context.Context, *RunSpeedRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetRunSpeed not implemented")
@@ -378,6 +418,24 @@ func _Module_MoveTo_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Module_Navigate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MoveToRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).Navigate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_Navigate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).Navigate(ctx, req.(*MoveToRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Module_Stop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -392,6 +450,24 @@ func _Module_Stop_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ModuleServer).Stop(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Module_RecoverGround_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).RecoverGround(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_RecoverGround_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).RecoverGround(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -486,8 +562,16 @@ var Module_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Module_MoveTo_Handler,
 		},
 		{
+			MethodName: "Navigate",
+			Handler:    _Module_Navigate_Handler,
+		},
+		{
 			MethodName: "Stop",
 			Handler:    _Module_Stop_Handler,
+		},
+		{
+			MethodName: "RecoverGround",
+			Handler:    _Module_RecoverGround_Handler,
 		},
 		{
 			MethodName: "SetRunSpeed",

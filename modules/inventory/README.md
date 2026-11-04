@@ -20,6 +20,7 @@ cache entries remain valid for the process lifetime.
 | `inventory.sell` | `vendorGuid`, `itemGuid`, `count` | `InventoryState` | `count=0` sells the whole stack |
 | `inventory.repair` | `vendorGuid`, `itemGuid`, `useGuildBank` | `InventoryState` | `itemGuid=0` repairs all; growth never uses guild funds |
 | `inventory.equip` | `itemGuid`, `destinationSlot` | `InventoryState` | Equipment destination is 0..18 |
+| `inventory.set_ammo` | `itemId` | `InventoryState` | Selects owned projectile item through `CMSG_SET_AMMO`; verify `selectedAmmoId` |
 | `inventory.buyback` | `vendorGuid`, `slot` | `InventoryState` | Absolute buyback slot 74..85 |
 
 A successful send is not proof of a purchase, sale, repair or equip. Sell and

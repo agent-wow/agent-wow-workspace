@@ -227,6 +227,30 @@ func TestAttackDoesNotEraseImmediateRefusal(t *testing.T) {
 	}
 }
 
+func TestCastSelectsUnitTargetWithoutStartingMeleeAttack(t *testing.T) {
+	t.Setenv("AGENT_WOW_CHARACTER_GUID", "42")
+	var requests []*modv1.SendPacketRequest
+	session := combatSession{send: func(ctx context.Context, req *modv1.SendPacketRequest) (*emptypb.Empty, error) {
+		requests = append(requests, req)
+		return &emptypb.Empty{}, nil
+	}}
+	s := New(session)
+
+	state, err := s.Cast(context.Background(), &modulev1.CastRequest{
+		SpellId: 75, TargetGuid: 99,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(requests) != 2 || requests[0].GetOpcode() != opcode.CMSGSetSelection ||
+		requests[1].GetOpcode() != opcode.CMSGCastSpell {
+		t.Fatalf("cast packets = %+v", requests)
+	}
+	if state.TargetGuid != 99 || state.Attacking {
+		t.Fatalf("cast state = %+v", state)
+	}
+}
+
 func TestRefusalDoesNotClearCombat(t *testing.T) {
 	t.Setenv("AGENT_WOW_CHARACTER_GUID", "42")
 	s := New(nil)

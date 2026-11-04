@@ -7,7 +7,7 @@ from pathlib import Path
 
 from _support import ROOT  # noqa: F401  (sets sys.path)
 
-from scripts.growth.profiles import ProfileError, load_profile
+from scripts.growth.profiles import ProfileError, load_profile, with_route
 from scripts.growth.routes import RouteError, load_route
 
 
@@ -36,6 +36,31 @@ class ClassProfileContentTests(unittest.TestCase):
         heal = next(s for s in priest.skills if s.name == "Lesser Heal")
         self.assertIsNotNone(heal.when_health_below_pct)
         self.assertGreater(heal.priority, 0)
+
+    def test_horde_roster_classes_have_initial_profiles(self):
+        for class_name in ("shaman", "hunter", "warlock"):
+            with self.subTest(class_name=class_name):
+                profile = load_profile(class_name)
+                self.assertEqual(profile.resource, "mana")
+                self.assertTrue(profile.supports_role("dps"))
+                self.assertEqual(profile.route.zone, "durotar")
+                self.assertEqual(profile.route.map_id, 1)
+                if class_name == "hunter":
+                    self.assertFalse(
+                        profile.combat.auto_attack,
+                        "melee auto-attack pulls a ranged hunter into close combat")
+                self.assertTrue(any(
+                    skill.requires_target and not skill.in_combat_only
+                    for skill in profile.skills),
+                    "a ranged class needs a spell that can pull from neutral")
+
+    def test_roster_route_rebinds_class_content_without_changing_skills(self):
+        profile = load_profile("warrior")
+        route = load_route("durotar")
+        rebound = with_route(profile, route)
+        self.assertEqual(rebound.route.zone, "durotar")
+        self.assertEqual(rebound.route.map_id, 1)
+        self.assertEqual(rebound.skills, profile.skills)
 
     def test_unknown_class_profile_fails_closed(self):
         with self.assertRaises(ProfileError):

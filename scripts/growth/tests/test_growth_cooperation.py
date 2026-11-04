@@ -196,6 +196,49 @@ class CooperationTests(unittest.TestCase):
         self.assertEqual(action.action, "accept_invite")
         self.assertTrue(self.adapter.named("respond_invite")[0]["accept"])
 
+    def test_ambiguous_invite_response_does_not_pause_solo_growth(self):
+        self.adapter.party = friendly_party(
+            pending_invite=Invite(invite_id=7, inviter="Stranger"))
+
+        def lose_response(invite_id, inviter, accept):
+            self.adapter.calls.append(("respond_invite", {
+                "invite_id": invite_id, "inviter": inviter, "accept": accept}))
+            raise AdapterError("response lost")
+
+        self.adapter.respond_invite = lose_response
+        runtime = self.runtime()
+        self.assertIsNone(runtime.step(self.now, make_view(), WARRIOR.class_mask))
+        self.assertIsNone(runtime.step(self.now + 1, make_view(), WARRIOR.class_mask))
+        self.assertEqual(len(self.adapter.named("respond_invite")), 1)
+
+    def test_invite_id_reuse_after_module_restart_does_not_collide(self):
+        self.adapter.party = replace(friendly_party(
+            pending_invite=Invite(invite_id=1, inviter="Growth2")), epoch=11)
+        first = self.runtime().step(self.now, make_view(), WARRIOR.class_mask)
+        self.assertEqual(first.action, "accept_invite")
+
+        self.adapter.party = replace(friendly_party(
+            pending_invite=Invite(invite_id=1, inviter="Growth2")), epoch=12)
+        second = self.runtime().step(self.now + 1, make_view(), WARRIOR.class_mask)
+        self.assertEqual(second.action, "accept_invite")
+        self.assertEqual(len(self.adapter.named("respond_invite")), 2)
+
+    def test_questing_pauses_automatic_group_negotiation(self):
+        self.adapter.party = friendly_party(
+            in_group=True, group_guid=20, leader_guid=1, members=members(1, 2))
+        runtime = self.runtime()
+        self.assertIsNone(runtime.step(
+            self.now, make_view(), WARRIOR.class_mask, questing=True))
+        self.assertFalse(self.adapter.named("party_chat"))
+
+        self.adapter.party = replace(
+            self.adapter.party, in_group=False, members=(),
+            pending_invite=Invite(invite_id=9, inviter="Growth2"))
+        action = runtime.step(
+            self.now, make_view(), WARRIOR.class_mask, questing=True)
+        self.assertEqual(action.action, "decline_invite")
+        self.assertFalse(self.adapter.named("respond_invite")[0]["accept"])
+
     def test_group_with_outsider_is_left(self):
         self.adapter.party = friendly_party(
             in_group=True, group_guid=99,

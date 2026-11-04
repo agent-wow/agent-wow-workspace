@@ -31,7 +31,7 @@ EmptyProtoPZ.google.golang.org/protobuf/types/known/emptypbø¢GPBªGoogle.P
 SendPacket%.agentwow.module.v1.SendPacketRequest.google.protobuf.EmptyE
 GetClock.google.protobuf.Empty!.agentwow.module.v1.ClockResponsea
 InvokeModule'.agentwow.module.v1.InvokeModuleRequest(.agentwow.module.v1.InvokeModuleResponseB5Z3github.com/agent-wow/agent-wow/pkg/modules/v1;modv1bproto3
-Ì#
+™&
 module.protosense.module.v1api/module/v1/session.protogoogle/protobuf/empty.proto"3
 Vector3
 x (Rx
@@ -160,7 +160,14 @@ gameObject")
 SelectTargetRequest
 guid (Rguid"&
 QueryNameRequest
-guid (Rguid"—
+guid (Rguid"ü
+PlayedTimeResponse
+has_data (RhasData#
+total_seconds (RtotalSeconds#
+level_seconds (RlevelSeconds'
+session_seconds (RsessionSeconds0
+session_started_unix (RsessionStartedUnix&
+sampled_unix_ms (RsampledUnixMs"—
 StatusResponse
 packets (Rpackets!
 parse_errors (RparseErrors
@@ -183,7 +190,7 @@ mapChanges!
 index (Rindex
 value (Rvalue"=
 	FieldDump0
-slots (2.sense.module.v1.FieldSlotRslots2–
+slots (2.sense.module.v1.FieldSlotRslots2ä
 Module@
 GetSelf.google.protobuf.Empty.sense.module.v1.SelfResponseD
 	GetSkills.google.protobuf.Empty.sense.module.v1.SkillsResponseL
@@ -191,7 +198,8 @@ mapChanges!
 	GetTarget.google.protobuf.Empty.sense.module.v1.TargetResponseL
 SelectTarget$.sense.module.v1.SelectTargetRequest.google.protobuf.Empty=
 ClearTarget.google.protobuf.Empty.google.protobuf.EmptyF
-	QueryName!.sense.module.v1.QueryNameRequest.google.protobuf.EmptyA
+	QueryName!.sense.module.v1.QueryNameRequest.google.protobuf.EmptyL
+GetPlayedTime.google.protobuf.Empty#.sense.module.v1.PlayedTimeResponseA
 Status.google.protobuf.Empty.sense.module.v1.StatusResponseP
 DebugMonsterMoves.google.protobuf.Empty#.sense.module.v1.MonsterMoveSamplesA
 DebugFields.google.protobuf.Empty.sense.module.v1.FieldDumpC

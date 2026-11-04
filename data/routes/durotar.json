@@ -1,0 +1,102 @@
+{
+  "version": 6,
+  "zone": "durotar",
+  "map_id": 1,
+  "source": "Version 1 contains the initial live Valley of Trials sweep. Version 2 added a warlock training detour but its trainer entry and endpoint were disproven by live probes. Version 3 confirmed Duokna sales and raised money from 3 to 223 copper, but the Valley trainer approach hit terrain holes. Version 4 established that Nartok's cave floor is below the outdoor terrain layer and is unsupported by current indoor/VMap locomotion. Version 5 routes to Razor Hill warlock trainer Dhugru Gorelust entry 3172 using the quest pack's terrain-v20 candidate corridor; autonomous outbound travel remains unsafe after multiple deaths. Version 6 records controlled live validation after Spirit Healer resurrection: Dhugru has npcFlags 51 at the configured position, lists Corruption 172 for 95 copper, purchase leaves 128 copper, spellbook readback contains 172, and a caster-owned Corruption aura plus Shadow Bolt damage were observed on a Dire Mottled Boar. The Spirit Healer-to-Gar'Thok-to-Dhugru town path is validated; the full autonomous Valley outbound path is not",
+  "bands": [
+    {
+      "min_level": 1,
+      "max_level": 4,
+      "source": "Live sense sweep around the Valley of Trials den and Mottled Boar spawns, 2026-11-03",
+      "waypoints": [
+        {"x": -618.5, "y": -4251.7, "z": 38.7},
+        {"x": -638.2, "y": -4237.9, "z": 38.2},
+        {"x": -676.5, "y": -4284.8, "z": 40.5},
+        {"x": -679.1, "y": -4317.9, "z": 46.5},
+        {"x": -623.2, "y": -4349.7, "z": 41.1},
+        {"x": -599.5, "y": -4328.1, "z": 37.6},
+        {"x": -610.4, "y": -4279.6, "z": 37.9}
+      ]
+    },
+    {
+      "min_level": 5,
+      "max_level": 20,
+      "source": "Initial live sweep toward the northern Valley of Trials exit and Scorpid Worker spawn; additional measured Durotar bands are required for level-20 acceptance",
+      "waypoints": [
+        {"x": -625.3, "y": -4210.2, "z": 38.3},
+        {"x": -600.1, "y": -4186.2, "z": 41.3},
+        {"x": -584.7, "y": -4155.5, "z": 76.4},
+        {"x": -561.6, "y": -4221.8, "z": 41.7},
+        {"x": -618.5, "y": -4251.7, "z": 38.7}
+      ]
+    }
+  ],
+  "training": {
+    "warlock": {
+      "vendor_position": {"x": -565.428, "y": -4214.2, "z": 41.6737},
+      "vendor_waypoints": [
+        {"x": -195.0, "y": -4250.0, "z": 61.2942},
+        {"x": -200.0, "y": -4240.0, "z": 65.2429},
+        {"x": -290.0, "y": -4255.0, "z": 61.0035},
+        {"x": -515.0, "y": -4260.0, "z": 45.2262},
+        {"x": -530.0, "y": -4280.0, "z": 39.6215},
+        {"x": -560.0, "y": -4280.0, "z": 37.5486},
+        {"x": -590.0, "y": -4280.0, "z": 38.1465},
+        {"x": -618.5, "y": -4251.7, "z": 38.7}
+      ],
+      "position": {"x": 356.192, "y": -4837.95, "z": 11.172},
+      "waypoints": [
+        {"x": -565.428, "y": -4214.2, "z": 41.6737},
+        {"x": -560.0, "y": -4215.0, "z": 41.5891},
+        {"x": -565.0, "y": -4260.0, "z": 41.3274},
+        {"x": -265.0, "y": -4455.0, "z": 72.3909},
+        {"x": -245.0, "y": -4475.0, "z": 82.2849},
+        {"x": -225.0, "y": -4480.0, "z": 91.1537},
+        {"x": -220.0, "y": -4500.0, "z": 101.5355},
+        {"x": -185.0, "y": -4515.0, "z": 105.8774},
+        {"x": -145.0, "y": -4545.0, "z": 106.2426},
+        {"x": -135.0, "y": -4535.0, "z": 101.8164},
+        {"x": -130.0, "y": -4535.0, "z": 97.4705},
+        {"x": -135.0, "y": -4545.0, "z": 83.7736},
+        {"x": -120.0, "y": -4590.0, "z": 52.6019},
+        {"x": -80.0, "y": -4615.0, "z": 42.6905},
+        {"x": 65.0, "y": -4640.0, "z": 39.7384},
+        {"x": 270.0, "y": -4710.0, "z": 10.7077},
+        {"x": 276.0, "y": -4712.0, "z": 10.6742}
+      ],
+      "minimum_money": 150
+    }
+  },
+  "targets": {
+    "hostile_factions": [189, 7],
+    "hostile_names": [
+      "mottled boar",
+      "scorpid worker",
+      "scorpid",
+      "venomtail",
+      "raptor",
+      "quillboar",
+      "boar"
+    ],
+    "critter_names": [
+      "rabbit",
+      "deer",
+      "sheep",
+      "frog",
+      "chicken",
+      "cat",
+      "dog"
+    ],
+    "unit_types": [3],
+    "level_floor_delta": 3,
+    "level_ceiling_delta": 1
+  },
+  "recovery": {
+    "waypoint_arrival_radius": 6,
+    "waypoint_dwell_seconds": 5,
+    "route_change_waypoints": 1,
+    "spirit_healer_names": ["spirit healer", "幽灵医者"],
+    "spirit_healer_interact_range": 3.5,
+    "ghost_search_seconds": 30
+  }
+}

@@ -31,7 +31,7 @@ EmptyProtoPZ.google.golang.org/protobuf/types/known/emptypbø¢GPBªGoogle.P
 SendPacket%.agentwow.module.v1.SendPacketRequest.google.protobuf.EmptyE
 GetClock.google.protobuf.Empty!.agentwow.module.v1.ClockResponsea
 InvokeModule'.agentwow.module.v1.InvokeModuleRequest(.agentwow.module.v1.InvokeModuleResponseB5Z3github.com/agent-wow/agent-wow/pkg/modules/v1;modv1bproto3
-“!
+·"
 module.protoinventory.module.v1api/module/v1/session.protogoogle/protobuf/empty.proto"¬
 Item
 guid (Rguid
@@ -77,7 +77,7 @@ StatsEntry
 	item_guid (RitemGuid
 item_id (RitemId%
 required_level (RrequiredLevel
-detail (	Rdetail"ð
+detail (	Rdetail"š
 InventoryState/
 items (2.inventory.module.v1.ItemRitems<
 vendor_items (2.inventory.module.v1.ItemRvendorItems3
@@ -95,11 +95,14 @@ vendorGuid?
 vendor_loaded (RvendorLoaded
 revision (Rrevision5
 trade (2.inventory.module.v1.TradeStateRtrade@
-item_templates (2.inventory.module.v1.ItemRitemTemplates"0
+item_templates (2.inventory.module.v1.ItemRitemTemplates(
+selected_ammo_id (RselectedAmmoId"0
 VendorRequest
 vendor_guid (R
 vendorGuid"$
 	ItemQuery
+item_id (RitemId"&
+AmmoRequest
 item_id (RitemId"p
 
 BuyRequest
@@ -161,14 +164,15 @@ trade_slot (R	tradeSlot
 bag (Rbag
 slot (Rslot
 	item_guid (RitemGuid
-copper	 (Rcopper2¨
+copper	 (Rcopper2ú
 ModuleG
 GetState.google.protobuf.Empty#.inventory.module.v1.InventoryStateX
 ListInventory".inventory.module.v1.VendorRequest#.inventory.module.v1.InventoryStateK
 Buy.inventory.module.v1.BuyRequest#.inventory.module.v1.InventoryStateM
 Sell .inventory.module.v1.SellRequest#.inventory.module.v1.InventoryStateQ
 Repair".inventory.module.v1.RepairRequest#.inventory.module.v1.InventoryStateO
-Equip!.inventory.module.v1.EquipRequest#.inventory.module.v1.InventoryStateS
+Equip!.inventory.module.v1.EquipRequest#.inventory.module.v1.InventoryStateP
+SetAmmo .inventory.module.v1.AmmoRequest#.inventory.module.v1.InventoryStateS
 Buyback#.inventory.module.v1.BuybackRequest#.inventory.module.v1.InventoryStateO
 Trade!.inventory.module.v1.TradeRequest#.inventory.module.v1.InventoryStateP
 	QueryItem.inventory.module.v1.ItemQuery#.inventory.module.v1.InventoryStateC

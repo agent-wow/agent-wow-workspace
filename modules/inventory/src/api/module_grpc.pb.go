@@ -27,6 +27,7 @@ const (
 	Module_Sell_FullMethodName          = "/inventory.module.v1.Module/Sell"
 	Module_Repair_FullMethodName        = "/inventory.module.v1.Module/Repair"
 	Module_Equip_FullMethodName         = "/inventory.module.v1.Module/Equip"
+	Module_SetAmmo_FullMethodName       = "/inventory.module.v1.Module/SetAmmo"
 	Module_Buyback_FullMethodName       = "/inventory.module.v1.Module/Buyback"
 	Module_Trade_FullMethodName         = "/inventory.module.v1.Module/Trade"
 	Module_QueryItem_FullMethodName     = "/inventory.module.v1.Module/QueryItem"
@@ -43,6 +44,7 @@ type ModuleClient interface {
 	Sell(ctx context.Context, in *SellRequest, opts ...grpc.CallOption) (*InventoryState, error)
 	Repair(ctx context.Context, in *RepairRequest, opts ...grpc.CallOption) (*InventoryState, error)
 	Equip(ctx context.Context, in *EquipRequest, opts ...grpc.CallOption) (*InventoryState, error)
+	SetAmmo(ctx context.Context, in *AmmoRequest, opts ...grpc.CallOption) (*InventoryState, error)
 	Buyback(ctx context.Context, in *BuybackRequest, opts ...grpc.CallOption) (*InventoryState, error)
 	Trade(ctx context.Context, in *TradeRequest, opts ...grpc.CallOption) (*InventoryState, error)
 	QueryItem(ctx context.Context, in *ItemQuery, opts ...grpc.CallOption) (*InventoryState, error)
@@ -117,6 +119,16 @@ func (c *moduleClient) Equip(ctx context.Context, in *EquipRequest, opts ...grpc
 	return out, nil
 }
 
+func (c *moduleClient) SetAmmo(ctx context.Context, in *AmmoRequest, opts ...grpc.CallOption) (*InventoryState, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(InventoryState)
+	err := c.cc.Invoke(ctx, Module_SetAmmo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *moduleClient) Buyback(ctx context.Context, in *BuybackRequest, opts ...grpc.CallOption) (*InventoryState, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(InventoryState)
@@ -167,6 +179,7 @@ type ModuleServer interface {
 	Sell(context.Context, *SellRequest) (*InventoryState, error)
 	Repair(context.Context, *RepairRequest) (*InventoryState, error)
 	Equip(context.Context, *EquipRequest) (*InventoryState, error)
+	SetAmmo(context.Context, *AmmoRequest) (*InventoryState, error)
 	Buyback(context.Context, *BuybackRequest) (*InventoryState, error)
 	Trade(context.Context, *TradeRequest) (*InventoryState, error)
 	QueryItem(context.Context, *ItemQuery) (*InventoryState, error)
@@ -198,6 +211,9 @@ func (UnimplementedModuleServer) Repair(context.Context, *RepairRequest) (*Inven
 }
 func (UnimplementedModuleServer) Equip(context.Context, *EquipRequest) (*InventoryState, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Equip not implemented")
+}
+func (UnimplementedModuleServer) SetAmmo(context.Context, *AmmoRequest) (*InventoryState, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetAmmo not implemented")
 }
 func (UnimplementedModuleServer) Buyback(context.Context, *BuybackRequest) (*InventoryState, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Buyback not implemented")
@@ -340,6 +356,24 @@ func _Module_Equip_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Module_SetAmmo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AmmoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModuleServer).SetAmmo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Module_SetAmmo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModuleServer).SetAmmo(ctx, req.(*AmmoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Module_Buyback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BuybackRequest)
 	if err := dec(in); err != nil {
@@ -442,6 +476,10 @@ var Module_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Equip",
 			Handler:    _Module_Equip_Handler,
+		},
+		{
+			MethodName: "SetAmmo",
+			Handler:    _Module_SetAmmo_Handler,
 		},
 		{
 			MethodName: "Buyback",

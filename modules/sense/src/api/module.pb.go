@@ -1286,6 +1286,98 @@ func (x *QueryNameRequest) GetGuid() uint64 {
 	return 0
 }
 
+// PlayedTimeResponse reports the server's played-time counters, the same
+// numbers the client's /played command prints. Total is cumulative across all
+// sessions; Level is the time spent at the current level. Session is measured
+// by this module from the login that started the current process.
+type PlayedTimeResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// False until the server has answered CMSG_PLAYED_TIME at least once.
+	HasData      bool   `protobuf:"varint,1,opt,name=has_data,json=hasData,proto3" json:"has_data,omitempty"`
+	TotalSeconds uint32 `protobuf:"varint,2,opt,name=total_seconds,json=totalSeconds,proto3" json:"total_seconds,omitempty"`
+	LevelSeconds uint32 `protobuf:"varint,3,opt,name=level_seconds,json=levelSeconds,proto3" json:"level_seconds,omitempty"`
+	// Seconds since this module entered the world (the current session).
+	SessionSeconds uint32 `protobuf:"varint,4,opt,name=session_seconds,json=sessionSeconds,proto3" json:"session_seconds,omitempty"`
+	// Unix seconds when the current session started.
+	SessionStartedUnix uint64 `protobuf:"varint,5,opt,name=session_started_unix,json=sessionStartedUnix,proto3" json:"session_started_unix,omitempty"`
+	// Unix milliseconds when the server last answered CMSG_PLAYED_TIME.
+	SampledUnixMs uint64 `protobuf:"varint,6,opt,name=sampled_unix_ms,json=sampledUnixMs,proto3" json:"sampled_unix_ms,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlayedTimeResponse) Reset() {
+	*x = PlayedTimeResponse{}
+	mi := &file_module_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlayedTimeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlayedTimeResponse) ProtoMessage() {}
+
+func (x *PlayedTimeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_module_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlayedTimeResponse.ProtoReflect.Descriptor instead.
+func (*PlayedTimeResponse) Descriptor() ([]byte, []int) {
+	return file_module_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *PlayedTimeResponse) GetHasData() bool {
+	if x != nil {
+		return x.HasData
+	}
+	return false
+}
+
+func (x *PlayedTimeResponse) GetTotalSeconds() uint32 {
+	if x != nil {
+		return x.TotalSeconds
+	}
+	return 0
+}
+
+func (x *PlayedTimeResponse) GetLevelSeconds() uint32 {
+	if x != nil {
+		return x.LevelSeconds
+	}
+	return 0
+}
+
+func (x *PlayedTimeResponse) GetSessionSeconds() uint32 {
+	if x != nil {
+		return x.SessionSeconds
+	}
+	return 0
+}
+
+func (x *PlayedTimeResponse) GetSessionStartedUnix() uint64 {
+	if x != nil {
+		return x.SessionStartedUnix
+	}
+	return 0
+}
+
+func (x *PlayedTimeResponse) GetSampledUnixMs() uint64 {
+	if x != nil {
+		return x.SampledUnixMs
+	}
+	return 0
+}
+
 type StatusResponse struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Packets         uint32                 `protobuf:"varint,1,opt,name=packets,proto3" json:"packets,omitempty"`
@@ -1306,7 +1398,7 @@ type StatusResponse struct {
 
 func (x *StatusResponse) Reset() {
 	*x = StatusResponse{}
-	mi := &file_module_proto_msgTypes[13]
+	mi := &file_module_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1318,7 +1410,7 @@ func (x *StatusResponse) String() string {
 func (*StatusResponse) ProtoMessage() {}
 
 func (x *StatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[13]
+	mi := &file_module_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1331,7 +1423,7 @@ func (x *StatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatusResponse.ProtoReflect.Descriptor instead.
 func (*StatusResponse) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{13}
+	return file_module_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *StatusResponse) GetPackets() uint32 {
@@ -1429,7 +1521,7 @@ type MonsterMoveSamples struct {
 
 func (x *MonsterMoveSamples) Reset() {
 	*x = MonsterMoveSamples{}
-	mi := &file_module_proto_msgTypes[14]
+	mi := &file_module_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1441,7 +1533,7 @@ func (x *MonsterMoveSamples) String() string {
 func (*MonsterMoveSamples) ProtoMessage() {}
 
 func (x *MonsterMoveSamples) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[14]
+	mi := &file_module_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1454,7 +1546,7 @@ func (x *MonsterMoveSamples) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MonsterMoveSamples.ProtoReflect.Descriptor instead.
 func (*MonsterMoveSamples) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{14}
+	return file_module_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *MonsterMoveSamples) GetPayloads() []string {
@@ -1475,7 +1567,7 @@ type FieldSlot struct {
 
 func (x *FieldSlot) Reset() {
 	*x = FieldSlot{}
-	mi := &file_module_proto_msgTypes[15]
+	mi := &file_module_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1487,7 +1579,7 @@ func (x *FieldSlot) String() string {
 func (*FieldSlot) ProtoMessage() {}
 
 func (x *FieldSlot) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[15]
+	mi := &file_module_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1500,7 +1592,7 @@ func (x *FieldSlot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FieldSlot.ProtoReflect.Descriptor instead.
 func (*FieldSlot) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{15}
+	return file_module_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *FieldSlot) GetIndex() uint32 {
@@ -1528,7 +1620,7 @@ type FieldDump struct {
 
 func (x *FieldDump) Reset() {
 	*x = FieldDump{}
-	mi := &file_module_proto_msgTypes[16]
+	mi := &file_module_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1540,7 +1632,7 @@ func (x *FieldDump) String() string {
 func (*FieldDump) ProtoMessage() {}
 
 func (x *FieldDump) ProtoReflect() protoreflect.Message {
-	mi := &file_module_proto_msgTypes[16]
+	mi := &file_module_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1553,7 +1645,7 @@ func (x *FieldDump) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FieldDump.ProtoReflect.Descriptor instead.
 func (*FieldDump) Descriptor() ([]byte, []int) {
-	return file_module_proto_rawDescGZIP(), []int{16}
+	return file_module_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *FieldDump) GetSlots() []*FieldSlot {
@@ -1695,7 +1787,14 @@ const file_module_proto_rawDesc = "" +
 	"\x13SelectTargetRequest\x12\x12\n" +
 	"\x04guid\x18\x01 \x01(\x04R\x04guid\"&\n" +
 	"\x10QueryNameRequest\x12\x12\n" +
-	"\x04guid\x18\x01 \x01(\x04R\x04guid\"\x97\x03\n" +
+	"\x04guid\x18\x01 \x01(\x04R\x04guid\"\xfc\x01\n" +
+	"\x12PlayedTimeResponse\x12\x19\n" +
+	"\bhas_data\x18\x01 \x01(\bR\ahasData\x12#\n" +
+	"\rtotal_seconds\x18\x02 \x01(\rR\ftotalSeconds\x12#\n" +
+	"\rlevel_seconds\x18\x03 \x01(\rR\flevelSeconds\x12'\n" +
+	"\x0fsession_seconds\x18\x04 \x01(\rR\x0esessionSeconds\x120\n" +
+	"\x14session_started_unix\x18\x05 \x01(\x04R\x12sessionStartedUnix\x12&\n" +
+	"\x0fsampled_unix_ms\x18\x06 \x01(\x04R\rsampledUnixMs\"\x97\x03\n" +
 	"\x0eStatusResponse\x12\x18\n" +
 	"\apackets\x18\x01 \x01(\rR\apackets\x12!\n" +
 	"\fparse_errors\x18\x02 \x01(\rR\vparseErrors\x12\x1f\n" +
@@ -1718,7 +1817,7 @@ const file_module_proto_rawDesc = "" +
 	"\x05index\x18\x01 \x01(\rR\x05index\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\rR\x05value\"=\n" +
 	"\tFieldDump\x120\n" +
-	"\x05slots\x18\x01 \x03(\v2\x1a.sense.module.v1.FieldSlotR\x05slots2\x96\x06\n" +
+	"\x05slots\x18\x01 \x03(\v2\x1a.sense.module.v1.FieldSlotR\x05slots2\xe4\x06\n" +
 	"\x06Module\x12@\n" +
 	"\aGetSelf\x12\x16.google.protobuf.Empty\x1a\x1d.sense.module.v1.SelfResponse\x12D\n" +
 	"\tGetSkills\x12\x16.google.protobuf.Empty\x1a\x1f.sense.module.v1.SkillsResponse\x12L\n" +
@@ -1726,7 +1825,8 @@ const file_module_proto_rawDesc = "" +
 	"\tGetTarget\x12\x16.google.protobuf.Empty\x1a\x1f.sense.module.v1.TargetResponse\x12L\n" +
 	"\fSelectTarget\x12$.sense.module.v1.SelectTargetRequest\x1a\x16.google.protobuf.Empty\x12=\n" +
 	"\vClearTarget\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\x12F\n" +
-	"\tQueryName\x12!.sense.module.v1.QueryNameRequest\x1a\x16.google.protobuf.Empty\x12A\n" +
+	"\tQueryName\x12!.sense.module.v1.QueryNameRequest\x1a\x16.google.protobuf.Empty\x12L\n" +
+	"\rGetPlayedTime\x12\x16.google.protobuf.Empty\x1a#.sense.module.v1.PlayedTimeResponse\x12A\n" +
 	"\x06Status\x12\x16.google.protobuf.Empty\x1a\x1f.sense.module.v1.StatusResponse\x12P\n" +
 	"\x11DebugMonsterMoves\x12\x16.google.protobuf.Empty\x1a#.sense.module.v1.MonsterMoveSamples\x12A\n" +
 	"\vDebugFields\x12\x16.google.protobuf.Empty\x1a\x1a.sense.module.v1.FieldDump\x12C\n" +
@@ -1744,7 +1844,7 @@ func file_module_proto_rawDescGZIP() []byte {
 	return file_module_proto_rawDescData
 }
 
-var file_module_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_module_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_module_proto_goTypes = []any{
 	(*Vector3)(nil),             // 0: sense.module.v1.Vector3
 	(*Unit)(nil),                // 1: sense.module.v1.Unit
@@ -1759,12 +1859,13 @@ var file_module_proto_goTypes = []any{
 	(*TargetResponse)(nil),      // 10: sense.module.v1.TargetResponse
 	(*SelectTargetRequest)(nil), // 11: sense.module.v1.SelectTargetRequest
 	(*QueryNameRequest)(nil),    // 12: sense.module.v1.QueryNameRequest
-	(*StatusResponse)(nil),      // 13: sense.module.v1.StatusResponse
-	(*MonsterMoveSamples)(nil),  // 14: sense.module.v1.MonsterMoveSamples
-	(*FieldSlot)(nil),           // 15: sense.module.v1.FieldSlot
-	(*FieldDump)(nil),           // 16: sense.module.v1.FieldDump
-	(*emptypb.Empty)(nil),       // 17: google.protobuf.Empty
-	(*v1.WorldPacket)(nil),      // 18: agentwow.module.v1.WorldPacket
+	(*PlayedTimeResponse)(nil),  // 13: sense.module.v1.PlayedTimeResponse
+	(*StatusResponse)(nil),      // 14: sense.module.v1.StatusResponse
+	(*MonsterMoveSamples)(nil),  // 15: sense.module.v1.MonsterMoveSamples
+	(*FieldSlot)(nil),           // 16: sense.module.v1.FieldSlot
+	(*FieldDump)(nil),           // 17: sense.module.v1.FieldDump
+	(*emptypb.Empty)(nil),       // 18: google.protobuf.Empty
+	(*v1.WorldPacket)(nil),      // 19: agentwow.module.v1.WorldPacket
 }
 var file_module_proto_depIdxs = []int32{
 	0,  // 0: sense.module.v1.Unit.position:type_name -> sense.module.v1.Vector3
@@ -1779,31 +1880,33 @@ var file_module_proto_depIdxs = []int32{
 	4,  // 9: sense.module.v1.NearbyResponse.game_objects:type_name -> sense.module.v1.GameObject
 	1,  // 10: sense.module.v1.TargetResponse.unit:type_name -> sense.module.v1.Unit
 	4,  // 11: sense.module.v1.TargetResponse.game_object:type_name -> sense.module.v1.GameObject
-	15, // 12: sense.module.v1.FieldDump.slots:type_name -> sense.module.v1.FieldSlot
-	17, // 13: sense.module.v1.Module.GetSelf:input_type -> google.protobuf.Empty
-	17, // 14: sense.module.v1.Module.GetSkills:input_type -> google.protobuf.Empty
+	16, // 12: sense.module.v1.FieldDump.slots:type_name -> sense.module.v1.FieldSlot
+	18, // 13: sense.module.v1.Module.GetSelf:input_type -> google.protobuf.Empty
+	18, // 14: sense.module.v1.Module.GetSkills:input_type -> google.protobuf.Empty
 	8,  // 15: sense.module.v1.Module.GetNearby:input_type -> sense.module.v1.NearbyRequest
-	17, // 16: sense.module.v1.Module.GetTarget:input_type -> google.protobuf.Empty
+	18, // 16: sense.module.v1.Module.GetTarget:input_type -> google.protobuf.Empty
 	11, // 17: sense.module.v1.Module.SelectTarget:input_type -> sense.module.v1.SelectTargetRequest
-	17, // 18: sense.module.v1.Module.ClearTarget:input_type -> google.protobuf.Empty
+	18, // 18: sense.module.v1.Module.ClearTarget:input_type -> google.protobuf.Empty
 	12, // 19: sense.module.v1.Module.QueryName:input_type -> sense.module.v1.QueryNameRequest
-	17, // 20: sense.module.v1.Module.Status:input_type -> google.protobuf.Empty
-	17, // 21: sense.module.v1.Module.DebugMonsterMoves:input_type -> google.protobuf.Empty
-	17, // 22: sense.module.v1.Module.DebugFields:input_type -> google.protobuf.Empty
-	18, // 23: sense.module.v1.Module.OnPacket:input_type -> agentwow.module.v1.WorldPacket
-	6,  // 24: sense.module.v1.Module.GetSelf:output_type -> sense.module.v1.SelfResponse
-	7,  // 25: sense.module.v1.Module.GetSkills:output_type -> sense.module.v1.SkillsResponse
-	9,  // 26: sense.module.v1.Module.GetNearby:output_type -> sense.module.v1.NearbyResponse
-	10, // 27: sense.module.v1.Module.GetTarget:output_type -> sense.module.v1.TargetResponse
-	17, // 28: sense.module.v1.Module.SelectTarget:output_type -> google.protobuf.Empty
-	17, // 29: sense.module.v1.Module.ClearTarget:output_type -> google.protobuf.Empty
-	17, // 30: sense.module.v1.Module.QueryName:output_type -> google.protobuf.Empty
-	13, // 31: sense.module.v1.Module.Status:output_type -> sense.module.v1.StatusResponse
-	14, // 32: sense.module.v1.Module.DebugMonsterMoves:output_type -> sense.module.v1.MonsterMoveSamples
-	16, // 33: sense.module.v1.Module.DebugFields:output_type -> sense.module.v1.FieldDump
-	17, // 34: sense.module.v1.Module.OnPacket:output_type -> google.protobuf.Empty
-	24, // [24:35] is the sub-list for method output_type
-	13, // [13:24] is the sub-list for method input_type
+	18, // 20: sense.module.v1.Module.GetPlayedTime:input_type -> google.protobuf.Empty
+	18, // 21: sense.module.v1.Module.Status:input_type -> google.protobuf.Empty
+	18, // 22: sense.module.v1.Module.DebugMonsterMoves:input_type -> google.protobuf.Empty
+	18, // 23: sense.module.v1.Module.DebugFields:input_type -> google.protobuf.Empty
+	19, // 24: sense.module.v1.Module.OnPacket:input_type -> agentwow.module.v1.WorldPacket
+	6,  // 25: sense.module.v1.Module.GetSelf:output_type -> sense.module.v1.SelfResponse
+	7,  // 26: sense.module.v1.Module.GetSkills:output_type -> sense.module.v1.SkillsResponse
+	9,  // 27: sense.module.v1.Module.GetNearby:output_type -> sense.module.v1.NearbyResponse
+	10, // 28: sense.module.v1.Module.GetTarget:output_type -> sense.module.v1.TargetResponse
+	18, // 29: sense.module.v1.Module.SelectTarget:output_type -> google.protobuf.Empty
+	18, // 30: sense.module.v1.Module.ClearTarget:output_type -> google.protobuf.Empty
+	18, // 31: sense.module.v1.Module.QueryName:output_type -> google.protobuf.Empty
+	13, // 32: sense.module.v1.Module.GetPlayedTime:output_type -> sense.module.v1.PlayedTimeResponse
+	14, // 33: sense.module.v1.Module.Status:output_type -> sense.module.v1.StatusResponse
+	15, // 34: sense.module.v1.Module.DebugMonsterMoves:output_type -> sense.module.v1.MonsterMoveSamples
+	17, // 35: sense.module.v1.Module.DebugFields:output_type -> sense.module.v1.FieldDump
+	18, // 36: sense.module.v1.Module.OnPacket:output_type -> google.protobuf.Empty
+	25, // [25:37] is the sub-list for method output_type
+	13, // [13:25] is the sub-list for method input_type
 	13, // [13:13] is the sub-list for extension type_name
 	13, // [13:13] is the sub-list for extension extendee
 	0,  // [0:13] is the sub-list for field type_name
@@ -1820,7 +1923,7 @@ func file_module_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_module_proto_rawDesc), len(file_module_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

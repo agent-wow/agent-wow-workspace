@@ -223,7 +223,7 @@ conf)
 	conf "$name"
 	;;
 *)
-	sed -n '2,20p' "$0"
+	sed -n '2,24p' "$0"
 	exit 2
 	;;
 esac

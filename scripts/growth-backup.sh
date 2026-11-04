@@ -40,7 +40,7 @@ if [ "$VM_MODE" = 1 ] && [ "$RESTORE" = 1 ]; then
 	# Restoring code/state underneath a live worker can duplicate non-idempotent
 	# actions. Reuse the same process/lock guard as growth sync.
 	if colima ssh -- env VM_DIR="$VM_DIR" sh -c '
-		if pgrep -f "[g]rowth.*worker|[s]cripts.growth.*worker" >/dev/null 2>&1; then
+		if pgrep -f "[p]ython[0-9.]* .*scripts/growth/cli[.]py worker" >/dev/null 2>&1; then
 			exit 0
 		fi
 		dir="$HOME/$VM_DIR/data/growth"

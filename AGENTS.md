@@ -44,6 +44,13 @@ it invalidates that account's session key and disconnects the user's client.
 `session.sh stop` / the console's stop button are deliberately allowed so an
 accidental session can always be removed.
 
+Human accounts are manual-only: their cards in the web console expose 上线 /
+下线 / 创建 / 删除 / 重新登录 for the operator, and the backend sets
+`AGENT_WOW_MANUAL=1` for those calls. **That override exists for the user, not
+for you: never set `AGENT_WOW_MANUAL` yourself and never use it to act on an
+off-limits account.** The keeper never sets it either, so human sessions are
+not auto-reconnected.
+
 New agent accounts must be added to `agent-policy.json` with `"characters":
 ["*"]` before use. Keep user accounts out of that file.
 
@@ -86,6 +93,11 @@ python3 -I scripts/session-keeper.py desired doumoboy2 online <character>
 `python3 -I scripts/session-keeper.py status` shows intents and live clients;
 `--dry-run --once` previews what the keeper would do. Do not stop the keeper
 while intents are online.
+
+Human accounts never use intents. In the console their 上线 is a direct
+`session.sh start` and their 下线 is a direct stop; nothing reconnects them.
+The start button is manual by design — clicking it means "keep this character
+online until I click 下线" only for agent accounts.
 
 ## Gameplay sessions
 

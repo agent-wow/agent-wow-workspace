@@ -201,6 +201,40 @@ class KeeperTests(unittest.TestCase):
         ok, _ = self.keeper_module.probe_modules("doumoboy3")
         self.assertFalse(ok)
 
+    def test_module_probe_reads_compose_labels_for_hashed_names(self):
+        original_run = self.keeper_module.run
+        self.addCleanup(setattr, self.keeper_module, "run", original_run)
+        modules = ("sense", "move", "combat", "loot", "quest", "party")
+        rows = [
+            f"aw-1176777713-{index}-module-1\t"
+            f"/home/user/aw-doumoboy2/modules/{module}"
+            for index, module in enumerate(modules)
+        ]
+        rows.append("aw-other-sense-1\t/home/user/aw-doumoboy1/modules/sense")
+        self.keeper_module.run = lambda *args, **kwargs: (
+            0, "\n".join(rows) + "\n", "")
+
+        ok, reason = self.keeper_module.probe_modules("doumoboy2")
+        self.assertTrue(ok, reason)
+        ok, _ = self.keeper_module.probe_modules("doumoboy1")
+        self.assertFalse(ok)
+
+    def test_deleted_runtime_cwd_still_belongs_to_the_same_account(self):
+        original_run = self.keeper_module.run
+        self.addCleanup(setattr, self.keeper_module, "run", original_run)
+        self.keeper_module.run = lambda *args, **kwargs: (
+            0,
+            "42\t/home/u/aw-doumoboy1 (deleted)\t"
+            "agent-wow char play Growth1 --module-timeout 5m\n",
+            "")
+
+        clients = self.keeper_module.list_clients()
+
+        self.assertEqual(list(clients), ["doumoboy1"])
+        self.assertTrue(self.keeper_module.matching(
+            clients["doumoboy1"], "Growth1"))
+        self.assertNotIn("doumoboy1 (deleted)", clients)
+
     def test_host_backup_runs_at_most_once_per_rpo_interval(self):
         backup = Recorder(True)
         keeper = self.make_keeper(backup=backup)

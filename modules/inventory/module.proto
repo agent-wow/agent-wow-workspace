@@ -61,10 +61,13 @@ message InventoryState {
   uint64 revision = 12;
   TradeState trade = 13;
   repeated Item item_templates = 14;
+  // PLAYER_AMMO_ID selected by CMSG_SET_AMMO; zero means no selected ammo.
+  uint32 selected_ammo_id = 15;
 }
 
 message VendorRequest { uint64 vendor_guid = 1; }
 message ItemQuery { uint32 item_id = 1; }
+message AmmoRequest { uint32 item_id = 1; }
 message BuyRequest {
   uint64 vendor_guid = 1;
   uint32 item_id = 2;
@@ -134,6 +137,7 @@ service Module {
   rpc Sell(SellRequest) returns (InventoryState);
   rpc Repair(RepairRequest) returns (InventoryState);
   rpc Equip(EquipRequest) returns (InventoryState);
+  rpc SetAmmo(AmmoRequest) returns (InventoryState);
   rpc Buyback(BuybackRequest) returns (InventoryState);
   rpc Trade(TradeRequest) returns (InventoryState);
   rpc QueryItem(ItemQuery) returns (InventoryState);
