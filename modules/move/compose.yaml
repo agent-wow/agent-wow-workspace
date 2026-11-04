@@ -1,0 +1,9 @@
+services:
+  module:
+    # Modules use mounted Unix sockets; avoid one Docker subnet per module.
+    network_mode: none
+    build:
+      context: ../..
+      dockerfile: modules/move/Dockerfile
+    volumes:
+      - ${AGENT_WOW_MAPS_DIR:-../../data/client-data/terrain-v20/maps}:/data/maps:ro

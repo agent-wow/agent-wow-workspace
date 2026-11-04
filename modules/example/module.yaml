@@ -1,0 +1,15 @@
+api_version: 1
+enabled: false
+description: Minimal Go module demonstrating server-time queries
+compose:
+  file: compose.yaml
+  service: module
+grpc:
+  descriptor_set: module.pb
+rpc:
+  status: /example.module.v1.Module/Status
+  query_time: /example.module.v1.Module/QueryTime
+packets:
+  SMSG_QUERY_TIME_RESPONSE: /example.module.v1.Module/OnPacket
+lifecycle:
+  before_logout: /example.module.v1.Module/BeforeLogout

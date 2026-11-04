@@ -1,0 +1,238 @@
+{
+  "version": 10,
+  "zone": "durotar",
+  "map_id": 1,
+  "source": "Version 1 steps live-verified on 2026-11-03. Version 2 Vile Familiars NPC, objective entry/count and live kills were verified on 2026-11-04. Version 3 adds same-turn-in batch 784/837 from the hash-checked AzerothCore world snapshot; Gar'Thok identity, packed GUID and all Razor Hill/Tiragarde/quilboar walkability are explicitly pending live validation. Version 4 adds a south-side Zureetha detour sampled from verified terrain-v20 maps after live 20/8/4-yard segments hit a 17-yard wall. Version 5 adds a separately measured high-ledge recovery path after combat pulled the hunter off the normal corridor; the normal objective route remains direct. Version 6 adds a terrain-v20 low-slope Valley-to-Razor-Hill candidate corridor with four-yard-safe height deltas; the priest reached Gar'Thok and accepted 784 live, while other classes remain under validation. Version 7 adds a terrain-v20 candidate branch from the eastern Valley ledge into the Zureetha recovery corridor; the warlock traversed that branch live. Version 8 binds reward-slot maintenance at Zureetha to a live-observed vendor and measured south-side routing. Version 9 corrects that service endpoint to Duokna and reuses the complete hunter-verified western approach after the direct northern Zlagk leg hit a live 17-yard wall; the complete reward loop remains under live validation. Version 10 recommends deferring 784's Tiragarde hunt until level 6 after repeated live level-five terrain/line-of-sight stalls, without changing its server minimum level; completed objectives still turn in. RestedXP-inspired batching and ordered navigation; no third-party route data copied.",
+  "quests": [
+    {
+      "quest_id": 4641,
+      "title": "Your Place In The World",
+      "min_level": 1,
+      "quest_level": 1,
+      "reward_xp_difficulty": 3,
+      "batch": "arrival",
+      "accept": {
+        "npc": "Kaltunk",
+        "guid": 17379391132747694879,
+        "position": {"x": -610.073, "y": -4253.52, "z": 39.0393}
+      },
+      "turn_in": {
+        "npc": "Gornek",
+        "guid": 17379391014753534752,
+        "position": {"x": -600.132, "y": -4186.19, "z": 41.2663}
+      },
+      "objectives": []
+    },
+    {
+      "quest_id": 788,
+      "title": "Cutting Teeth",
+      "min_level": 1,
+      "quest_level": 2,
+      "reward_xp_difficulty": 6,
+      "batch": "valley-combat",
+      "accept": {
+        "npc": "Gornek",
+        "guid": 17379391014753534752,
+        "position": {"x": -600.132, "y": -4186.19, "z": 41.2663}
+      },
+      "turn_in": {
+        "npc": "Gornek",
+        "guid": 17379391014753534752,
+        "position": {"x": -600.132, "y": -4186.19, "z": 41.2663}
+      },
+      "objectives": [
+        {
+          "entry": 3098,
+          "name": "Mottled Boar",
+          "required": 8,
+          "position": {"x": -676.5, "y": -4284.8, "z": 40.5}
+        }
+      ]
+    },
+    {
+      "quest_id": 792,
+      "title": "Vile Familiars",
+      "min_level": 2,
+      "quest_level": 4,
+      "reward_xp_difficulty": 7,
+      "batch": "valley-combat",
+      "accept": {
+        "npc": "Zureetha Fargaze",
+        "guid": 17379391014787089185,
+        "position": {"x": -629.052, "y": -4228.06, "z": 38.2334},
+        "waypoints": [
+          {"x": -530.0, "y": -4280.0, "z": 39.6215},
+          {"x": -560.0, "y": -4280.0, "z": 37.5486},
+          {"x": -590.0, "y": -4280.0, "z": 38.1465},
+          {"x": -618.5, "y": -4251.7, "z": 38.7}
+        ],
+        "recovery_waypoints": [
+          {"x": -195.0, "y": -4250.0, "z": 61.2942},
+          {"x": -200.0, "y": -4240.0, "z": 65.2429},
+          {"x": -290.0, "y": -4255.0, "z": 61.0035},
+          {"x": -515.0, "y": -4260.0, "z": 45.2262},
+          {"x": -530.0, "y": -4280.0, "z": 39.6215},
+          {"x": -560.0, "y": -4280.0, "z": 37.5486},
+          {"x": -590.0, "y": -4280.0, "z": 38.1465},
+          {"x": -618.5, "y": -4251.7, "z": 38.7}
+        ]
+      },
+      "turn_in": {
+        "npc": "Zureetha Fargaze",
+        "guid": 17379391014787089185,
+        "position": {"x": -629.052, "y": -4228.06, "z": 38.2334},
+        "vendor_position": {"x": -565.428, "y": -4214.2, "z": 41.6737},
+        "vendor_waypoints": [
+          {"x": -530.0, "y": -4280.0, "z": 39.6215},
+          {"x": -560.0, "y": -4280.0, "z": 37.5486},
+          {"x": -590.0, "y": -4280.0, "z": 38.1465},
+          {"x": -618.5, "y": -4251.7, "z": 38.7},
+          {"x": -565.428, "y": -4214.2, "z": 41.6737}
+        ],
+        "waypoints": [
+          {"x": -530.0, "y": -4280.0, "z": 39.6215},
+          {"x": -560.0, "y": -4280.0, "z": 37.5486},
+          {"x": -590.0, "y": -4280.0, "z": 38.1465},
+          {"x": -618.5, "y": -4251.7, "z": 38.7}
+        ],
+        "recovery_waypoints": [
+          {"x": -195.0, "y": -4250.0, "z": 61.2942},
+          {"x": -200.0, "y": -4240.0, "z": 65.2429},
+          {"x": -290.0, "y": -4255.0, "z": 61.0035},
+          {"x": -515.0, "y": -4260.0, "z": 45.2262},
+          {"x": -530.0, "y": -4280.0, "z": 39.6215},
+          {"x": -560.0, "y": -4280.0, "z": 37.5486},
+          {"x": -590.0, "y": -4280.0, "z": 38.1465},
+          {"x": -618.5, "y": -4251.7, "z": 38.7}
+        ]
+      },
+      "objectives": [
+        {
+          "entry": 3101,
+          "name": "Vile Familiar",
+          "required": 8,
+          "position": {"x": -253.593, "y": -4316.13, "z": 56.0352}
+        }
+      ]
+    },
+    {
+      "quest_id": 784,
+      "title": "Vanquish the Betrayers",
+      "min_level": 3,
+      "recommended_level": 6,
+      "quest_level": 7,
+      "reward_xp_difficulty": 5,
+      "batch": "razor-hill-combat",
+      "accept": {
+        "npc": "Gar'Thok",
+        "guid": 17379391014686429780,
+        "position": {"x": 274.988, "y": -4709.3, "z": 17.5719},
+        "waypoints": [
+          {"x": -560.0, "y": -4215.0, "z": 41.5891},
+          {"x": -565.0, "y": -4260.0, "z": 41.3274},
+          {"x": -265.0, "y": -4455.0, "z": 72.3909},
+          {"x": -245.0, "y": -4475.0, "z": 82.2849},
+          {"x": -225.0, "y": -4480.0, "z": 91.1537},
+          {"x": -220.0, "y": -4500.0, "z": 101.5355},
+          {"x": -185.0, "y": -4515.0, "z": 105.8774},
+          {"x": -145.0, "y": -4545.0, "z": 106.2426},
+          {"x": -135.0, "y": -4535.0, "z": 101.8164},
+          {"x": -130.0, "y": -4535.0, "z": 97.4705},
+          {"x": -135.0, "y": -4545.0, "z": 83.7736},
+          {"x": -120.0, "y": -4590.0, "z": 52.6019},
+          {"x": -80.0, "y": -4615.0, "z": 42.6905},
+          {"x": 65.0, "y": -4640.0, "z": 39.7384},
+          {"x": 270.0, "y": -4710.0, "z": 10.7077},
+          {"x": 275.0, "y": -4710.0, "z": 10.4288}
+        ]
+      },
+      "turn_in": {
+        "npc": "Gar'Thok",
+        "guid": 17379391014686429780,
+        "position": {"x": 274.988, "y": -4709.3, "z": 17.5719}
+      },
+      "objectives": [
+        {
+          "entry": 3128,
+          "name": "Kul Tiras Sailor",
+          "required": 10,
+          "position": {"x": -192.284, "y": -4996.99, "z": 22.5548}
+        },
+        {
+          "entry": 3129,
+          "name": "Kul Tiras Marine",
+          "required": 8,
+          "position": {"x": -191.896, "y": -5092.67, "z": 22.1366}
+        },
+        {
+          "entry": 3192,
+          "name": "Lieutenant Benedict",
+          "required": 1,
+          "position": {"x": -245.52, "y": -5119.95, "z": 42.6406}
+        }
+      ]
+    },
+    {
+      "quest_id": 837,
+      "title": "Encroachment",
+      "min_level": 6,
+      "quest_level": 10,
+      "reward_xp_difficulty": 4,
+      "batch": "razor-hill-combat",
+      "accept": {
+        "npc": "Gar'Thok",
+        "guid": 17379391014686429780,
+        "position": {"x": 274.988, "y": -4709.3, "z": 17.5719},
+        "waypoints": [
+          {"x": -560.0, "y": -4215.0, "z": 41.5891},
+          {"x": -565.0, "y": -4260.0, "z": 41.3274},
+          {"x": -265.0, "y": -4455.0, "z": 72.3909},
+          {"x": -245.0, "y": -4475.0, "z": 82.2849},
+          {"x": -225.0, "y": -4480.0, "z": 91.1537},
+          {"x": -220.0, "y": -4500.0, "z": 101.5355},
+          {"x": -185.0, "y": -4515.0, "z": 105.8774},
+          {"x": -145.0, "y": -4545.0, "z": 106.2426},
+          {"x": -135.0, "y": -4535.0, "z": 101.8164},
+          {"x": -130.0, "y": -4535.0, "z": 97.4705},
+          {"x": -135.0, "y": -4545.0, "z": 83.7736},
+          {"x": -120.0, "y": -4590.0, "z": 52.6019},
+          {"x": -80.0, "y": -4615.0, "z": 42.6905},
+          {"x": 65.0, "y": -4640.0, "z": 39.7384},
+          {"x": 270.0, "y": -4710.0, "z": 10.7077},
+          {"x": 275.0, "y": -4710.0, "z": 10.4288}
+        ]
+      },
+      "turn_in": {
+        "npc": "Gar'Thok",
+        "guid": 17379391014686429780,
+        "position": {"x": 274.988, "y": -4709.3, "z": 17.5719}
+      },
+      "objectives": [
+        {
+          "entry": 3111,
+          "name": "Razormane Quilboar",
+          "required": 4,
+          "position": {"x": 85.4167, "y": -4543.75, "z": 58.4279}
+        },
+        {
+          "entry": 3112,
+          "name": "Razormane Scout",
+          "required": 4,
+          "position": {"x": 62.1836, "y": -4454.37, "z": 46.8297}
+        },
+        {
+          "entry": 3113,
+          "name": "Razormane Dustrunner",
+          "required": 4,
+          "position": {"x": 413.141, "y": -4243.35, "z": 27.0356}
+        },
+        {
+          "entry": 3114,
+          "name": "Razormane Battleguard",
+          "required": 4,
+          "position": {"x": 342.624, "y": -4230.38, "z": 23.6101}
+        }
+      ]
+    }
+  ]
+}

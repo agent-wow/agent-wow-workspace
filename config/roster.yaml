@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "configured": true,
+  "_comment": "Five user-created 腰果 characters on the dedicated agent accounts. Durotar route and class content were added on 2026-11-03; worldrpc ports match accounts/<account>/agent-wow.yaml.",
+  "faction": "horde",
+  "start_zone": "durotar",
+  "characters": [
+    {
+      "account": "doumoboy1",
+      "name": "腰果战士",
+      "guid": 2727221,
+      "port": 8093,
+      "role": "tank",
+      "class": "warrior",
+      "race": "orc",
+      "faction": "horde",
+      "start_zone": "durotar"
+    },
+    {
+      "account": "doumoboy2",
+      "name": "腰果萨满",
+      "guid": 2727222,
+      "port": 8092,
+      "role": "dps",
+      "class": "shaman",
+      "race": "orc",
+      "faction": "horde",
+      "start_zone": "durotar"
+    },
+    {
+      "account": "doumoboy3",
+      "name": "腰果猎人",
+      "guid": 2727223,
+      "port": 8091,
+      "role": "dps",
+      "class": "hunter",
+      "race": "troll",
+      "faction": "horde",
+      "start_zone": "durotar"
+    },
+    {
+      "account": "doumoboy4",
+      "name": "腰果牧师",
+      "guid": 2727224,
+      "port": 8090,
+      "role": "healer",
+      "class": "priest",
+      "race": "troll",
+      "faction": "horde",
+      "start_zone": "durotar"
+    },
+    {
+      "account": "doumoboy5",
+      "name": "腰果术士",
+      "guid": 2727225,
+      "port": 8089,
+      "role": "dps",
+      "class": "warlock",
+      "race": "orc",
+      "faction": "horde",
+      "start_zone": "durotar"
+    }
+  ]
+}

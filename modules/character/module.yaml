@@ -1,0 +1,22 @@
+api_version: 1
+enabled: true
+description: Trainer, talent and game-object protocol actions with server read-back
+compose:
+  file: compose.yaml
+  service: module
+grpc:
+  descriptor_set: module.pb
+rpc:
+  open_trainer: /character.module.v1.Module/OpenTrainer
+  buy_spell: /character.module.v1.Module/BuySpell
+  learn_talent: /character.module.v1.Module/LearnTalent
+  use_game_object: /character.module.v1.Module/UseGameObject
+  get_state: /character.module.v1.Module/GetState
+  status: /character.module.v1.Module/Status
+packets:
+  SMSG_TRAINER_LIST: /character.module.v1.Module/OnPacket
+  SMSG_TRAINER_BUY_SUCCEEDED: /character.module.v1.Module/OnPacket
+  SMSG_TRAINER_BUY_FAILED: /character.module.v1.Module/OnPacket
+  SMSG_TALENTS_INFO: /character.module.v1.Module/OnPacket
+  SMSG_LOGIN_VERIFY_WORLD: /character.module.v1.Module/OnPacket
+  SMSG_NEW_WORLD: /character.module.v1.Module/OnPacket

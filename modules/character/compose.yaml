@@ -1,0 +1,7 @@
+services:
+  module:
+    # Modules use mounted Unix sockets; avoid one Docker subnet per module.
+    network_mode: none
+    build:
+      context: ../..
+      dockerfile: modules/character/Dockerfile

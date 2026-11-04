@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "WotLK 3.3.5a apprentice Herbalism/Alchemy/First Aid baseline; spell and item IDs are content, live ranks come only from sense.get_skills",
+  "trainer_npc_flags": 64,
+  "interaction_distance": 4.0,
+  "approach_distance": 25.0,
+  "retry_cooldown_seconds": 30.0,
+  "professions": [
+    {"kind": "gathering", "skill_id": 182, "trainer_spell_id": 2366},
+    {"kind": "manufacturing", "skill_id": 171, "trainer_spell_id": 2259},
+    {"kind": "auxiliary", "skill_id": 129, "trainer_spell_id": 3273}
+  ],
+  "recipes": [
+    {
+      "spell_id": 2330,
+      "skill_id": 171,
+      "min_skill": 0,
+      "target_skill": 40,
+      "materials": {"2447": 1, "765": 1, "3372": 1}
+    },
+    {
+      "spell_id": 3275,
+      "skill_id": 129,
+      "min_skill": 0,
+      "target_skill": 40,
+      "materials": {"2589": 1}
+    }
+  ],
+  "gathering_entries": [1617, 1618, 1619]
+}

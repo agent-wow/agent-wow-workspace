@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package party.module.v1;
+option go_package = "github.com/doumoman/agent-wow-mods/party/src/api;modulev1";
+
+import "api/module/v1/session.proto";
+import "google/protobuf/empty.proto";
+
+message Contact {
+  uint64 guid = 1;
+  uint32 flags = 2;
+  string note = 3;
+  uint32 status = 4;
+  uint32 area = 5;
+  uint32 level = 6;
+  uint32 class_id = 7;
+}
+
+message WhoPlayer {
+  string name = 1;
+  string guild = 2;
+  uint32 level = 3;
+  uint32 class_id = 4;
+  uint32 race = 5;
+  uint32 gender = 6;
+  uint32 zone = 7;
+}
+
+message Invite {
+  uint64 invite_id = 1;
+  string inviter = 2;
+  int64 received_at = 3;
+  int64 expires_at = 4;
+}
+
+message GroupMember {
+  string name = 1;
+  uint64 guid = 2;
+  uint32 status = 3;
+  uint32 subgroup = 4;
+  uint32 flags = 5;
+  uint32 roles = 6;
+  bool is_self = 7;
+}
+
+message ChatMessage {
+  uint64 epoch = 1;
+  uint64 sequence = 2;
+  uint64 sender_guid = 3;
+  uint64 receiver_guid = 4;
+  string message = 5;
+  int64 received_at = 6;
+}
+
+message PartyState {
+  uint64 epoch = 1;
+  uint64 revision = 2;
+  repeated Contact contacts = 3;
+  repeated WhoPlayer who = 4;
+  Invite pending_invite = 5;
+  bool in_group = 6;
+  uint64 group_guid = 7;
+  uint64 leader_guid = 8;
+  repeated GroupMember members = 9;
+  uint32 loot_method = 10;
+  uint64 master_looter_guid = 11;
+  uint32 loot_threshold = 12;
+  uint32 dungeon_difficulty = 13;
+  repeated ChatMessage messages = 14;
+  uint32 parse_errors = 15;
+  uint32 sent_actions = 16;
+}
+
+message NameRequest { string name = 1; }
+message AddFriendRequest {
+  string name = 1;
+  string note = 2;
+}
+message WhoRequest {
+  string name = 1;
+  uint32 min_level = 2;
+  uint32 max_level = 3;
+}
+message InviteResponse {
+  uint64 invite_id = 1;
+  string inviter = 2;
+  bool accept = 3;
+}
+message LootMethodRequest {
+  uint32 method = 1;
+  uint64 master_guid = 2;
+  uint32 threshold = 3;
+}
+message ChatRequest { string message = 1; }
+
+service Module {
+  rpc GetState(google.protobuf.Empty) returns (PartyState);
+  rpc RequestContacts(google.protobuf.Empty) returns (PartyState);
+  rpc AddFriend(AddFriendRequest) returns (PartyState);
+  rpc Who(WhoRequest) returns (PartyState);
+  rpc Invite(NameRequest) returns (PartyState);
+  rpc RespondInvite(InviteResponse) returns (PartyState);
+  rpc SetLootMethod(LootMethodRequest) returns (PartyState);
+  rpc LeaveParty(google.protobuf.Empty) returns (PartyState);
+  rpc SendPartyChat(ChatRequest) returns (PartyState);
+  rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);
+}

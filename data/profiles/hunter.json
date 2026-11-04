@@ -1,0 +1,102 @@
+{
+  "version": 9,
+  "class": "hunter",
+  "source": "WotLK 3.3.5a hunter baseline verified from 腰果猎人's live spellbook and trainer on 2026-11-03; live inventory on 2026-11-04 exposed zero ammunition, so Rough Arrow is protected and replenished before bag upgrades. Version 3 binds replenishment to Duokna's live-observed position and the measured south-side route. Duokna's live vendor list and a 600-arrow purchase were verified on 2026-11-04. Version 4 disables melee auto-attack so the hunter can open at 20 yards with Auto Shot instead of running into melee; arrow consumption and ranged damage remain under live validation. Version 5 gates Raptor Strike to its four-yard melee range after live out-of-range cast failures at ranged distance. Version 6 binds zero-durability equipment recovery to live-observed repair-capable NPC flags; Ghrawt completed a real repair on 2026-11-04, raising the equipped bow from 0/20 to 20/20 for 48 copper. Version 7 opens Auto Shot at its 30-yard ranged window instead of approaching to 20 yards while the target charges, and excludes it inside eight yards. Version 8 selects Rough Arrow through CMSG_SET_AMMO before Auto Shot; a live controlled shot on 2026-11-04 produced SMSG_SPELL_GO, reduced the target from 137 to 129 health and consumed one arrow (600 to 599). Version 9 restocks at 100 arrows instead of treating every consumed arrow as a vendor emergency, and never asks a non-repair merchant to repair equipment.",
+  "roles": ["dps"],
+  "resource": "mana",
+  "resource_scale": 1,
+  "skills": [
+    {
+      "name": "Raptor Strike",
+      "spell_id": 2973,
+      "cost": 10,
+      "priority": 20,
+      "min_level": 1,
+      "requires_target": true,
+      "in_combat_only": false,
+      "max_range": 4
+    },
+    {
+      "name": "Arcane Shot",
+      "spell_id": 3044,
+      "cost": 25,
+      "priority": 10,
+      "min_level": 6,
+      "requires_target": true,
+      "in_combat_only": false
+    },
+    {
+      "name": "Auto Shot",
+      "spell_id": 75,
+      "cost": 0,
+      "priority": 30,
+      "min_level": 1,
+      "requires_target": true,
+      "in_combat_only": false,
+      "sustained": true,
+      "min_range": 8,
+      "max_range": 30,
+      "ammo_item_id": 2512
+    }
+  ],
+  "training_reserve": 50,
+  "talents": {"dps": []},
+  "recovery": {
+    "rest_below_pct": 0.6,
+    "rest_until_pct": 0.85,
+    "flee_below_pct": 0.2,
+    "max_rest_seconds": 40,
+    "rest_step_seconds": 1
+  },
+  "combat": {
+    "engage_radius": 35,
+    "melee_range": 4,
+    "preferred_range": 30,
+    "auto_attack": false,
+    "approach_step": 12,
+    "dz_tolerance": 3,
+    "attack_reissue_seconds": 2,
+    "cast_interval_seconds": 2.5,
+    "stall_seconds": 10,
+    "no_kill_seconds": 120,
+    "max_approach_seconds": 20,
+    "blacklist_seconds": 45,
+    "side_step_distance": 20,
+    "crowd_radius": 8,
+    "max_crowd": 2,
+    "lost_target_limit": 3,
+    "spell_disable_seconds": 8
+  },
+  "route": {"zone": "durotar", "map_id": 1},
+  "inventory": {
+    "stat_weights": {
+      "agility": 2.0,
+      "stamina": 1.2,
+      "attack_power": 1.5,
+      "ranged_attack_power": 2.0
+    },
+    "armor_weight": 0.04,
+    "weapon_dps_weight": 5.0,
+    "min_free_slots": 8,
+    "sell_quality_max": 1,
+    "protected_item_ids": [2512],
+    "material_item_ids": [],
+    "repair_position": {"x": 358.128, "y": -4706.73, "z": 14.4772},
+    "repair_waypoints": [],
+    "supplies": [
+      {
+        "item_id": 2512,
+        "target_count": 600,
+        "restock_below": 100,
+        "vendor_position": {"x": -565.428, "y": -4214.2, "z": 41.6737},
+        "vendor_waypoints": [
+          {"x": -530.0, "y": -4280.0, "z": 39.6215},
+          {"x": -560.0, "y": -4280.0, "z": 37.5486},
+          {"x": -590.0, "y": -4280.0, "z": 38.1465},
+          {"x": -618.5, "y": -4251.7, "z": 38.7},
+          {"x": -565.428, "y": -4214.2, "z": 41.6737}
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package combat.module.v1;
+option go_package = "github.com/doumoman/agent-wow-mods/combat/src/api;modulev1";
+
+import "api/module/v1/session.proto";
+import "google/protobuf/empty.proto";
+
+message AttackRequest {
+  // Required. The module also selects this GUID before starting the swing.
+  uint64 guid = 1;
+}
+
+message CastRequest {
+  uint32 spell_id = 1;
+  // Zero means the current combat target unless preserve_empty_target is set.
+  uint64 target_guid = 2;
+  // Trade skills use an empty target mask even when a combat target is tracked.
+  bool preserve_empty_target = 3;
+  // Gathering spells target a game object rather than a unit.
+  bool target_is_game_object = 4;
+}
+
+message Vector3 {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message CombatState {
+  bool has_target = 1;
+  uint64 target_guid = 2;
+  bool attacking = 3;
+  bool in_combat = 4;
+  uint32 target_health = 5;
+  uint32 target_max_health = 6;
+  bool target_dead = 7;
+
+  uint32 self_health = 8;
+  uint32 self_max_health = 9;
+  bool self_dead = 10;
+  uint32 self_level = 11;
+  uint32 self_xp = 12;
+  uint32 self_next_level_xp = 13;
+
+  uint32 kills = 14;
+  uint32 deaths = 15;
+  uint32 last_xp = 16;
+  uint64 last_victim = 17;
+  string last_error = 18;
+  uint32 refusals = 19;
+  uint32 level_ups = 20;
+  uint32 cast_failures = 21;
+  // Legacy alias for the rage slot. New code should read self_power_type and
+  // self_power instead; the primary slot is UNIT_FIELD_POWER1 + power type, so
+  // a warrior's rage is POWER2, a rogue's energy is POWER4 and a priest's mana
+  // is POWER1.
+  uint32 self_rage = 22;
+  // Primary power type from UNIT_FIELD_BYTES_0: 0 mana, 1 rage, 2 focus,
+  // 3 energy, 4 happiness, 5 rune, 6 runic power.
+  uint32 self_power_type = 23;
+  uint32 self_power = 24;
+  uint32 self_max_power = 25;
+  // Self_ghost is PLAYER_FLAGS & 0x10: released spirit, corpse still exists.
+  bool self_ghost = 26;
+  // Corpse reclaim delay last reported by the server and the module-computed
+  // time left. Zero delay or zero remaining means no active reclaim timer.
+  uint32 corpse_reclaim_delay_ms = 27;
+  uint32 corpse_reclaim_remaining_ms = 28;
+  // Graveyard/spirit-healer location from SMSG_DEATH_RELEASE_LOC. The map id
+  // and position are only valid when has_spirit_healer_location is true.
+  uint32 spirit_healer_map_id = 29;
+  bool has_spirit_healer_location = 30;
+  Vector3 spirit_healer_position = 31;
+  // Tracked target facts from update fields.
+  uint32 target_level = 32;
+  uint32 target_entry = 33;
+}
+
+message SpiritHealerRequest {
+  uint64 healer_guid = 1;
+  // packed_guid sends the GUID in packed form; some servers expect it.
+  bool packed_guid = 2;
+}
+
+message Spell {
+  uint32 spell_id = 1;
+  bool disabled = 2;
+}
+
+message SpellsResponse {
+  repeated Spell spells = 1;
+  // False until SMSG_INITIAL_SPELLS establishes the current login's spellbook.
+  bool initialized = 2;
+}
+
+message StatusResponse {
+  uint32 packets = 1;
+  uint32 parse_errors = 2;
+  uint32 attack_starts = 3;
+  uint32 attack_stops = 4;
+  string last_error = 5;
+  uint32 gossip_messages = 6;
+  uint32 spirit_healer_confirms = 7;
+  uint32 corpse_reclaim_delays = 8;
+  uint32 death_release_locations = 9;
+  // Number of authoritative world entries (SMSG_LOGIN_VERIFY_WORLD and
+  // SMSG_NEW_WORLD) that cleared the tracked target.
+  uint32 world_resets = 10;
+}
+
+service Module {
+  rpc Attack(AttackRequest) returns (CombatState);
+  rpc StopAttack(google.protobuf.Empty) returns (CombatState);
+  rpc Cast(CastRequest) returns (CombatState);
+  // ReleaseSpirit sends CMSG_REPOP_REQUEST, turning the corpse into a ghost.
+  rpc ReleaseSpirit(google.protobuf.Empty) returns (CombatState);
+  // ReclaimCorpse sends CMSG_RECLAIM_CORPSE with the character's own GUID.
+  rpc ReclaimCorpse(google.protobuf.Empty) returns (CombatState);
+  // ResurrectAtSpiritHealer opens gossip with the healer and activates it. It
+  // costs durability but always works, even after the corpse has decayed.
+  rpc ResurrectAtSpiritHealer(SpiritHealerRequest) returns (CombatState);
+  rpc GetState(google.protobuf.Empty) returns (CombatState);
+  rpc GetSpells(google.protobuf.Empty) returns (SpellsResponse);
+  rpc Status(google.protobuf.Empty) returns (StatusResponse);
+  rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);
+}

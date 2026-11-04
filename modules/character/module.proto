@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package character.module.v1;
+option go_package = "github.com/doumoman/agent-wow-mods/character/src/api;modulev1";
+
+import "api/module/v1/session.proto";
+import "google/protobuf/empty.proto";
+
+message TrainerRequest {
+  uint64 trainer_guid = 1;
+}
+
+message BuySpellRequest {
+  uint64 trainer_guid = 1;
+  uint32 spell_id = 2;
+}
+
+message TrainerSpell {
+  uint32 spell_id = 1;
+  uint32 usable = 2;
+  uint32 money_cost = 3;
+  uint32 profession_point_cost = 4;
+  uint32 required_level = 5;
+  uint32 required_skill_line = 6;
+  uint32 required_skill_rank = 7;
+  repeated uint32 required_abilities = 8;
+}
+
+message TalentLearnRequest {
+  uint32 talent_id = 1;
+  // Zero-based rank expected after learning, matching CMSG_LEARN_TALENT.
+  uint32 requested_rank = 2;
+}
+
+message TalentRank {
+  uint32 talent_id = 1;
+  uint32 rank = 2;
+}
+
+message TalentGroup {
+  uint32 index = 1;
+  bool active = 2;
+  repeated TalentRank talents = 3;
+}
+
+message GameObjectUseRequest {
+  uint64 guid = 1;
+}
+
+message CharacterState {
+  uint64 trainer_guid = 1;
+  uint32 trainer_type = 2;
+  string greeting = 3;
+  repeated TrainerSpell trainer_spells = 4;
+  bool trainer_open = 5;
+  uint32 last_buy_spell_id = 6;
+  bool last_buy_succeeded = 7;
+  uint32 last_buy_result = 8;
+  bool has_talents = 9;
+  uint32 free_talent_points = 10;
+  uint32 active_talent_group = 11;
+  repeated TalentGroup talent_groups = 12;
+  uint64 last_game_object_guid = 13;
+  uint32 game_object_uses = 14;
+  string last_error = 15;
+  // Distinguishes an unavailable/failure result of zero from no result yet.
+  bool last_buy_result_known = 16;
+}
+
+message StatusResponse {
+  uint32 packets = 1;
+  uint32 parse_errors = 2;
+  uint32 trainer_lists = 3;
+  uint32 trainer_buys = 4;
+  uint32 talent_snapshots = 5;
+  uint32 game_object_uses = 6;
+  string last_error = 7;
+}
+
+service Module {
+  rpc OpenTrainer(TrainerRequest) returns (CharacterState);
+  rpc BuySpell(BuySpellRequest) returns (CharacterState);
+  rpc LearnTalent(TalentLearnRequest) returns (CharacterState);
+  rpc UseGameObject(GameObjectUseRequest) returns (CharacterState);
+  rpc GetState(google.protobuf.Empty) returns (CharacterState);
+  rpc Status(google.protobuf.Empty) returns (StatusResponse);
+  rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);
+}

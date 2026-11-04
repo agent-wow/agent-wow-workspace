@@ -1,5 +1,18 @@
-/config/
-/data/
+# Versioned configuration and content packages are tracked; runtime state is not.
+/config/*
+!/config/roster.yaml
+/data/*
+!/data/profiles/
+!/data/routes/
+!/data/quests/
+!/data/professions/
+!/data/dungeons/
+/data/growth/
+/logs/
+/accounts/*/config/
+/accounts/*/data/
+/accounts/*/session.json
+/accounts/*/session.json.tmp
 /.sandbox/codex/
 /.sandbox/logs/
 

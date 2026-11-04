@@ -1,0 +1,26 @@
+api_version: 1
+enabled: true
+description: Open quest-giver menus, accept quests, track progress and turn in rewards
+compose:
+  file: compose.yaml
+  service: module
+grpc:
+  descriptor_set: module.pb
+rpc:
+  gossip: /quest.module.v1.Module/Gossip
+  accept: /quest.module.v1.Module/Accept
+  turn_in: /quest.module.v1.Module/TurnIn
+  get_state: /quest.module.v1.Module/GetState
+  status: /quest.module.v1.Module/Status
+packets:
+  SMSG_QUESTGIVER_QUEST_LIST: /quest.module.v1.Module/OnPacket
+  SMSG_QUESTGIVER_REQUEST_ITEMS: /quest.module.v1.Module/OnPacket
+  SMSG_QUESTGIVER_OFFER_REWARD: /quest.module.v1.Module/OnPacket
+  SMSG_QUESTGIVER_QUEST_INVALID: /quest.module.v1.Module/OnPacket
+  SMSG_QUESTGIVER_QUEST_COMPLETE: /quest.module.v1.Module/OnPacket
+  SMSG_QUESTGIVER_QUEST_FAILED: /quest.module.v1.Module/OnPacket
+  SMSG_QUESTLOG_FULL: /quest.module.v1.Module/OnPacket
+  SMSG_QUESTUPDATE_FAILED: /quest.module.v1.Module/OnPacket
+  SMSG_QUESTUPDATE_FAILEDTIMER: /quest.module.v1.Module/OnPacket
+  SMSG_QUESTUPDATE_COMPLETE: /quest.module.v1.Module/OnPacket
+  SMSG_QUESTUPDATE_ADD_KILL: /quest.module.v1.Module/OnPacket

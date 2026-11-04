@@ -1,0 +1,25 @@
+{
+  "_comment": "Agent access policy. An account not listed here is off-limits: no login, no start, no create/delete. On a listed account, 'characters' narrows it further; '*' means every character. Human accounts doumoman, isawall126 and isawall317 must stay unlisted.",
+  "accounts": {
+    "doumoboy1": {
+      "characters": ["*"],
+      "note": "Dedicated agent account."
+    },
+    "doumoboy2": {
+      "characters": ["*"],
+      "note": "Dedicated agent account."
+    },
+    "doumoboy3": {
+      "characters": ["*"],
+      "note": "Dedicated agent account."
+    },
+    "doumoboy4": {
+      "characters": ["*"],
+      "note": "Dedicated agent account."
+    },
+    "doumoboy5": {
+      "characters": ["*"],
+      "note": "Dedicated agent account."
+    }
+  }
+}

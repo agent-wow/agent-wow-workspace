@@ -1,0 +1,44 @@
+api_version: 1
+enabled: true
+description: Melee attack, abilities, and combat/progression state
+compose:
+  file: compose.yaml
+  service: module
+grpc:
+  descriptor_set: module.pb
+rpc:
+  attack: /combat.module.v1.Module/Attack
+  stop_attack: /combat.module.v1.Module/StopAttack
+  cast: /combat.module.v1.Module/Cast
+  release_spirit: /combat.module.v1.Module/ReleaseSpirit
+  reclaim_corpse: /combat.module.v1.Module/ReclaimCorpse
+  resurrect_at_spirit_healer: /combat.module.v1.Module/ResurrectAtSpiritHealer
+  get_state: /combat.module.v1.Module/GetState
+  get_spells: /combat.module.v1.Module/GetSpells
+  status: /combat.module.v1.Module/Status
+packets:
+  SMSG_LOGIN_VERIFY_WORLD: /combat.module.v1.Module/OnPacket
+  SMSG_NEW_WORLD: /combat.module.v1.Module/OnPacket
+  SMSG_ATTACKSTART: /combat.module.v1.Module/OnPacket
+  SMSG_ATTACKSTOP: /combat.module.v1.Module/OnPacket
+  SMSG_ATTACKSWING_NOTINRANGE: /combat.module.v1.Module/OnPacket
+  SMSG_ATTACKSWING_BADFACING: /combat.module.v1.Module/OnPacket
+  SMSG_ATTACKSWING_DEADTARGET: /combat.module.v1.Module/OnPacket
+  SMSG_ATTACKSWING_CANT_ATTACK: /combat.module.v1.Module/OnPacket
+  SMSG_LOG_XPGAIN: /combat.module.v1.Module/OnPacket
+  SMSG_LEVELUP_INFO: /combat.module.v1.Module/OnPacket
+  SMSG_CAST_FAILED: /combat.module.v1.Module/OnPacket
+  SMSG_SPELL_START: /combat.module.v1.Module/OnPacket
+  SMSG_SPELL_GO: /combat.module.v1.Module/OnPacket
+  SMSG_SPELL_FAILURE: /combat.module.v1.Module/OnPacket
+  SMSG_SPELL_FAILED_OTHER: /combat.module.v1.Module/OnPacket
+  SMSG_ATTACKERSTATEUPDATE: /combat.module.v1.Module/OnPacket
+  SMSG_INITIAL_SPELLS: /combat.module.v1.Module/OnPacket
+  SMSG_LEARNED_SPELL: /combat.module.v1.Module/OnPacket
+  SMSG_GOSSIP_MESSAGE: /combat.module.v1.Module/OnPacket
+  SMSG_SPIRIT_HEALER_CONFIRM: /combat.module.v1.Module/OnPacket
+  SMSG_CORPSE_RECLAIM_DELAY: /combat.module.v1.Module/OnPacket
+  SMSG_DEATH_RELEASE_LOC: /combat.module.v1.Module/OnPacket
+  SMSG_UPDATE_OBJECT: /combat.module.v1.Module/OnPacket
+  SMSG_COMPRESSED_UPDATE_OBJECT: /combat.module.v1.Module/OnPacket
+  SMSG_DESTROY_OBJECT: /combat.module.v1.Module/OnPacket

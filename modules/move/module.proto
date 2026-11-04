@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package move.module.v1;
+option go_package = "github.com/doumoman/agent-wow-mods/move/src/api;modulev1";
+
+import "api/module/v1/session.proto";
+import "google/protobuf/empty.proto";
+
+message Position {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+  // Facing angle in radians in the server's convention: 0 faces +X and the
+  // angle grows toward +Y, so the forward vector is (cos o, sin o) and facing
+  // a target is atan2(dy, dx).
+  float orientation = 4;
+}
+
+message PositionResponse {
+  Position position = 1;
+  bool moving = 2;
+}
+
+message MoveRequest {
+  // Yards to travel in one call. Capped at 40.
+  float yards = 1;
+}
+
+message TurnRequest {
+  // Radians to turn in one call. Positive is left/counter-clockwise.
+  float radians = 1;
+}
+
+message TurnToRequest {
+  float orientation = 1;
+}
+
+message MoveToRequest {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message RunSpeedRequest {
+  float yards_per_second = 1;
+}
+
+message StatusResponse {
+  Position position = 1;
+  bool has_position = 2;
+  bool moving = 3;
+  float run_speed = 4;
+  uint32 packets = 5;
+  uint32 parse_errors = 6;
+  // World epoch, incremented by SMSG_LOGIN_VERIFY_WORLD and SMSG_NEW_WORLD.
+  // A move started in an older epoch aborts with codes.Aborted; callers should
+  // discard positions and cursors captured before the epoch changed.
+  uint64 world_epoch = 7;
+  uint32 map_id = 8;
+  bool has_map = 9;
+}
+
+service Module {
+  rpc GetPosition(google.protobuf.Empty) returns (PositionResponse);
+  rpc Forward(MoveRequest) returns (PositionResponse);
+  rpc Backward(MoveRequest) returns (PositionResponse);
+  rpc TurnLeft(TurnRequest) returns (PositionResponse);
+  rpc TurnRight(TurnRequest) returns (PositionResponse);
+  rpc TurnTo(TurnToRequest) returns (PositionResponse);
+  // MoveTo walks straight toward a world position, samples terrain along the
+  // way, and caps the step at 40 yards. It does not pathfind or avoid obstacles.
+  rpc MoveTo(MoveToRequest) returns (PositionResponse);
+  // Navigate follows a bounded outdoor-terrain A* path for up to 12 yards.
+  // It is a short-step detour primitive, not a long-running route worker.
+  rpc Navigate(MoveToRequest) returns (PositionResponse);
+  rpc Stop(google.protobuf.Empty) returns (PositionResponse);
+  // RecoverGround sends one stop at the sampled outdoor terrain height. This
+  // deliberately bypasses the 8-yard guard for operator-confirmed bad saved Z.
+  rpc RecoverGround(google.protobuf.Empty) returns (PositionResponse);
+  rpc SetRunSpeed(RunSpeedRequest) returns (StatusResponse);
+  rpc Status(google.protobuf.Empty) returns (StatusResponse);
+  rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);
+}

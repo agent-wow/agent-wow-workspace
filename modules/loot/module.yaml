@@ -1,0 +1,20 @@
+api_version: 1
+enabled: true
+description: Open corpses and take everything (items and money), with an RPC to open a loot window
+compose:
+  file: compose.yaml
+  service: module
+grpc:
+  descriptor_set: module.pb
+rpc:
+  get_state: /loot.module.v1.Module/GetState
+  loot: /loot.module.v1.Module/Loot
+  take: /loot.module.v1.Module/Take
+  roll: /loot.module.v1.Module/Roll
+  set_auto_loot: /loot.module.v1.Module/SetAutoLoot
+packets:
+  SMSG_LOOT_RESPONSE: /loot.module.v1.Module/OnPacket
+  SMSG_LOOT_START_ROLL: /loot.module.v1.Module/OnPacket
+  SMSG_LOOT_ROLL: /loot.module.v1.Module/OnPacket
+  SMSG_LOOT_ROLL_WON: /loot.module.v1.Module/OnPacket
+  SMSG_LOOT_ALL_PASSED: /loot.module.v1.Module/OnPacket

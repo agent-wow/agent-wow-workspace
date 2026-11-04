@@ -1,0 +1,141 @@
+{
+  "version": 7,
+  "class": "priest",
+  "source": "WotLK 3.3.5a mana-healer baseline; Smite 585 and Lesser Heal 2050 are live-verified. Version 6 excludes damaging Smite casts inside four yards while preserving self-healing. Version 7 adds Shadow Word: Pain 589 from hash-verified AzerothCore npc_trainer template 200011 (level 4, 100 copper) and Spell.dbc (rank 1, instant, 30-yard range index); its per-target 18-second reapply gate prevents repeated DoT casts",
+  "roles": ["healer", "dps"],
+  "resource": "mana",
+  "resource_scale": 1,
+  "skills": [
+    {
+      "name": "Lesser Heal",
+      "spell_id": 2050,
+      "cost": 40,
+      "priority": 20,
+      "min_level": 1,
+      "requires_target": false,
+      "in_combat_only": false,
+      "when_health_below_pct": 0.5
+    },
+    {
+      "name": "Shadow Word: Pain",
+      "spell_id": 589,
+      "cost": 25,
+      "priority": 15,
+      "min_level": 4,
+      "requires_target": true,
+      "in_combat_only": false,
+      "min_range": 4,
+      "reapply_seconds": 18
+    },
+    {
+      "name": "Smite",
+      "spell_id": 585,
+      "cost": 30,
+      "priority": 10,
+      "min_level": 1,
+      "requires_target": true,
+      "in_combat_only": false,
+      "min_range": 4
+    },
+    {
+      "name": "Lesser Heal",
+      "spell_id": 2052,
+      "cost": 45,
+      "priority": 21,
+      "min_level": 4,
+      "requires_target": false,
+      "in_combat_only": false,
+      "when_health_below_pct": 0.5
+    },
+    {
+      "name": "Smite",
+      "spell_id": 591,
+      "cost": 50,
+      "priority": 11,
+      "min_level": 6,
+      "requires_target": true,
+      "in_combat_only": false,
+      "min_range": 4
+    },
+    {
+      "name": "Lesser Heal",
+      "spell_id": 2053,
+      "cost": 75,
+      "priority": 22,
+      "min_level": 10,
+      "requires_target": false,
+      "in_combat_only": false,
+      "when_health_below_pct": 0.5
+    },
+    {
+      "name": "Smite",
+      "spell_id": 592,
+      "cost": 95,
+      "priority": 12,
+      "min_level": 14,
+      "requires_target": true,
+      "in_combat_only": false,
+      "min_range": 4
+    },
+    {
+      "name": "Heal",
+      "spell_id": 2054,
+      "cost": 155,
+      "priority": 23,
+      "min_level": 16,
+      "requires_target": false,
+      "in_combat_only": false,
+      "when_health_below_pct": 0.5
+    }
+  ],
+  "training_reserve": 50,
+  "talents": {
+    "healer": [{"talent_id": 342, "min_level": 10, "max_rank": 4}],
+    "dps": [{"talent_id": 342, "min_level": 10, "max_rank": 4}]
+  },
+  "recovery": {
+    "rest_below_pct": 0.6,
+    "rest_until_pct": 0.8,
+    "flee_below_pct": 0.2,
+    "max_rest_seconds": 40,
+    "rest_step_seconds": 1
+  },
+  "combat": {
+    "engage_radius": 35,
+    "melee_range": 4,
+    "preferred_range": 28,
+    "auto_attack": false,
+    "approach_step": 12,
+    "dz_tolerance": 3,
+    "attack_reissue_seconds": 2,
+    "cast_interval_seconds": 3.0,
+    "stall_seconds": 10,
+    "no_kill_seconds": 120,
+    "max_approach_seconds": 20,
+    "blacklist_seconds": 45,
+    "side_step_distance": 20,
+    "crowd_radius": 8,
+    "max_crowd": 2,
+    "lost_target_limit": 3,
+    "spell_disable_seconds": 60
+  },
+  "route": {
+    "zone": "elwynn-forest",
+    "map_id": 0
+  },
+  "inventory": {
+    "stat_weights": {
+      "intellect": 2.0,
+      "spirit": 1.5,
+      "stamina": 1.0,
+      "spell_power": 2.0
+    },
+    "armor_weight": 0.02,
+    "weapon_dps_weight": 1.0,
+    "min_free_slots": 2,
+    "sell_quality_max": 1,
+    "protected_item_ids": [],
+    "material_item_ids": [],
+    "supplies": []
+  }
+}

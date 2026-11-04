@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package loot.module.v1;
+option go_package = "github.com/doumoman/agent-wow-mods/loot/src/api;modulev1";
+
+import "api/module/v1/session.proto";
+import "google/protobuf/empty.proto";
+
+// LootItem is one row the server offered in the last opened window.
+message LootItem {
+  uint32 item_id = 1;
+  uint32 count = 2;
+  uint32 slot = 3;
+  uint32 slot_type = 4;
+}
+
+// LootState reports what the module has seen and done this session.
+message LootState {
+  // CMSG_LOOT packets sent.
+  uint32 opened = 1;
+  // Items taken with CMSG_AUTOSTORE_LOOT_ITEM.
+  uint32 items = 2;
+  // Copper collected with CMSG_LOOT_MONEY.
+  uint32 money = 3;
+  // Opens the server refused (out of range, no loot rights, already looted).
+  uint32 errors = 4;
+  // Take everything as soon as a window opens (default true).
+  bool auto_loot = 5;
+  // Text of the most recent refusal, for logs.
+  string last_error = 6;
+  // Rows from the most recent successful open.
+  repeated LootItem last_items = 7;
+  // Current open window, retained while auto_loot is disabled.
+  uint64 current_guid = 8;
+  uint32 current_gold = 9;
+  repeated RollOffer rolls = 10;
+}
+
+message LootRequest {
+  // Full 64-bit GUID of the creature whose corpse should be opened.
+  uint64 guid = 1;
+}
+
+message AutoLootRequest {
+  bool enabled = 1;
+}
+
+message TakeRequest {
+  uint64 guid = 1;
+  repeated uint32 slots = 2;
+  bool take_money = 3;
+}
+
+message RollOffer {
+  uint64 item_guid = 1;
+  uint32 map_id = 2;
+  uint32 slot = 3;
+  uint32 item_id = 4;
+  uint32 random_suffix = 5;
+  uint32 random_property = 6;
+  uint32 count = 7;
+  uint32 countdown_ms = 8;
+  int64 deadline_at = 9;
+  uint32 vote_mask = 10;
+  int32 own_vote = 11;
+  bool active = 12;
+  string outcome = 13;
+  uint64 winner_guid = 14;
+  bool vote_confirmed = 15;
+}
+
+message RollRequest {
+  uint64 item_guid = 1;
+  uint32 slot = 2;
+  uint32 vote = 3;
+}
+
+service Module {
+  rpc GetState(google.protobuf.Empty) returns (LootState);
+  rpc Loot(LootRequest) returns (LootState);
+  rpc Take(TakeRequest) returns (LootState);
+  rpc Roll(RollRequest) returns (LootState);
+  rpc SetAutoLoot(AutoLootRequest) returns (LootState);
+  rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);
+}

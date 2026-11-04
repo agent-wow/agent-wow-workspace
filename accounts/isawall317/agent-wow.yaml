@@ -1,0 +1,13 @@
+config_dir: ./accounts/isawall317/config
+data_dir: ./accounts/isawall317/data
+module_dir: ./modules
+
+authserver:
+  host: login.ymwow.com
+  port: 3720
+
+worldrpc:
+  host: localhost
+  port: 8088
+
+log_level: info

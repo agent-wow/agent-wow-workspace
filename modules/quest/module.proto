@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package quest.module.v1;
+option go_package = "github.com/doumoman/agent-wow-mods/quest/src/api;modulev1";
+
+import "api/module/v1/session.proto";
+import "google/protobuf/empty.proto";
+
+message QuestObjective {
+  // Creature entry for kill updates. Other objective kinds are not decoded yet.
+  uint32 entry = 1;
+  uint32 current = 2;
+  uint32 required = 3;
+}
+
+message Quest {
+  uint32 quest_id = 1;
+  string title = 2;
+  int32 level = 3;
+  // Server-provided dialog status from the NPC quest menu.
+  uint32 icon = 4;
+  uint32 flags = 5;
+  bool repeatable = 6;
+  bool complete = 7;
+  repeated QuestObjective objectives = 8;
+}
+
+message QuestState {
+  uint64 npc_guid = 1;
+  // Rows from the latest SMSG_QUESTGIVER_QUEST_LIST.
+  repeated Quest menu = 2;
+  // Quests accepted or updated during this module session.
+  repeated Quest active = 3;
+  uint32 accepts = 4;
+  uint32 completed = 5;
+  uint32 errors = 6;
+  string last_error = 7;
+  uint32 last_quest_id = 8;
+  // Nonzero while the complete/request-reward/choose-reward sequence is open.
+  uint32 turning_in_quest_id = 9;
+}
+
+message GossipRequest {
+  uint64 guid = 1;
+}
+
+message QuestRequest {
+  uint64 guid = 1;
+  uint32 quest_id = 2;
+}
+
+message TurnInRequest {
+  uint64 guid = 1;
+  uint32 quest_id = 2;
+  // Zero-based choice index. Use zero for fixed-reward quests.
+  uint32 reward_index = 3;
+}
+
+message StatusResponse {
+  uint32 packets = 1;
+  uint32 parse_errors = 2;
+  uint32 gossips = 3;
+  uint32 accept_requests = 4;
+  uint32 reward_requests = 5;
+  uint32 turn_ins = 6;
+  string last_error = 7;
+  uint32 reward_choices = 8;
+}
+
+service Module {
+  rpc Gossip(GossipRequest) returns (QuestState);
+  rpc Accept(QuestRequest) returns (QuestState);
+  // Starts an asynchronous turn-in; poll GetState for completion or errors.
+  rpc TurnIn(TurnInRequest) returns (QuestState);
+  rpc GetState(google.protobuf.Empty) returns (QuestState);
+  rpc Status(google.protobuf.Empty) returns (StatusResponse);
+  rpc OnPacket(agentwow.module.v1.WorldPacket) returns (google.protobuf.Empty);
+}

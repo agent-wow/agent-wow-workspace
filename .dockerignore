@@ -1,0 +1,10 @@
+# Never send credentials, runtime state or VCS data to the build context.
+.git
+**/.git
+config
+data
+logs
+journal
+.sandbox
+**/*.log
+**/bin

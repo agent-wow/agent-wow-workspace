@@ -1,0 +1,4932 @@
+{
+  "version": 1,
+  "zone": "durotar",
+  "map_id": 1,
+  "source": "AzerothCore master world SQL snapshot downloaded and hash-checked 2026-11-04",
+  "scope": "QuestSortID 14/363, levels 1-20, Horde and current roster classes",
+  "limitations": [
+    "Candidates are not an executable route until live NPC and walkability checks pass.",
+    "reward_xp_difficulty is a DBC index, not an XP amount.",
+    "Item, game-object, timed, PvP and group objectives are excluded from execution."
+  ],
+  "rejected_before_graph": {
+    "outside_1_20": 8
+  },
+  "eligible_count": 12,
+  "quests": [
+    {
+      "quest_id": 787,
+      "title": "The New Horde",
+      "quest_level": 1,
+      "min_level": 1,
+      "sort_id": 363,
+      "reward_xp_difficulty": 3,
+      "reward_money": 0,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3144
+      ],
+      "ender_entries": [
+        3143
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3144,
+          "name": "Eitrigg",
+          "min_level": 20,
+          "max_level": 20,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 4771,
+              "x": 1905.75,
+              "y": -4161.37,
+              "z": 41.2471
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3143,
+          "name": "Gornek",
+          "min_level": 5,
+          "max_level": 5,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3443,
+              "x": -600.132,
+              "y": -4186.19,
+              "z": 41.2663
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": true,
+      "validation_required": [
+        "live_npc_identity",
+        "live_walkability",
+        "live_quest_accept"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 4641,
+      "title": "Your Place In The World",
+      "quest_level": 1,
+      "min_level": 1,
+      "sort_id": 363,
+      "reward_xp_difficulty": 3,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        10176
+      ],
+      "ender_entries": [
+        3143
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 10176,
+          "name": "Kaltunk",
+          "min_level": 20,
+          "max_level": 20,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3442,
+              "x": -610.073,
+              "y": -4253.52,
+              "z": 39.0393
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3143,
+          "name": "Gornek",
+          "min_level": 5,
+          "max_level": 5,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3443,
+              "x": -600.132,
+              "y": -4186.19,
+              "z": 41.2663
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": true,
+      "validation_required": [
+        "live_npc_identity",
+        "live_walkability",
+        "live_quest_accept"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 5843,
+      "title": "Welcome!",
+      "quest_level": 1,
+      "min_level": 1,
+      "sort_id": 363,
+      "reward_xp_difficulty": 0,
+      "reward_money": 0,
+      "races": 130,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [],
+      "ender_entries": [
+        11943
+      ],
+      "objectives": [],
+      "accept_candidates": [],
+      "turn_in_candidates": [
+        {
+          "entry": 11943,
+          "name": "Magga",
+          "min_level": 5,
+          "max_level": 5,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3416,
+              "x": -638.159,
+              "y": -4237.94,
+              "z": 38.2173
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "external_start_item",
+        "item_objectives_not_decoded",
+        "no_creature_starter",
+        "no_map_1_starter_spawn"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 788,
+      "title": "Cutting Teeth",
+      "quest_level": 2,
+      "min_level": 1,
+      "sort_id": 363,
+      "reward_xp_difficulty": 6,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3143
+      ],
+      "ender_entries": [
+        3143
+      ],
+      "objectives": [
+        {
+          "entry": 3098,
+          "required": 8,
+          "name": "Mottled Boar",
+          "min_level": 1,
+          "max_level": 2,
+          "faction": 189,
+          "rank": 0,
+          "type": 1,
+          "candidate_anchor": {
+            "x": -486.307,
+            "y": -4314.94,
+            "z": 43.5488,
+            "guid": 12965,
+            "spawn_count": 65
+          },
+          "candidate_spawns": [
+            {
+              "guid": 4688,
+              "x": -675.722,
+              "y": -4350.36,
+              "z": 44.603
+            },
+            {
+              "guid": 4689,
+              "x": -549.241,
+              "y": -4421.25,
+              "z": 42.1042
+            },
+            {
+              "guid": 4690,
+              "x": -485.464,
+              "y": -4381.5,
+              "z": 48.2731
+            },
+            {
+              "guid": 4691,
+              "x": -680.926,
+              "y": -4284.82,
+              "z": 39.9806
+            },
+            {
+              "guid": 6632,
+              "x": -747.256,
+              "y": -4181.42,
+              "z": 30.2402
+            },
+            {
+              "guid": 6633,
+              "x": -452.91,
+              "y": -4421.99,
+              "z": 50.3803
+            },
+            {
+              "guid": 6634,
+              "x": -375.04,
+              "y": -4314.96,
+              "z": 51.8979
+            },
+            {
+              "guid": 7482,
+              "x": -486.181,
+              "y": -4454.21,
+              "z": 50.132
+            },
+            {
+              "guid": 7484,
+              "x": -486.279,
+              "y": -4144.73,
+              "z": 55.0583
+            },
+            {
+              "guid": 7487,
+              "x": -360.833,
+              "y": -4312.15,
+              "z": 49.0128
+            },
+            {
+              "guid": 7488,
+              "x": -744.55,
+              "y": -4255.23,
+              "z": 43.5246
+            },
+            {
+              "guid": 7490,
+              "x": -344.253,
+              "y": -4260.39,
+              "z": 61.6241
+            },
+            {
+              "guid": 7491,
+              "x": -348.51,
+              "y": -4212.4,
+              "z": 60.2904
+            },
+            {
+              "guid": 7974,
+              "x": -477.985,
+              "y": -4182.53,
+              "z": 50.9057
+            },
+            {
+              "guid": 7975,
+              "x": -714.937,
+              "y": -4221.35,
+              "z": 40.2762
+            },
+            {
+              "guid": 7976,
+              "x": -391.309,
+              "y": -4283.43,
+              "z": 49.1575
+            },
+            {
+              "guid": 7977,
+              "x": -716.996,
+              "y": -4150.75,
+              "z": 30.0694
+            },
+            {
+              "guid": 7979,
+              "x": -680.794,
+              "y": -4317.67,
+              "z": 47.2347
+            },
+            {
+              "guid": 7980,
+              "x": -754.894,
+              "y": -4219.76,
+              "z": 43.0009
+            },
+            {
+              "guid": 7981,
+              "x": -411.091,
+              "y": -4411.85,
+              "z": 45.83
+            },
+            {
+              "guid": 8545,
+              "x": -453.527,
+              "y": -4182.39,
+              "z": 46.4166
+            },
+            {
+              "guid": 8546,
+              "x": -726.486,
+              "y": -4188.09,
+              "z": 30.2252
+            },
+            {
+              "guid": 8547,
+              "x": -714.713,
+              "y": -4286.47,
+              "z": 43.2732
+            },
+            {
+              "guid": 8548,
+              "x": -317.699,
+              "y": -4281.69,
+              "z": 59.5233
+            },
+            {
+              "guid": 8549,
+              "x": -555.417,
+              "y": -4384.57,
+              "z": 45.5126
+            },
+            {
+              "guid": 8550,
+              "x": -612.622,
+              "y": -4448.09,
+              "z": 45.5919
+            },
+            {
+              "guid": 10371,
+              "x": -514.764,
+              "y": -4414.54,
+              "z": 52.793
+            },
+            {
+              "guid": 10372,
+              "x": -616.183,
+              "y": -4417.66,
+              "z": 45.7873
+            },
+            {
+              "guid": 10373,
+              "x": -381.385,
+              "y": -4256.06,
+              "z": 56.2352
+            },
+            {
+              "guid": 10374,
+              "x": -647.283,
+              "y": -4353.27,
+              "z": 44.5734
+            },
+            {
+              "guid": 10375,
+              "x": -346.066,
+              "y": -4290.66,
+              "z": 57.6544
+            },
+            {
+              "guid": 10376,
+              "x": -715.746,
+              "y": -4320.25,
+              "z": 43.4214
+            },
+            {
+              "guid": 10377,
+              "x": -749.724,
+              "y": -4281.92,
+              "z": 43.6258
+            },
+            {
+              "guid": 11014,
+              "x": -619.219,
+              "y": -4382.64,
+              "z": 43.2194
+            },
+            {
+              "guid": 11029,
+              "x": -550.962,
+              "y": -4351.29,
+              "z": 41.5591
+            },
+            {
+              "guid": 11030,
+              "x": -453.709,
+              "y": -4222.64,
+              "z": 49.1813
+            },
+            {
+              "guid": 11239,
+              "x": -317.835,
+              "y": -4243.54,
+              "z": 61.7041
+            },
+            {
+              "guid": 12178,
+              "x": -319.209,
+              "y": -4317.22,
+              "z": 54.7874
+            },
+            {
+              "guid": 12181,
+              "x": -476.114,
+              "y": -4255.08,
+              "z": 46.1353
+            },
+            {
+              "guid": 12189,
+              "x": -281.01,
+              "y": -4322.8,
+              "z": 62.1084
+            },
+            {
+              "guid": 12201,
+              "x": -351.906,
+              "y": -4384.64,
+              "z": 48.7124
+            },
+            {
+              "guid": 12203,
+              "x": -320.586,
+              "y": -4354.29,
+              "z": 54.8292
+            },
+            {
+              "guid": 12207,
+              "x": -414.888,
+              "y": -4341.82,
+              "z": 43.1272
+            },
+            {
+              "guid": 12208,
+              "x": -389.932,
+              "y": -4374.94,
+              "z": 40.2634
+            },
+            {
+              "guid": 12211,
+              "x": -448.447,
+              "y": -4240.06,
+              "z": 51.5052
+            },
+            {
+              "guid": 12212,
+              "x": -420.524,
+              "y": -4319.37,
+              "z": 44.686
+            },
+            {
+              "guid": 12213,
+              "x": -420.536,
+              "y": -4246.93,
+              "z": 50.8602
+            },
+            {
+              "guid": 12262,
+              "x": -509.872,
+              "y": -4377.28,
+              "z": 45.7495
+            },
+            {
+              "guid": 12385,
+              "x": -479.686,
+              "y": -4280.64,
+              "z": 43.8398
+            },
+            {
+              "guid": 12388,
+              "x": -456.403,
+              "y": -4280.85,
+              "z": 41.7353
+            },
+            {
+              "guid": 12391,
+              "x": -447.311,
+              "y": -4355.99,
+              "z": 46.1737
+            },
+            {
+              "guid": 12393,
+              "x": -488.73,
+              "y": -4352.5,
+              "z": 40.1998
+            },
+            {
+              "guid": 12394,
+              "x": -514.337,
+              "y": -4344.96,
+              "z": 38.308
+            },
+            {
+              "guid": 12952,
+              "x": -487.311,
+              "y": -4213.77,
+              "z": 50.2931
+            },
+            {
+              "guid": 12960,
+              "x": -516.59,
+              "y": -4286.81,
+              "z": 40.0634
+            },
+            {
+              "guid": 12965,
+              "x": -486.307,
+              "y": -4314.94,
+              "z": 43.5488
+            },
+            {
+              "guid": 12966,
+              "x": -449.98,
+              "y": -4314.05,
+              "z": 45.9259
+            },
+            {
+              "guid": 12973,
+              "x": -385.317,
+              "y": -4351.71,
+              "z": 41.3647
+            },
+            {
+              "guid": 12974,
+              "x": -412.563,
+              "y": -4382.79,
+              "z": 39.2734
+            },
+            {
+              "guid": 12976,
+              "x": -414.492,
+              "y": -4277.36,
+              "z": 42.9012
+            },
+            {
+              "guid": 13025,
+              "x": -308.834,
+              "y": -4217.85,
+              "z": 52.5989
+            },
+            {
+              "guid": 13037,
+              "x": -415.534,
+              "y": -4188.62,
+              "z": 51.1441
+            },
+            {
+              "guid": 13038,
+              "x": -382.127,
+              "y": -4181.93,
+              "z": 56.7214
+            },
+            {
+              "guid": 13047,
+              "x": -519.185,
+              "y": -4314.91,
+              "z": 39.3783
+            },
+            {
+              "guid": 13077,
+              "x": -349.288,
+              "y": -4184.41,
+              "z": 59.1999
+            }
+          ]
+        }
+      ],
+      "accept_candidates": [
+        {
+          "entry": 3143,
+          "name": "Gornek",
+          "min_level": 5,
+          "max_level": 5,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3443,
+              "x": -600.132,
+              "y": -4186.19,
+              "z": 41.2663
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3143,
+          "name": "Gornek",
+          "min_level": 5,
+          "max_level": 5,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3443,
+              "x": -600.132,
+              "y": -4186.19,
+              "z": 41.2663
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": true,
+      "validation_required": [
+        "live_npc_identity",
+        "live_walkability",
+        "live_quest_accept"
+      ],
+      "estimated_kill_cost": 8
+    },
+    {
+      "quest_id": 789,
+      "title": "Sting of the Scorpid",
+      "quest_level": 3,
+      "min_level": 1,
+      "sort_id": 363,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 788,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3143
+      ],
+      "ender_entries": [
+        3143
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3143,
+          "name": "Gornek",
+          "min_level": 5,
+          "max_level": 5,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3443,
+              "x": -600.132,
+              "y": -4186.19,
+              "z": 41.2663
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3143,
+          "name": "Gornek",
+          "min_level": 5,
+          "max_level": 5,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3443,
+              "x": -600.132,
+              "y": -4186.19,
+              "z": 41.2663
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 4402,
+      "title": "Galgar's Cactus Apple Surprise",
+      "quest_level": 3,
+      "min_level": 1,
+      "sort_id": 363,
+      "reward_xp_difficulty": 7,
+      "reward_money": 50,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 788,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        9796
+      ],
+      "ender_entries": [
+        9796
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 9796,
+          "name": "Galgar",
+          "min_level": 8,
+          "max_level": 8,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 704,
+              "x": -561.628,
+              "y": -4221.8,
+              "z": 41.6737
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 9796,
+          "name": "Galgar",
+          "min_level": 8,
+          "max_level": 8,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 704,
+              "x": -561.628,
+              "y": -4221.8,
+              "z": 41.6737
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 790,
+      "title": "Sarkoth",
+      "quest_level": 5,
+      "min_level": 1,
+      "sort_id": 363,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3287
+      ],
+      "ender_entries": [
+        3287
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3287,
+          "name": "Hana'zua",
+          "min_level": 2,
+          "max_level": 2,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6471,
+              "x": -397.761,
+              "y": -4108.99,
+              "z": 50.2876
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3287,
+          "name": "Hana'zua",
+          "min_level": 2,
+          "max_level": 2,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6471,
+              "x": -397.761,
+              "y": -4108.99,
+              "z": 50.2876
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 794,
+      "title": "Burning Blade Medallion",
+      "quest_level": 5,
+      "min_level": 1,
+      "sort_id": 363,
+      "reward_xp_difficulty": 7,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3145
+      ],
+      "ender_entries": [
+        3145
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3145,
+          "name": "Zureetha Fargaze",
+          "min_level": 12,
+          "max_level": 12,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3444,
+              "x": -629.052,
+              "y": -4228.06,
+              "z": 38.2334
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3145,
+          "name": "Zureetha Fargaze",
+          "min_level": 12,
+          "max_level": 12,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3444,
+              "x": -629.052,
+              "y": -4228.06,
+              "z": 38.2334
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 804,
+      "title": "Sarkoth",
+      "quest_level": 5,
+      "min_level": 1,
+      "sort_id": 363,
+      "reward_xp_difficulty": 2,
+      "reward_money": 0,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 790,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3287
+      ],
+      "ender_entries": [
+        3143
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3287,
+          "name": "Hana'zua",
+          "min_level": 2,
+          "max_level": 2,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6471,
+              "x": -397.761,
+              "y": -4108.99,
+              "z": 50.2876
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3143,
+          "name": "Gornek",
+          "min_level": 5,
+          "max_level": 5,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3443,
+              "x": -600.132,
+              "y": -4186.19,
+              "z": 41.2663
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": true,
+      "validation_required": [
+        "live_npc_identity",
+        "live_walkability",
+        "live_quest_accept"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 805,
+      "title": "Report to Sen'jin Village",
+      "quest_level": 5,
+      "min_level": 1,
+      "sort_id": 363,
+      "reward_xp_difficulty": 3,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 794,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3145
+      ],
+      "ender_entries": [
+        3188
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3145,
+          "name": "Zureetha Fargaze",
+          "min_level": 12,
+          "max_level": 12,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3444,
+              "x": -629.052,
+              "y": -4228.06,
+              "z": 38.2334
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3188,
+          "name": "Master Gadrin",
+          "min_level": 12,
+          "max_level": 12,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6462,
+              "x": -825.636,
+              "y": -4920.76,
+              "z": 19.7409
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": true,
+      "validation_required": [
+        "live_npc_identity",
+        "live_walkability",
+        "live_quest_accept"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 2161,
+      "title": "A Peon's Burden",
+      "quest_level": 5,
+      "min_level": 1,
+      "sort_id": 14,
+      "reward_xp_difficulty": 2,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        6786
+      ],
+      "ender_entries": [
+        6928
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 6786,
+          "name": "Ukor",
+          "min_level": 4,
+          "max_level": 4,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 4787,
+              "x": -599.449,
+              "y": -4715.32,
+              "z": 35.2296
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 6928,
+          "name": "Innkeeper Grosk",
+          "min_level": 30,
+          "max_level": 30,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 7671,
+              "x": 340.362,
+              "y": -4686.29,
+              "z": 16.5411
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "external_start_item",
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 830,
+      "title": "The Admiral's Orders",
+      "quest_level": 7,
+      "min_level": 1,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [],
+      "ender_entries": [
+        3139
+      ],
+      "objectives": [],
+      "accept_candidates": [],
+      "turn_in_candidates": [
+        {
+          "entry": 3139,
+          "name": "Gar'Thok",
+          "min_level": 10,
+          "max_level": 10,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 4692,
+              "x": 274.988,
+              "y": -4709.3,
+              "z": 17.5719
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "external_start_item",
+        "item_objectives_not_decoded",
+        "no_creature_starter",
+        "no_map_1_starter_spawn"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 831,
+      "title": "The Admiral's Orders",
+      "quest_level": 7,
+      "min_level": 1,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 175,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 830,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3139
+      ],
+      "ender_entries": [
+        10540
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3139,
+          "name": "Gar'Thok",
+          "min_level": 10,
+          "max_level": 10,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 4692,
+              "x": 274.988,
+              "y": -4709.3,
+              "z": 17.5719
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 10540,
+          "name": "Vol'jin",
+          "min_level": 83,
+          "max_level": 83,
+          "faction": 125,
+          "rank": 3,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3394,
+              "x": 1934.06,
+              "y": -4162.26,
+              "z": 41.2386
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "external_start_item",
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 926,
+      "title": "Flawed Power Stone",
+      "quest_level": 14,
+      "min_level": 1,
+      "sort_id": 14,
+      "reward_xp_difficulty": 0,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": -924,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [],
+      "ender_entries": [],
+      "objectives": [],
+      "accept_candidates": [],
+      "turn_in_candidates": [],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "no_creature_ender",
+        "no_creature_starter",
+        "no_map_1_ender_spawn",
+        "no_map_1_starter_spawn"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 792,
+      "title": "Vile Familiars",
+      "quest_level": 4,
+      "min_level": 2,
+      "sort_id": 363,
+      "reward_xp_difficulty": 7,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 794,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3145
+      ],
+      "ender_entries": [
+        3145
+      ],
+      "objectives": [
+        {
+          "entry": 3101,
+          "required": 8,
+          "name": "Vile Familiar",
+          "min_level": 3,
+          "max_level": 4,
+          "faction": 7,
+          "rank": 0,
+          "type": 7,
+          "candidate_anchor": {
+            "x": -139.632,
+            "y": -4301.54,
+            "z": 65.9616,
+            "guid": 6644,
+            "spawn_count": 37
+          },
+          "candidate_spawns": [
+            {
+              "guid": 3392,
+              "x": -168.068,
+              "y": -4403.07,
+              "z": 78.0722
+            },
+            {
+              "guid": 4701,
+              "x": -35.7399,
+              "y": -4228.09,
+              "z": 65.3623
+            },
+            {
+              "guid": 4702,
+              "x": -117.284,
+              "y": -4217.52,
+              "z": 54.6214
+            },
+            {
+              "guid": 4705,
+              "x": -152.718,
+              "y": -4264.43,
+              "z": 61.5234
+            },
+            {
+              "guid": 4706,
+              "x": -79.4423,
+              "y": -4284.5,
+              "z": 76.1454
+            },
+            {
+              "guid": 6568,
+              "x": -151.647,
+              "y": -4278.49,
+              "z": 81.3672
+            },
+            {
+              "guid": 6642,
+              "x": -79.5128,
+              "y": -4235.76,
+              "z": 53.703
+            },
+            {
+              "guid": 6643,
+              "x": -47.9176,
+              "y": -4312.65,
+              "z": 68.8945
+            },
+            {
+              "guid": 6644,
+              "x": -139.632,
+              "y": -4301.54,
+              "z": 65.9616
+            },
+            {
+              "guid": 6645,
+              "x": -43.4144,
+              "y": -4226.15,
+              "z": 63.8637
+            },
+            {
+              "guid": 6646,
+              "x": -149.295,
+              "y": -4259.93,
+              "z": 60.9167
+            },
+            {
+              "guid": 7505,
+              "x": -106.37,
+              "y": -4247.68,
+              "z": 53.6425
+            },
+            {
+              "guid": 7507,
+              "x": -104.777,
+              "y": -4285.94,
+              "z": 62.8635
+            },
+            {
+              "guid": 7508,
+              "x": -76.6151,
+              "y": -4266.42,
+              "z": 52.3558
+            },
+            {
+              "guid": 7509,
+              "x": -140.697,
+              "y": -4282.97,
+              "z": 64.3929
+            },
+            {
+              "guid": 7527,
+              "x": -43.8409,
+              "y": -4274.3,
+              "z": 68.39
+            },
+            {
+              "guid": 12169,
+              "x": -107.068,
+              "y": -4306.76,
+              "z": 62.7287
+            },
+            {
+              "guid": 12192,
+              "x": -193.396,
+              "y": -4403.29,
+              "z": 68.6726
+            },
+            {
+              "guid": 12193,
+              "x": -210.65,
+              "y": -4419.36,
+              "z": 64.7843
+            },
+            {
+              "guid": 12194,
+              "x": -210.927,
+              "y": -4448.35,
+              "z": 68.2828
+            },
+            {
+              "guid": 12290,
+              "x": -88.303,
+              "y": -4285.01,
+              "z": 62.0652
+            },
+            {
+              "guid": 13054,
+              "x": -246.558,
+              "y": -4279.26,
+              "z": 61.6414
+            },
+            {
+              "guid": 13055,
+              "x": -253.593,
+              "y": -4316.13,
+              "z": 56.0352
+            },
+            {
+              "guid": 13056,
+              "x": -244.718,
+              "y": -4342.81,
+              "z": 62.7066
+            },
+            {
+              "guid": 13057,
+              "x": -207.922,
+              "y": -4309.4,
+              "z": 63.9191
+            },
+            {
+              "guid": 13058,
+              "x": -49.3166,
+              "y": -4222.96,
+              "z": 62.3924
+            },
+            {
+              "guid": 13059,
+              "x": -200.79,
+              "y": -4295.73,
+              "z": 64.2941
+            },
+            {
+              "guid": 13060,
+              "x": -86.673,
+              "y": -4328.19,
+              "z": 65.8605
+            },
+            {
+              "guid": 13062,
+              "x": -154.199,
+              "y": -4357.06,
+              "z": 66.9191
+            },
+            {
+              "guid": 13063,
+              "x": -195.434,
+              "y": -4376.55,
+              "z": 66.7012
+            },
+            {
+              "guid": 13064,
+              "x": -132.968,
+              "y": -4349.6,
+              "z": 67.1474
+            },
+            {
+              "guid": 13065,
+              "x": -176.948,
+              "y": -4360.68,
+              "z": 68.4505
+            },
+            {
+              "guid": 13067,
+              "x": -166.438,
+              "y": -4320.16,
+              "z": 71.1002
+            },
+            {
+              "guid": 13070,
+              "x": -211.553,
+              "y": -4351.95,
+              "z": 64.4947
+            },
+            {
+              "guid": 13073,
+              "x": -198.088,
+              "y": -4333.76,
+              "z": 68.3462
+            },
+            {
+              "guid": 13076,
+              "x": -213.201,
+              "y": -4382.11,
+              "z": 63.6607
+            },
+            {
+              "guid": 13080,
+              "x": -252.915,
+              "y": -4381.57,
+              "z": 62.5709
+            }
+          ]
+        }
+      ],
+      "accept_candidates": [
+        {
+          "entry": 3145,
+          "name": "Zureetha Fargaze",
+          "min_level": 12,
+          "max_level": 12,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3444,
+              "x": -629.052,
+              "y": -4228.06,
+              "z": 38.2334
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3145,
+          "name": "Zureetha Fargaze",
+          "min_level": 12,
+          "max_level": 12,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3444,
+              "x": -629.052,
+              "y": -4228.06,
+              "z": 38.2334
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": true,
+      "validation_required": [
+        "live_npc_identity",
+        "live_walkability",
+        "live_quest_accept"
+      ],
+      "estimated_kill_cost": 8
+    },
+    {
+      "quest_id": 5441,
+      "title": "Lazy Peons",
+      "quest_level": 4,
+      "min_level": 3,
+      "sort_id": 363,
+      "reward_xp_difficulty": 6,
+      "reward_money": 0,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        11378
+      ],
+      "ender_entries": [
+        11378
+      ],
+      "objectives": [
+        {
+          "entry": 10556,
+          "required": 5,
+          "name": "Lazy Peon",
+          "min_level": 4,
+          "max_level": 4,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "candidate_anchor": {
+            "x": -507.436,
+            "y": -4376.15,
+            "z": 46.3741,
+            "guid": 3348,
+            "spawn_count": 14
+          },
+          "candidate_spawns": [
+            {
+              "guid": 3345,
+              "x": -228.477,
+              "y": -4283.62,
+              "z": 65.1967
+            },
+            {
+              "guid": 3346,
+              "x": -329.996,
+              "y": -4433.72,
+              "z": 54.7811
+            },
+            {
+              "guid": 3347,
+              "x": -231.603,
+              "y": -4452.81,
+              "z": 63.9317
+            },
+            {
+              "guid": 3348,
+              "x": -507.436,
+              "y": -4376.15,
+              "z": 46.3741
+            },
+            {
+              "guid": 6523,
+              "x": -320.966,
+              "y": -4127.11,
+              "z": 51.7729
+            },
+            {
+              "guid": 6524,
+              "x": -635.911,
+              "y": -4477.31,
+              "z": 46.522
+            },
+            {
+              "guid": 6525,
+              "x": -762.903,
+              "y": -4322.07,
+              "z": 46.4172
+            },
+            {
+              "guid": 6526,
+              "x": -370.284,
+              "y": -4015.48,
+              "z": 50.7604
+            },
+            {
+              "guid": 6527,
+              "x": -754.03,
+              "y": -4144.65,
+              "z": 38.4804
+            },
+            {
+              "guid": 7372,
+              "x": -209.51,
+              "y": -4227.29,
+              "z": 63.727
+            },
+            {
+              "guid": 7373,
+              "x": -773.777,
+              "y": -4201.21,
+              "z": 45.3498
+            },
+            {
+              "guid": 7374,
+              "x": -628.48,
+              "y": -4340.7,
+              "z": 41.8407
+            },
+            {
+              "guid": 7375,
+              "x": -269.336,
+              "y": -4144.42,
+              "z": 55.1774
+            },
+            {
+              "guid": 7376,
+              "x": -492.12,
+              "y": -4452.65,
+              "z": 50.877
+            }
+          ]
+        }
+      ],
+      "accept_candidates": [
+        {
+          "entry": 11378,
+          "name": "Foreman Thazz'ril",
+          "min_level": 4,
+          "max_level": 4,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3427,
+              "x": -611.587,
+              "y": -4322.08,
+              "z": 40.0927
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 11378,
+          "name": "Foreman Thazz'ril",
+          "min_level": 4,
+          "max_level": 4,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3427,
+              "x": -611.587,
+              "y": -4322.08,
+              "z": 40.0927
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "external_start_item",
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 5
+    },
+    {
+      "quest_id": 6394,
+      "title": "Thazz'ril's Pick",
+      "quest_level": 4,
+      "min_level": 3,
+      "sort_id": 363,
+      "reward_xp_difficulty": 6,
+      "reward_money": 150,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 5441,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        11378
+      ],
+      "ender_entries": [
+        11378
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 11378,
+          "name": "Foreman Thazz'ril",
+          "min_level": 4,
+          "max_level": 4,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3427,
+              "x": -611.587,
+              "y": -4322.08,
+              "z": 40.0927
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 11378,
+          "name": "Foreman Thazz'ril",
+          "min_level": 4,
+          "max_level": 4,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3427,
+              "x": -611.587,
+              "y": -4322.08,
+              "z": 40.0927
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 784,
+      "title": "Vanquish the Betrayers",
+      "quest_level": 7,
+      "min_level": 3,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 175,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3139
+      ],
+      "ender_entries": [
+        3139
+      ],
+      "objectives": [
+        {
+          "entry": 3128,
+          "required": 10,
+          "name": "Kul Tiras Sailor",
+          "min_level": 5,
+          "max_level": 6,
+          "faction": 123,
+          "rank": 0,
+          "type": 7,
+          "candidate_anchor": {
+            "x": -192.284,
+            "y": -4996.99,
+            "z": 22.5548,
+            "guid": 12308,
+            "spawn_count": 29
+          },
+          "candidate_spawns": [
+            {
+              "guid": 4772,
+              "x": -262.554,
+              "y": -5188.37,
+              "z": 21.1489
+            },
+            {
+              "guid": 4773,
+              "x": -273.242,
+              "y": -4919.18,
+              "z": 27.1867
+            },
+            {
+              "guid": 4774,
+              "x": -277.769,
+              "y": -5146.6,
+              "z": 21.436
+            },
+            {
+              "guid": 7261,
+              "x": -64.1312,
+              "y": -4982.18,
+              "z": 19.7145
+            },
+            {
+              "guid": 7262,
+              "x": -51.3995,
+              "y": -4961.7,
+              "z": 21.513
+            },
+            {
+              "guid": 7627,
+              "x": -220.082,
+              "y": -4908.83,
+              "z": 26.9168
+            },
+            {
+              "guid": 8409,
+              "x": -312.365,
+              "y": -5070.01,
+              "z": 21.6341
+            },
+            {
+              "guid": 8410,
+              "x": -64.9716,
+              "y": -4961.5,
+              "z": 21.5128
+            },
+            {
+              "guid": 8411,
+              "x": -182.394,
+              "y": -4942.46,
+              "z": 21.1166
+            },
+            {
+              "guid": 10206,
+              "x": -58.7476,
+              "y": -4955.55,
+              "z": 21.5145
+            },
+            {
+              "guid": 10209,
+              "x": -253.261,
+              "y": -4945.05,
+              "z": 23.1006
+            },
+            {
+              "guid": 12266,
+              "x": -128.271,
+              "y": -4958.23,
+              "z": 20.2083
+            },
+            {
+              "guid": 12288,
+              "x": -209.532,
+              "y": -4982.4,
+              "z": 21.5041
+            },
+            {
+              "guid": 12291,
+              "x": -255.313,
+              "y": -5010.76,
+              "z": 22.1318
+            },
+            {
+              "guid": 12292,
+              "x": -87.4879,
+              "y": -4920.75,
+              "z": 18.605
+            },
+            {
+              "guid": 12293,
+              "x": -259.423,
+              "y": -5018.76,
+              "z": 22.2559
+            },
+            {
+              "guid": 12304,
+              "x": -119.671,
+              "y": -4988.08,
+              "z": 19.4948
+            },
+            {
+              "guid": 12308,
+              "x": -192.284,
+              "y": -4996.99,
+              "z": 22.5548
+            },
+            {
+              "guid": 12331,
+              "x": -243.801,
+              "y": -4996.51,
+              "z": 21.3111
+            },
+            {
+              "guid": 12338,
+              "x": -208.333,
+              "y": -5025.0,
+              "z": 21.7622
+            },
+            {
+              "guid": 12342,
+              "x": -7.65502,
+              "y": -4982.83,
+              "z": 13.485
+            },
+            {
+              "guid": 12347,
+              "x": -18.868,
+              "y": -4917.26,
+              "z": 16.7475
+            },
+            {
+              "guid": 12348,
+              "x": -48.0292,
+              "y": -5080.86,
+              "z": 10.5321
+            },
+            {
+              "guid": 12349,
+              "x": -193.487,
+              "y": -5039.54,
+              "z": 21.1663
+            },
+            {
+              "guid": 12350,
+              "x": -47.2603,
+              "y": -5019.83,
+              "z": 13.3476
+            },
+            {
+              "guid": 12354,
+              "x": -85.9882,
+              "y": -5052.96,
+              "z": 16.3209
+            },
+            {
+              "guid": 12362,
+              "x": -266.264,
+              "y": -5126.95,
+              "z": 24.3417
+            },
+            {
+              "guid": 12364,
+              "x": -218.587,
+              "y": -5056.1,
+              "z": 21.2766
+            },
+            {
+              "guid": 12390,
+              "x": -272.464,
+              "y": -5110.77,
+              "z": 26.0531
+            }
+          ]
+        },
+        {
+          "entry": 3129,
+          "required": 8,
+          "name": "Kul Tiras Marine",
+          "min_level": 6,
+          "max_level": 7,
+          "faction": 123,
+          "rank": 0,
+          "type": 7,
+          "candidate_anchor": {
+            "x": -191.896,
+            "y": -5092.67,
+            "z": 22.1366,
+            "guid": 13000,
+            "spawn_count": 18
+          },
+          "candidate_spawns": [
+            {
+              "guid": 7263,
+              "x": -312.696,
+              "y": -5145.91,
+              "z": 21.5362
+            },
+            {
+              "guid": 8408,
+              "x": -284.439,
+              "y": -5174.54,
+              "z": 21.2768
+            },
+            {
+              "guid": 12267,
+              "x": -78.0601,
+              "y": -5110.51,
+              "z": 17.2597
+            },
+            {
+              "guid": 12275,
+              "x": -120.032,
+              "y": -5131.44,
+              "z": 21.6015
+            },
+            {
+              "guid": 12276,
+              "x": -146.828,
+              "y": -5106.02,
+              "z": 21.3111
+            },
+            {
+              "guid": 12294,
+              "x": -178.005,
+              "y": -5108.49,
+              "z": 22.1404
+            },
+            {
+              "guid": 12295,
+              "x": -191.936,
+              "y": -5113.18,
+              "z": 22.219
+            },
+            {
+              "guid": 12296,
+              "x": -149.138,
+              "y": -5035.27,
+              "z": 21.9753
+            },
+            {
+              "guid": 12298,
+              "x": -141.465,
+              "y": -5003.08,
+              "z": 22.1861
+            },
+            {
+              "guid": 12300,
+              "x": -151.218,
+              "y": -5087.12,
+              "z": 21.6279
+            },
+            {
+              "guid": 12302,
+              "x": -87.9146,
+              "y": -5018.34,
+              "z": 16.5591
+            },
+            {
+              "guid": 12336,
+              "x": -252.393,
+              "y": -5118.68,
+              "z": 42.6406
+            },
+            {
+              "guid": 12341,
+              "x": -252.959,
+              "y": -5104.31,
+              "z": 41.4467
+            },
+            {
+              "guid": 12346,
+              "x": 17.5113,
+              "y": -4951.48,
+              "z": 14.3885
+            },
+            {
+              "guid": 12366,
+              "x": -242.195,
+              "y": -5114.24,
+              "z": 25.2436
+            },
+            {
+              "guid": 12392,
+              "x": -253.491,
+              "y": -5052.29,
+              "z": 21.317
+            },
+            {
+              "guid": 12998,
+              "x": -230.719,
+              "y": -5125.15,
+              "z": 42.4774
+            },
+            {
+              "guid": 13000,
+              "x": -191.896,
+              "y": -5092.67,
+              "z": 22.1366
+            }
+          ]
+        },
+        {
+          "entry": 3192,
+          "required": 1,
+          "name": "Lieutenant Benedict",
+          "min_level": 8,
+          "max_level": 8,
+          "faction": 123,
+          "rank": 0,
+          "type": 7,
+          "candidate_anchor": {
+            "x": -245.52,
+            "y": -5119.95,
+            "z": 42.6406,
+            "guid": 12375,
+            "spawn_count": 1
+          },
+          "candidate_spawns": [
+            {
+              "guid": 12375,
+              "x": -245.52,
+              "y": -5119.95,
+              "z": 42.6406
+            }
+          ]
+        }
+      ],
+      "accept_candidates": [
+        {
+          "entry": 3139,
+          "name": "Gar'Thok",
+          "min_level": 10,
+          "max_level": 10,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 4692,
+              "x": 274.988,
+              "y": -4709.3,
+              "z": 17.5719
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3139,
+          "name": "Gar'Thok",
+          "min_level": 10,
+          "max_level": 10,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 4692,
+              "x": 274.988,
+              "y": -4709.3,
+              "z": 17.5719
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": true,
+      "validation_required": [
+        "live_npc_identity",
+        "live_walkability",
+        "live_quest_accept"
+      ],
+      "estimated_kill_cost": 19
+    },
+    {
+      "quest_id": 825,
+      "title": "From The Wreckage....",
+      "quest_level": 8,
+      "min_level": 3,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 784,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3139
+      ],
+      "ender_entries": [
+        3139
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3139,
+          "name": "Gar'Thok",
+          "min_level": 10,
+          "max_level": 10,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 4692,
+              "x": 274.988,
+              "y": -4709.3,
+              "z": 17.5719
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3139,
+          "name": "Gar'Thok",
+          "min_level": 10,
+          "max_level": 10,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 4692,
+              "x": 274.988,
+              "y": -4709.3,
+              "z": 17.5719
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 810,
+      "title": "<UNUSED>",
+      "quest_level": 5,
+      "min_level": 4,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 100,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [],
+      "ender_entries": [],
+      "objectives": [],
+      "accept_candidates": [],
+      "turn_in_candidates": [],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "no_creature_ender",
+        "no_creature_starter",
+        "no_map_1_ender_spawn",
+        "no_map_1_starter_spawn"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 814,
+      "title": "<UNUSED>",
+      "quest_level": 6,
+      "min_level": 4,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [],
+      "ender_entries": [],
+      "objectives": [],
+      "accept_candidates": [],
+      "turn_in_candidates": [],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "no_creature_ender",
+        "no_creature_starter",
+        "no_map_1_ender_spawn",
+        "no_map_1_starter_spawn"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 791,
+      "title": "Carry Your Weight",
+      "quest_level": 7,
+      "min_level": 4,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3147
+      ],
+      "ender_entries": [
+        3147
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3147,
+          "name": "Furl Scornbrow",
+          "min_level": 6,
+          "max_level": 6,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3445,
+              "x": 384.743,
+              "y": -4600.13,
+              "z": 76.1716
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3147,
+          "name": "Furl Scornbrow",
+          "min_level": 6,
+          "max_level": 6,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3445,
+              "x": 384.743,
+              "y": -4600.13,
+              "z": 76.1716
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 811,
+      "title": "<UNUSED>",
+      "quest_level": 7,
+      "min_level": 4,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [],
+      "ender_entries": [],
+      "objectives": [],
+      "accept_candidates": [],
+      "turn_in_candidates": [],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "no_creature_ender",
+        "no_creature_starter",
+        "no_map_1_ender_spawn",
+        "no_map_1_starter_spawn"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 823,
+      "title": "Report to Orgnil",
+      "quest_level": 7,
+      "min_level": 4,
+      "sort_id": 14,
+      "reward_xp_difficulty": 3,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 805,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3188
+      ],
+      "ender_entries": [
+        3142
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3188,
+          "name": "Master Gadrin",
+          "min_level": 12,
+          "max_level": 12,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6462,
+              "x": -825.636,
+              "y": -4920.76,
+              "z": 19.7409
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3142,
+          "name": "Orgnil Soulscar",
+          "min_level": 18,
+          "max_level": 18,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3396,
+              "x": 287.265,
+              "y": -4724.88,
+              "z": 13.2142
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": true,
+      "validation_required": [
+        "live_npc_identity",
+        "live_walkability",
+        "live_quest_accept"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 808,
+      "title": "Minshina's Skull",
+      "quest_level": 9,
+      "min_level": 4,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3188
+      ],
+      "ender_entries": [
+        3188
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3188,
+          "name": "Master Gadrin",
+          "min_level": 12,
+          "max_level": 12,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6462,
+              "x": -825.636,
+              "y": -4920.76,
+              "z": 19.7409
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3188,
+          "name": "Master Gadrin",
+          "min_level": 12,
+          "max_level": 12,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6462,
+              "x": -825.636,
+              "y": -4920.76,
+              "z": 19.7409
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 826,
+      "title": "Zalazane",
+      "quest_level": 10,
+      "min_level": 4,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3188
+      ],
+      "ender_entries": [
+        3188
+      ],
+      "objectives": [
+        {
+          "entry": 3207,
+          "required": 8,
+          "name": "Hexed Troll",
+          "min_level": 8,
+          "max_level": 9,
+          "faction": 16,
+          "rank": 0,
+          "type": 7,
+          "candidate_anchor": {
+            "x": -1187.5,
+            "y": -5512.5,
+            "z": 5.6852,
+            "guid": 13020,
+            "spawn_count": 15
+          },
+          "candidate_spawns": [
+            {
+              "guid": 12367,
+              "x": -1134.72,
+              "y": -5544.55,
+              "z": 10.7377
+            },
+            {
+              "guid": 12374,
+              "x": -1141.04,
+              "y": -5542.15,
+              "z": 7.372
+            },
+            {
+              "guid": 12377,
+              "x": -1125.52,
+              "y": -5573.58,
+              "z": 10.0079
+            },
+            {
+              "guid": 12378,
+              "x": -1144.54,
+              "y": -5566.72,
+              "z": 10.0079
+            },
+            {
+              "guid": 12382,
+              "x": -1136.2,
+              "y": -5563.91,
+              "z": 9.90795
+            },
+            {
+              "guid": 13007,
+              "x": -1317.58,
+              "y": -5520.55,
+              "z": 4.35507
+            },
+            {
+              "guid": 13016,
+              "x": -1251.06,
+              "y": -5582.51,
+              "z": 8.08332
+            },
+            {
+              "guid": 13018,
+              "x": -1220.26,
+              "y": -5552.95,
+              "z": 5.53587
+            },
+            {
+              "guid": 13019,
+              "x": -1221.02,
+              "y": -5512.09,
+              "z": 5.60975
+            },
+            {
+              "guid": 13020,
+              "x": -1187.5,
+              "y": -5512.5,
+              "z": 5.6852
+            },
+            {
+              "guid": 13024,
+              "x": -1152.97,
+              "y": -5446.21,
+              "z": 8.70802
+            },
+            {
+              "guid": 13026,
+              "x": -1138.31,
+              "y": -5597.88,
+              "z": 7.61002
+            },
+            {
+              "guid": 13033,
+              "x": -1248.95,
+              "y": -5480.5,
+              "z": 5.21741
+            },
+            {
+              "guid": 13036,
+              "x": -1287.27,
+              "y": -5481.16,
+              "z": 4.22497
+            },
+            {
+              "guid": 13046,
+              "x": -1118.81,
+              "y": -5485.68,
+              "z": 7.90532
+            }
+          ]
+        },
+        {
+          "entry": 3206,
+          "required": 8,
+          "name": "Voodoo Troll",
+          "min_level": 8,
+          "max_level": 9,
+          "faction": 16,
+          "rank": 0,
+          "type": 7,
+          "candidate_anchor": {
+            "x": -1243.89,
+            "y": -5513.5,
+            "z": 9.4805,
+            "guid": 12357,
+            "spawn_count": 13
+          },
+          "candidate_spawns": [
+            {
+              "guid": 6457,
+              "x": -1165.43,
+              "y": -5588.42,
+              "z": 13.7373
+            },
+            {
+              "guid": 7908,
+              "x": -1285.31,
+              "y": -5508.77,
+              "z": 8.46731
+            },
+            {
+              "guid": 12357,
+              "x": -1243.89,
+              "y": -5513.5,
+              "z": 9.4805
+            },
+            {
+              "guid": 12358,
+              "x": -1253.65,
+              "y": -5534.9,
+              "z": 5.25236
+            },
+            {
+              "guid": 12361,
+              "x": -1270.25,
+              "y": -5516.54,
+              "z": 4.98094
+            },
+            {
+              "guid": 12380,
+              "x": -1135.93,
+              "y": -5585.65,
+              "z": 10.6323
+            },
+            {
+              "guid": 13021,
+              "x": -1110.47,
+              "y": -5447.91,
+              "z": 9.85885
+            },
+            {
+              "guid": 13027,
+              "x": -1102.46,
+              "y": -5526.49,
+              "z": 11.873
+            },
+            {
+              "guid": 13030,
+              "x": -1094.85,
+              "y": -5579.36,
+              "z": 11.1797
+            },
+            {
+              "guid": 13032,
+              "x": -1084.12,
+              "y": -5548.47,
+              "z": 10.5019
+            },
+            {
+              "guid": 13039,
+              "x": -1247.7,
+              "y": -5448.08,
+              "z": 5.47132
+            },
+            {
+              "guid": 13042,
+              "x": -1264.6,
+              "y": -5498.64,
+              "z": 4.98397
+            },
+            {
+              "guid": 13045,
+              "x": -1251.9,
+              "y": -5508.89,
+              "z": 5.85606
+            }
+          ]
+        }
+      ],
+      "accept_candidates": [
+        {
+          "entry": 3188,
+          "name": "Master Gadrin",
+          "min_level": 12,
+          "max_level": 12,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6462,
+              "x": -825.636,
+              "y": -4920.76,
+              "z": 19.7409
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3188,
+          "name": "Master Gadrin",
+          "min_level": 12,
+          "max_level": 12,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6462,
+              "x": -825.636,
+              "y": -4920.76,
+              "z": 19.7409
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 16
+    },
+    {
+      "quest_id": 807,
+      "title": "<UNUSED>",
+      "quest_level": 11,
+      "min_level": 4,
+      "sort_id": 14,
+      "reward_xp_difficulty": 6,
+      "reward_money": 0,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [],
+      "ender_entries": [],
+      "objectives": [],
+      "accept_candidates": [],
+      "turn_in_candidates": [],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded",
+        "no_creature_ender",
+        "no_creature_starter",
+        "no_map_1_ender_spawn",
+        "no_map_1_starter_spawn"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 806,
+      "title": "Dark Storms",
+      "quest_level": 12,
+      "min_level": 4,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 823,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3142
+      ],
+      "ender_entries": [
+        3142
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3142,
+          "name": "Orgnil Soulscar",
+          "min_level": 18,
+          "max_level": 18,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3396,
+              "x": 287.265,
+              "y": -4724.88,
+              "z": 13.2142
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3142,
+          "name": "Orgnil Soulscar",
+          "min_level": 18,
+          "max_level": 18,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3396,
+              "x": 287.265,
+              "y": -4724.88,
+              "z": 13.2142
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 827,
+      "title": "Skull Rock",
+      "quest_level": 12,
+      "min_level": 4,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 828,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3208
+      ],
+      "ender_entries": [
+        3208
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3208,
+          "name": "Margoz",
+          "min_level": 18,
+          "max_level": 18,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6464,
+              "x": 1102.09,
+              "y": -4945.36,
+              "z": 15.6857
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3208,
+          "name": "Margoz",
+          "min_level": 18,
+          "max_level": 18,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6464,
+              "x": 1102.09,
+              "y": -4945.36,
+              "z": 15.6857
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 828,
+      "title": "Margoz",
+      "quest_level": 12,
+      "min_level": 4,
+      "sort_id": 14,
+      "reward_xp_difficulty": 1,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 806,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3142
+      ],
+      "ender_entries": [
+        3208
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3142,
+          "name": "Orgnil Soulscar",
+          "min_level": 18,
+          "max_level": 18,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3396,
+              "x": 287.265,
+              "y": -4724.88,
+              "z": 13.2142
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3208,
+          "name": "Margoz",
+          "min_level": 18,
+          "max_level": 18,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6464,
+              "x": 1102.09,
+              "y": -4945.36,
+              "z": 15.6857
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": true,
+      "validation_required": [
+        "live_npc_identity",
+        "live_walkability",
+        "live_quest_accept"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 829,
+      "title": "Neeru Fireblade",
+      "quest_level": 12,
+      "min_level": 4,
+      "sort_id": 14,
+      "reward_xp_difficulty": 3,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 827,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3208
+      ],
+      "ender_entries": [
+        3216
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3208,
+          "name": "Margoz",
+          "min_level": 18,
+          "max_level": 18,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6464,
+              "x": 1102.09,
+              "y": -4945.36,
+              "z": 15.6857
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3216,
+          "name": "Neeru Fireblade",
+          "min_level": 37,
+          "max_level": 37,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3415,
+              "x": 1800.66,
+              "y": -4374.51,
+              "z": -17.1039
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "external_start_item",
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 832,
+      "title": "Burning Shadows",
+      "quest_level": 12,
+      "min_level": 4,
+      "sort_id": 14,
+      "reward_xp_difficulty": 4,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [],
+      "ender_entries": [
+        3216
+      ],
+      "objectives": [],
+      "accept_candidates": [],
+      "turn_in_candidates": [
+        {
+          "entry": 3216,
+          "name": "Neeru Fireblade",
+          "min_level": 37,
+          "max_level": 37,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3415,
+              "x": 1800.66,
+              "y": -4374.51,
+              "z": -17.1039
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "external_start_item",
+        "item_objectives_not_decoded",
+        "no_creature_starter",
+        "no_map_1_starter_spawn"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 809,
+      "title": "Ak'Zeloth",
+      "quest_level": 13,
+      "min_level": 4,
+      "sort_id": 14,
+      "reward_xp_difficulty": 3,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 829,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3216
+      ],
+      "ender_entries": [
+        3521
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3216,
+          "name": "Neeru Fireblade",
+          "min_level": 37,
+          "max_level": 37,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 3415,
+              "x": 1800.66,
+              "y": -4374.51,
+              "z": -17.1039
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3521,
+          "name": "Ak'Zeloth",
+          "min_level": 22,
+          "max_level": 22,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 20268,
+              "x": 256.258,
+              "y": -3693.95,
+              "z": 26.4771
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": true,
+      "validation_required": [
+        "live_npc_identity",
+        "live_walkability",
+        "live_quest_accept"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 818,
+      "title": "A Solvent Spirit",
+      "quest_level": 7,
+      "min_level": 5,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 175,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3304
+      ],
+      "ender_entries": [
+        3304
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3304,
+          "name": "Master Vornal",
+          "min_level": 11,
+          "max_level": 11,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 515,
+              "x": -813.994,
+              "y": -4920.57,
+              "z": 19.4341
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3304,
+          "name": "Master Vornal",
+          "min_level": 11,
+          "max_level": 11,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 515,
+              "x": -813.994,
+              "y": -4920.57,
+              "z": 19.4341
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 785,
+      "title": "A Strategic Alliance",
+      "quest_level": 8,
+      "min_level": 5,
+      "sort_id": 14,
+      "reward_xp_difficulty": 3,
+      "reward_money": 0,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [],
+      "ender_entries": [],
+      "objectives": [],
+      "accept_candidates": [],
+      "turn_in_candidates": [],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "no_creature_ender",
+        "no_creature_starter",
+        "no_map_1_ender_spawn",
+        "no_map_1_starter_spawn"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 786,
+      "title": "Thwarting Kolkar Aggression",
+      "quest_level": 8,
+      "min_level": 5,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3140
+      ],
+      "ender_entries": [
+        3140
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3140,
+          "name": "Lar Prowltusk",
+          "min_level": 7,
+          "max_level": 7,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 4699,
+              "x": -774.774,
+              "y": -4830.36,
+              "z": 19.8326
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3140,
+          "name": "Lar Prowltusk",
+          "min_level": 7,
+          "max_level": 7,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 4699,
+              "x": -774.774,
+              "y": -4830.36,
+              "z": 19.8326
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "game_object_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 817,
+      "title": "Practical Prey",
+      "quest_level": 8,
+      "min_level": 5,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 225,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3194
+      ],
+      "ender_entries": [
+        3194
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3194,
+          "name": "Vel'rin Fang",
+          "min_level": 7,
+          "max_level": 7,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6463,
+              "x": -797.523,
+              "y": -4921.17,
+              "z": 22.9571
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3194,
+          "name": "Vel'rin Fang",
+          "min_level": 7,
+          "max_level": 7,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6463,
+              "x": -797.523,
+              "y": -4921.17,
+              "z": 22.9571
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 820,
+      "title": "<UNUSED>",
+      "quest_level": 9,
+      "min_level": 5,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [],
+      "ender_entries": [],
+      "objectives": [],
+      "accept_candidates": [],
+      "turn_in_candidates": [],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "no_creature_ender",
+        "no_creature_starter",
+        "no_map_1_ender_spawn",
+        "no_map_1_starter_spawn"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 815,
+      "title": "Break a Few Eggs",
+      "quest_level": 8,
+      "min_level": 6,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 225,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3191
+      ],
+      "ender_entries": [
+        3191
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3191,
+          "name": "Cook Torka",
+          "min_level": 6,
+          "max_level": 6,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6460,
+              "x": 312.099,
+              "y": -4664.95,
+              "z": 16.4254
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3191,
+          "name": "Cook Torka",
+          "min_level": 6,
+          "max_level": 6,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6460,
+              "x": 312.099,
+              "y": -4664.95,
+              "z": 16.4254
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 837,
+      "title": "Encroachment",
+      "quest_level": 10,
+      "min_level": 6,
+      "sort_id": 14,
+      "reward_xp_difficulty": 4,
+      "reward_money": 250,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3139
+      ],
+      "ender_entries": [
+        3139
+      ],
+      "objectives": [
+        {
+          "entry": 3111,
+          "required": 4,
+          "name": "Razormane Quilboar",
+          "min_level": 6,
+          "max_level": 7,
+          "faction": 109,
+          "rank": 0,
+          "type": 7,
+          "candidate_anchor": {
+            "x": 85.4167,
+            "y": -4543.75,
+            "z": 58.4279,
+            "guid": 12315,
+            "spawn_count": 15
+          },
+          "candidate_spawns": [
+            {
+              "guid": 6415,
+              "x": 18.2329,
+              "y": -4617.23,
+              "z": 44.7297
+            },
+            {
+              "guid": 6416,
+              "x": 80.3499,
+              "y": -4406.12,
+              "z": 43.5863
+            },
+            {
+              "guid": 7327,
+              "x": 111.28,
+              "y": -4446.82,
+              "z": 38.8782
+            },
+            {
+              "guid": 7328,
+              "x": 69.3384,
+              "y": -4468.37,
+              "z": 45.4963
+            },
+            {
+              "guid": 7332,
+              "x": 92.7794,
+              "y": -4557.56,
+              "z": 54.6971
+            },
+            {
+              "guid": 7742,
+              "x": 128.805,
+              "y": -4583.54,
+              "z": 63.7619
+            },
+            {
+              "guid": 7877,
+              "x": 58.2777,
+              "y": -4478.91,
+              "z": 48.9058
+            },
+            {
+              "guid": 7878,
+              "x": 95.0306,
+              "y": -4476.37,
+              "z": 40.8566
+            },
+            {
+              "guid": 7879,
+              "x": 92.6001,
+              "y": -4458.62,
+              "z": 41.2049
+            },
+            {
+              "guid": 8427,
+              "x": 107.173,
+              "y": -4552.57,
+              "z": 56.8097
+            },
+            {
+              "guid": 12305,
+              "x": 82.9627,
+              "y": -4643.34,
+              "z": 37.4577
+            },
+            {
+              "guid": 12311,
+              "x": 78.5015,
+              "y": -4623.69,
+              "z": 44.2831
+            },
+            {
+              "guid": 12313,
+              "x": 89.8585,
+              "y": -4548.56,
+              "z": 56.8221
+            },
+            {
+              "guid": 12315,
+              "x": 85.4167,
+              "y": -4543.75,
+              "z": 58.4279
+            },
+            {
+              "guid": 12318,
+              "x": 110.593,
+              "y": -4572.87,
+              "z": 58.2189
+            }
+          ]
+        },
+        {
+          "entry": 3112,
+          "required": 4,
+          "name": "Razormane Scout",
+          "min_level": 7,
+          "max_level": 8,
+          "faction": 109,
+          "rank": 0,
+          "type": 7,
+          "candidate_anchor": {
+            "x": 62.1836,
+            "y": -4454.37,
+            "z": 46.8297,
+            "guid": 6413,
+            "spawn_count": 18
+          },
+          "candidate_spawns": [
+            {
+              "guid": 6411,
+              "x": 58.3333,
+              "y": -4291.67,
+              "z": 64.8786
+            },
+            {
+              "guid": 6412,
+              "x": 117.878,
+              "y": -4459.38,
+              "z": 37.6442
+            },
+            {
+              "guid": 6413,
+              "x": 62.1836,
+              "y": -4454.37,
+              "z": 46.8297
+            },
+            {
+              "guid": 6414,
+              "x": 51.0283,
+              "y": -4468.06,
+              "z": 48.8177
+            },
+            {
+              "guid": 7326,
+              "x": 34.2625,
+              "y": -4290.57,
+              "z": 69.2536
+            },
+            {
+              "guid": 7329,
+              "x": 44.381,
+              "y": -4312.11,
+              "z": 65.3864
+            },
+            {
+              "guid": 7330,
+              "x": 19.0145,
+              "y": -4251.52,
+              "z": 73.0239
+            },
+            {
+              "guid": 7331,
+              "x": 30.8559,
+              "y": -4335.03,
+              "z": 71.3453
+            },
+            {
+              "guid": 7876,
+              "x": 60.082,
+              "y": -4298.42,
+              "z": 64.1204
+            },
+            {
+              "guid": 8425,
+              "x": 22.1264,
+              "y": -4314.94,
+              "z": 71.4848
+            },
+            {
+              "guid": 8426,
+              "x": 37.5445,
+              "y": -4270.67,
+              "z": 68.679
+            },
+            {
+              "guid": 12306,
+              "x": 70.3385,
+              "y": -4597.89,
+              "z": 52.774
+            },
+            {
+              "guid": 12307,
+              "x": 69.2959,
+              "y": -4609.61,
+              "z": 48.3864
+            },
+            {
+              "guid": 12309,
+              "x": 92.4038,
+              "y": -4572.77,
+              "z": 56.7136
+            },
+            {
+              "guid": 12314,
+              "x": 77.7998,
+              "y": -4562.97,
+              "z": 55.3221
+            },
+            {
+              "guid": 12316,
+              "x": 124.53,
+              "y": -4582.72,
+              "z": 63.7189
+            },
+            {
+              "guid": 12317,
+              "x": 121.581,
+              "y": -4477.19,
+              "z": 37.9417
+            },
+            {
+              "guid": 12320,
+              "x": 52.693,
+              "y": -4613.99,
+              "z": 46.8383
+            }
+          ]
+        },
+        {
+          "entry": 3113,
+          "required": 4,
+          "name": "Razormane Dustrunner",
+          "min_level": 8,
+          "max_level": 9,
+          "faction": 109,
+          "rank": 0,
+          "type": 7,
+          "candidate_anchor": {
+            "x": 413.141,
+            "y": -4243.35,
+            "z": 27.0356,
+            "guid": 12326,
+            "spawn_count": 17
+          },
+          "candidate_spawns": [
+            {
+              "guid": 6440,
+              "x": -52.5952,
+              "y": -4017.01,
+              "z": 65.9618
+            },
+            {
+              "guid": 6441,
+              "x": -86.0457,
+              "y": -4025.48,
+              "z": 63.4506
+            },
+            {
+              "guid": 6442,
+              "x": -57.7837,
+              "y": -3979.82,
+              "z": 63.0095
+            },
+            {
+              "guid": 6443,
+              "x": -57.1798,
+              "y": -4040.56,
+              "z": 67.3281
+            },
+            {
+              "guid": 6444,
+              "x": -68.2943,
+              "y": -4052.45,
+              "z": 67.3768
+            },
+            {
+              "guid": 6450,
+              "x": 493.807,
+              "y": -4256.06,
+              "z": 21.1464
+            },
+            {
+              "guid": 6452,
+              "x": 461.106,
+              "y": -4298.42,
+              "z": 25.2114
+            },
+            {
+              "guid": 6454,
+              "x": 484.983,
+              "y": -4293.99,
+              "z": 22.3683
+            },
+            {
+              "guid": 7348,
+              "x": 431.878,
+              "y": -4251.52,
+              "z": 25.5356
+            },
+            {
+              "guid": 7903,
+              "x": 449.461,
+              "y": -4169.09,
+              "z": 25.951
+            },
+            {
+              "guid": 7905,
+              "x": 439.975,
+              "y": -4229.21,
+              "z": 25.4114
+            },
+            {
+              "guid": 12299,
+              "x": 495.607,
+              "y": -4170.69,
+              "z": 25.7837
+            },
+            {
+              "guid": 12301,
+              "x": 483.502,
+              "y": -4148.08,
+              "z": 24.8225
+            },
+            {
+              "guid": 12323,
+              "x": 406.918,
+              "y": -4288.94,
+              "z": 30.4364
+            },
+            {
+              "guid": 12324,
+              "x": 380.849,
+              "y": -4282.82,
+              "z": 25.978
+            },
+            {
+              "guid": 12326,
+              "x": 413.141,
+              "y": -4243.35,
+              "z": 27.0356
+            },
+            {
+              "guid": 12330,
+              "x": 424.512,
+              "y": -4228.85,
+              "z": 25.1545
+            }
+          ]
+        },
+        {
+          "entry": 3114,
+          "required": 4,
+          "name": "Razormane Battleguard",
+          "min_level": 9,
+          "max_level": 10,
+          "faction": 109,
+          "rank": 0,
+          "type": 7,
+          "candidate_anchor": {
+            "x": 342.624,
+            "y": -4230.38,
+            "z": 23.6101,
+            "guid": 7907,
+            "spawn_count": 25
+          },
+          "candidate_spawns": [
+            {
+              "guid": 6437,
+              "x": -78.1084,
+              "y": -4012.51,
+              "z": 63.6847
+            },
+            {
+              "guid": 6438,
+              "x": -118.588,
+              "y": -3985.38,
+              "z": 58.9729
+            },
+            {
+              "guid": 6445,
+              "x": -87.4558,
+              "y": -4045.82,
+              "z": 64.5018
+            },
+            {
+              "guid": 6446,
+              "x": -93.6433,
+              "y": -3984.71,
+              "z": 61.2153
+            },
+            {
+              "guid": 6447,
+              "x": -137.058,
+              "y": -4010.05,
+              "z": 59.3378
+            },
+            {
+              "guid": 6448,
+              "x": 491.18,
+              "y": -4222.48,
+              "z": 24.282
+            },
+            {
+              "guid": 6449,
+              "x": 463.713,
+              "y": -4273.01,
+              "z": 23.3364
+            },
+            {
+              "guid": 6451,
+              "x": 438.009,
+              "y": -4179.61,
+              "z": 25.1933
+            },
+            {
+              "guid": 6453,
+              "x": 461.623,
+              "y": -4169.47,
+              "z": 26.8051
+            },
+            {
+              "guid": 7345,
+              "x": -58.5116,
+              "y": -4029.94,
+              "z": 66.6532
+            },
+            {
+              "guid": 7347,
+              "x": 425.345,
+              "y": -4295.34,
+              "z": 29.0014
+            },
+            {
+              "guid": 7349,
+              "x": 492.111,
+              "y": -4323.12,
+              "z": 22.4243
+            },
+            {
+              "guid": 7350,
+              "x": 410.892,
+              "y": -4314.54,
+              "z": 25.1954
+            },
+            {
+              "guid": 7351,
+              "x": 435.848,
+              "y": -4211.84,
+              "z": 24.6614
+            },
+            {
+              "guid": 7352,
+              "x": 420.398,
+              "y": -4197.62,
+              "z": 25.4994
+            },
+            {
+              "guid": 7353,
+              "x": 437.596,
+              "y": -4239.34,
+              "z": 25.1242
+            },
+            {
+              "guid": 7354,
+              "x": 387.255,
+              "y": -4175.69,
+              "z": 27.1643
+            },
+            {
+              "guid": 7902,
+              "x": 462.983,
+              "y": -4234.37,
+              "z": 24.7492
+            },
+            {
+              "guid": 7904,
+              "x": 484.674,
+              "y": -4348.81,
+              "z": 27.1747
+            },
+            {
+              "guid": 7906,
+              "x": 495.711,
+              "y": -4196.06,
+              "z": 24.1587
+            },
+            {
+              "guid": 7907,
+              "x": 342.624,
+              "y": -4230.38,
+              "z": 23.6101
+            },
+            {
+              "guid": 8430,
+              "x": 385.936,
+              "y": -4221.34,
+              "z": 25.7494
+            },
+            {
+              "guid": 12328,
+              "x": 427.358,
+              "y": -4215.38,
+              "z": 24.5284
+            },
+            {
+              "guid": 12332,
+              "x": 348.268,
+              "y": -4282.86,
+              "z": 23.7379
+            },
+            {
+              "guid": 12333,
+              "x": 380.718,
+              "y": -4248.74,
+              "z": 24.6459
+            }
+          ]
+        }
+      ],
+      "accept_candidates": [
+        {
+          "entry": 3139,
+          "name": "Gar'Thok",
+          "min_level": 10,
+          "max_level": 10,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 4692,
+              "x": 274.988,
+              "y": -4709.3,
+              "z": 17.5719
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3139,
+          "name": "Gar'Thok",
+          "min_level": 10,
+          "max_level": 10,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 4692,
+              "x": 274.988,
+              "y": -4709.3,
+              "z": 17.5719
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": true,
+      "validation_required": [
+        "live_npc_identity",
+        "live_walkability",
+        "live_quest_accept"
+      ],
+      "estimated_kill_cost": 16
+    },
+    {
+      "quest_id": 812,
+      "title": "Need for a Cure",
+      "quest_level": 9,
+      "min_level": 7,
+      "sort_id": 14,
+      "reward_xp_difficulty": 6,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3190
+      ],
+      "ender_entries": [
+        3190
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3190,
+          "name": "Rhinag",
+          "min_level": 8,
+          "max_level": 8,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6459,
+              "x": 1279.03,
+              "y": -4188.68,
+              "z": 28.0245
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3190,
+          "name": "Rhinag",
+          "min_level": 8,
+          "max_level": 8,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6459,
+              "x": 1279.03,
+              "y": -4188.68,
+              "z": 28.0245
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded",
+        "timed"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 813,
+      "title": "Finding the Antidote",
+      "quest_level": 9,
+      "min_level": 7,
+      "sort_id": 14,
+      "reward_xp_difficulty": 0,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": -812,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3189
+      ],
+      "ender_entries": [
+        3189
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3189,
+          "name": "Kor'ghan",
+          "min_level": 7,
+          "max_level": 7,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6458,
+              "x": 1772.72,
+              "y": -4343.18,
+              "z": -7.57187
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3189,
+          "name": "Kor'ghan",
+          "min_level": 7,
+          "max_level": 7,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6458,
+              "x": 1772.72,
+              "y": -4343.18,
+              "z": -7.57187
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 834,
+      "title": "Winds in the Desert",
+      "quest_level": 9,
+      "min_level": 7,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 300,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3293
+      ],
+      "ender_entries": [
+        3293
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3293,
+          "name": "Rezlak",
+          "min_level": 5,
+          "max_level": 5,
+          "faction": 69,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6479,
+              "x": 999.763,
+              "y": -4414.4,
+              "z": 14.4718
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3293,
+          "name": "Rezlak",
+          "min_level": 5,
+          "max_level": 5,
+          "faction": 69,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6479,
+              "x": 999.763,
+              "y": -4414.4,
+              "z": 14.4718
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 835,
+      "title": "Securing the Lines",
+      "quest_level": 11,
+      "min_level": 7,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 834,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3293
+      ],
+      "ender_entries": [
+        3293
+      ],
+      "objectives": [
+        {
+          "entry": 3117,
+          "required": 12,
+          "name": "Dustwind Savage",
+          "min_level": 9,
+          "max_level": 10,
+          "faction": 514,
+          "rank": 0,
+          "type": 7,
+          "candidate_anchor": {
+            "x": 951.958,
+            "y": -4754.93,
+            "z": 23.7635,
+            "guid": 7275,
+            "spawn_count": 15
+          },
+          "candidate_spawns": [
+            {
+              "guid": 4792,
+              "x": 968.545,
+              "y": -4702.7,
+              "z": 30.2607
+            },
+            {
+              "guid": 4793,
+              "x": 965.025,
+              "y": -4732.44,
+              "z": 28.8712
+            },
+            {
+              "guid": 7275,
+              "x": 951.958,
+              "y": -4754.93,
+              "z": 23.7635
+            },
+            {
+              "guid": 12251,
+              "x": 945.736,
+              "y": -4820.83,
+              "z": 16.8331
+            },
+            {
+              "guid": 12254,
+              "x": 1055.75,
+              "y": -4751.77,
+              "z": 16.2219
+            },
+            {
+              "guid": 12255,
+              "x": 977.91,
+              "y": -4819.45,
+              "z": 17.3065
+            },
+            {
+              "guid": 12256,
+              "x": 1076.21,
+              "y": -4718.31,
+              "z": 13.8847
+            },
+            {
+              "guid": 12258,
+              "x": 925.645,
+              "y": -4810.8,
+              "z": 14.9581
+            },
+            {
+              "guid": 12261,
+              "x": 844.778,
+              "y": -4821.34,
+              "z": 11.3737
+            },
+            {
+              "guid": 12279,
+              "x": 1008.14,
+              "y": -4812.83,
+              "z": 16.3155
+            },
+            {
+              "guid": 12280,
+              "x": 826.808,
+              "y": -4813.78,
+              "z": 11.2454
+            },
+            {
+              "guid": 12281,
+              "x": 1036.55,
+              "y": -4801.56,
+              "z": 13.5467
+            },
+            {
+              "guid": 12935,
+              "x": 880.661,
+              "y": -4815.5,
+              "z": 14.807
+            },
+            {
+              "guid": 12937,
+              "x": 935.446,
+              "y": -4781.74,
+              "z": 21.9261
+            },
+            {
+              "guid": 12938,
+              "x": 1072.86,
+              "y": -4681.6,
+              "z": 13.8102
+            }
+          ]
+        },
+        {
+          "entry": 3118,
+          "required": 8,
+          "name": "Dustwind Storm Witch",
+          "min_level": 10,
+          "max_level": 11,
+          "faction": 514,
+          "rank": 0,
+          "type": 7,
+          "candidate_anchor": {
+            "x": 1053.67,
+            "y": -4712.36,
+            "z": 16.1625,
+            "guid": 12252,
+            "spawn_count": 18
+          },
+          "candidate_spawns": [
+            {
+              "guid": 4794,
+              "x": 1045.19,
+              "y": -4688.98,
+              "z": 41.1492
+            },
+            {
+              "guid": 7276,
+              "x": 995.057,
+              "y": -4678.42,
+              "z": 46.7831
+            },
+            {
+              "guid": 7278,
+              "x": 1100.94,
+              "y": -4713.27,
+              "z": 32.5475
+            },
+            {
+              "guid": 7646,
+              "x": 978.974,
+              "y": -4705.17,
+              "z": 46.7406
+            },
+            {
+              "guid": 8413,
+              "x": 983.955,
+              "y": -4686.89,
+              "z": 27.0107
+            },
+            {
+              "guid": 8414,
+              "x": 1118.89,
+              "y": -4657.44,
+              "z": 39.0227
+            },
+            {
+              "guid": 10270,
+              "x": 975.515,
+              "y": -4677.04,
+              "z": 27.0107
+            },
+            {
+              "guid": 10423,
+              "x": 967.296,
+              "y": -4765.49,
+              "z": 39.5934
+            },
+            {
+              "guid": 10424,
+              "x": 971.102,
+              "y": -4783.22,
+              "z": 42.5103
+            },
+            {
+              "guid": 12233,
+              "x": 988.622,
+              "y": -4670.71,
+              "z": 27.0107
+            },
+            {
+              "guid": 12249,
+              "x": 1020.36,
+              "y": -4823.5,
+              "z": 15.9218
+            },
+            {
+              "guid": 12250,
+              "x": 1046.03,
+              "y": -4778.52,
+              "z": 14.0468
+            },
+            {
+              "guid": 12252,
+              "x": 1053.67,
+              "y": -4712.36,
+              "z": 16.1625
+            },
+            {
+              "guid": 12253,
+              "x": 1103.62,
+              "y": -4698.06,
+              "z": 17.3793
+            },
+            {
+              "guid": 12257,
+              "x": 1131.94,
+              "y": -4673.4,
+              "z": 17.7543
+            },
+            {
+              "guid": 12278,
+              "x": 1137.51,
+              "y": -4689.39,
+              "z": 18.0381
+            },
+            {
+              "guid": 12283,
+              "x": 1096.48,
+              "y": -4676.93,
+              "z": 16.547
+            },
+            {
+              "guid": 12936,
+              "x": 953.471,
+              "y": -4771.75,
+              "z": 23.5511
+            }
+          ]
+        }
+      ],
+      "accept_candidates": [
+        {
+          "entry": 3293,
+          "name": "Rezlak",
+          "min_level": 5,
+          "max_level": 5,
+          "faction": 69,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6479,
+              "x": 999.763,
+              "y": -4414.4,
+              "z": 14.4718
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3293,
+          "name": "Rezlak",
+          "min_level": 5,
+          "max_level": 5,
+          "faction": 69,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6479,
+              "x": 999.763,
+              "y": -4414.4,
+              "z": 14.4718
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": true,
+      "validation_required": [
+        "live_npc_identity",
+        "live_walkability",
+        "live_quest_accept"
+      ],
+      "estimated_kill_cost": 20
+    },
+    {
+      "quest_id": 816,
+      "title": "Lost But Not Forgotten",
+      "quest_level": 11,
+      "min_level": 8,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3193
+      ],
+      "ender_entries": [
+        3193
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3193,
+          "name": "Misha Tor'kren",
+          "min_level": 5,
+          "max_level": 5,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6461,
+              "x": 742.385,
+              "y": -4241.65,
+              "z": 18.762
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3193,
+          "name": "Misha Tor'kren",
+          "min_level": 5,
+          "max_level": 5,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6461,
+              "x": 742.385,
+              "y": -4241.65,
+              "z": 18.762
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 924,
+      "title": "The Demon Seed",
+      "quest_level": 14,
+      "min_level": 9,
+      "sort_id": 14,
+      "reward_xp_difficulty": 6,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 809,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3521
+      ],
+      "ender_entries": [
+        3521
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3521,
+          "name": "Ak'Zeloth",
+          "min_level": 22,
+          "max_level": 22,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 20268,
+              "x": 256.258,
+              "y": -3693.95,
+              "z": 26.4771
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3521,
+          "name": "Ak'Zeloth",
+          "min_level": 22,
+          "max_level": 22,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 20268,
+              "x": 256.258,
+              "y": -3693.95,
+              "z": 26.4771
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "game_object_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 840,
+      "title": "Conscript of the Horde",
+      "quest_level": 12,
+      "min_level": 10,
+      "sort_id": 14,
+      "reward_xp_difficulty": 3,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3336
+      ],
+      "ender_entries": [
+        3337
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3336,
+          "name": "Takrin Pathseeker",
+          "min_level": 30,
+          "max_level": 30,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 516,
+              "x": 271.805,
+              "y": -4650.83,
+              "z": 11.7894
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3337,
+          "name": "Kargal Battlescar",
+          "min_level": 15,
+          "max_level": 15,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 13165,
+              "x": 303.432,
+              "y": -3686.16,
+              "z": 27.1502
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "external_start_item",
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 842,
+      "title": "Crossroads Conscription",
+      "quest_level": 12,
+      "min_level": 10,
+      "sort_id": 14,
+      "reward_xp_difficulty": 5,
+      "reward_money": 0,
+      "races": 690,
+      "classes": 0,
+      "prev_quest_id": 840,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [
+        3337
+      ],
+      "ender_entries": [
+        3338
+      ],
+      "objectives": [],
+      "accept_candidates": [
+        {
+          "entry": 3337,
+          "name": "Kargal Battlescar",
+          "min_level": 15,
+          "max_level": 15,
+          "faction": 29,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 13165,
+              "x": 303.432,
+              "y": -3686.16,
+              "z": 27.1502
+            }
+          ]
+        }
+      ],
+      "turn_in_candidates": [
+        {
+          "entry": 3338,
+          "name": "Sergra Darkthorn",
+          "min_level": 60,
+          "max_level": 60,
+          "faction": 125,
+          "rank": 1,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 13167,
+              "x": -482.475,
+              "y": -2670.19,
+              "z": 97.522
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "external_start_item",
+        "item_objectives_not_decoded"
+      ],
+      "estimated_kill_cost": 0
+    },
+    {
+      "quest_id": 14088,
+      "title": "Learn to Ride in Durotar",
+      "quest_level": 20,
+      "min_level": 20,
+      "sort_id": 14,
+      "reward_xp_difficulty": 1,
+      "reward_money": 0,
+      "races": 0,
+      "classes": 0,
+      "prev_quest_id": 0,
+      "next_quest_id": 0,
+      "exclusive_group": 0,
+      "starter_entries": [],
+      "ender_entries": [
+        7953
+      ],
+      "objectives": [],
+      "accept_candidates": [],
+      "turn_in_candidates": [
+        {
+          "entry": 7953,
+          "name": "Xar'Ti",
+          "min_level": 50,
+          "max_level": 50,
+          "faction": 126,
+          "rank": 0,
+          "type": 7,
+          "spawns": [
+            {
+              "guid": 6402,
+              "x": -852.558,
+              "y": -4885.32,
+              "z": 22.0868
+            }
+          ]
+        }
+      ],
+      "eligible_kill_or_talk": false,
+      "validation_required": [
+        "external_start_item",
+        "item_objectives_not_decoded",
+        "no_creature_starter",
+        "no_map_1_starter_spawn"
+      ],
+      "estimated_kill_cost": 0
+    }
+  ]
+}

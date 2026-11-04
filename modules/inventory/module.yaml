@@ -1,0 +1,32 @@
+api_version: 1
+enabled: true
+description: Server-backed bags, equipment, vendors and revision-guarded roster trades
+compose:
+  file: compose.yaml
+  service: module
+grpc:
+  descriptor_set: module.pb
+rpc:
+  get_state: /inventory.module.v1.Module/GetState
+  list_inventory: /inventory.module.v1.Module/ListInventory
+  buy: /inventory.module.v1.Module/Buy
+  sell: /inventory.module.v1.Module/Sell
+  repair: /inventory.module.v1.Module/Repair
+  equip: /inventory.module.v1.Module/Equip
+  set_ammo: /inventory.module.v1.Module/SetAmmo
+  buyback: /inventory.module.v1.Module/Buyback
+  trade: /inventory.module.v1.Module/Trade
+  query_item: /inventory.module.v1.Module/QueryItem
+packets:
+  SMSG_UPDATE_OBJECT: /inventory.module.v1.Module/OnPacket
+  SMSG_COMPRESSED_UPDATE_OBJECT: /inventory.module.v1.Module/OnPacket
+  SMSG_DESTROY_OBJECT: /inventory.module.v1.Module/OnPacket
+  SMSG_LOGIN_VERIFY_WORLD: /inventory.module.v1.Module/OnPacket
+  SMSG_NEW_WORLD: /inventory.module.v1.Module/OnPacket
+  SMSG_ITEM_QUERY_SINGLE_RESPONSE: /inventory.module.v1.Module/OnPacket
+  SMSG_LIST_INVENTORY: /inventory.module.v1.Module/OnPacket
+  SMSG_BUY_FAILED: /inventory.module.v1.Module/OnPacket
+  SMSG_SELL_ITEM: /inventory.module.v1.Module/OnPacket
+  SMSG_INVENTORY_CHANGE_FAILURE: /inventory.module.v1.Module/OnPacket
+  SMSG_TRADE_STATUS: /inventory.module.v1.Module/OnPacket
+  SMSG_TRADE_STATUS_EXTENDED: /inventory.module.v1.Module/OnPacket

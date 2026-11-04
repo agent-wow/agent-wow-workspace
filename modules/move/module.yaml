@@ -1,0 +1,32 @@
+api_version: 1
+enabled: true
+description: Walks and turns the character with WoW movement packets and tracks its position
+compose:
+  file: compose.yaml
+  service: module
+grpc:
+  descriptor_set: module.pb
+rpc:
+  get_position: /move.module.v1.Module/GetPosition
+  forward: /move.module.v1.Module/Forward
+  backward: /move.module.v1.Module/Backward
+  turn_left: /move.module.v1.Module/TurnLeft
+  turn_right: /move.module.v1.Module/TurnRight
+  turn_to: /move.module.v1.Module/TurnTo
+  move_to: /move.module.v1.Module/MoveTo
+  navigate: /move.module.v1.Module/Navigate
+  stop: /move.module.v1.Module/Stop
+  recover_ground: /move.module.v1.Module/RecoverGround
+  set_run_speed: /move.module.v1.Module/SetRunSpeed
+  status: /move.module.v1.Module/Status
+packets:
+  SMSG_LOGIN_VERIFY_WORLD: /move.module.v1.Module/OnPacket
+  SMSG_NEW_WORLD: /move.module.v1.Module/OnPacket
+  SMSG_UPDATE_OBJECT: /move.module.v1.Module/OnPacket
+  SMSG_COMPRESSED_UPDATE_OBJECT: /move.module.v1.Module/OnPacket
+  MSG_MOVE_START_FORWARD: /move.module.v1.Module/OnPacket
+  MSG_MOVE_START_BACKWARD: /move.module.v1.Module/OnPacket
+  MSG_MOVE_STOP: /move.module.v1.Module/OnPacket
+  MSG_MOVE_HEARTBEAT: /move.module.v1.Module/OnPacket
+  MSG_MOVE_SET_FACING: /move.module.v1.Module/OnPacket
+  MSG_MOVE_TELEPORT_ACK: /move.module.v1.Module/OnPacket
