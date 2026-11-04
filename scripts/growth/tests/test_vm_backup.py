@@ -43,6 +43,10 @@ class VMBackupTests(unittest.TestCase):
                 "if [ \"$1\" = ssh ]; then shift 2; exec \"$@\"; fi\n"
                 "exit 2\n", encoding="utf-8")
             colima.chmod(0o755)
+            # The simulated VM is isolated from real host growth workers.
+            pgrep = fake_bin / "pgrep"
+            pgrep.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+            pgrep.chmod(0o755)
             env = dict(os.environ)
             env.update({"PATH": f"{fake_bin}:{env['PATH']}", "HOME": str(vm_home)})
             backup = host / "backups" / "snapshot"

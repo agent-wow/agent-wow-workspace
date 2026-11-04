@@ -3,6 +3,7 @@ package server
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	moddisc "github.com/agent-wow/agent-wow/pkg/modules/discovery"
@@ -23,6 +24,11 @@ func TestModulePackage(t *testing.T) {
 		body, err := os.ReadFile(filepath.Join("..", "..", name))
 		if err != nil {
 			t.Fatal(err)
+		}
+		if name == "module.yaml" {
+			// Keep the shipped example disabled, but enable its temporary test copy.
+			body = []byte(strings.Replace(
+				string(body), "enabled: false", "enabled: true", 1))
 		}
 		if err := os.WriteFile(filepath.Join(dir, name), body, 0644); err != nil {
 			t.Fatal(err)
